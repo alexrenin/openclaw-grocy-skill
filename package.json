@@ -1,0 +1,22 @@
+{
+  "name": "openclaw-grocy-skill",
+  "version": "0.1.0",
+  "description": "Reusable read-only OpenClaw skill for Grocy shopping list and stock data.",
+  "main": "src/format-shopping-list.js",
+  "bin": {
+    "grocy-openclaw": "bin/grocy-openclaw.js"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [
+    "openclaw",
+    "grocy",
+    "shopping-list",
+    "inventory"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}
