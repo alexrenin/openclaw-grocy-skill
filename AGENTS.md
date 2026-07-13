@@ -1,0 +1,382 @@
+# AGENTS.md
+
+## Project
+
+This repository contains a reusable OpenClaw skill for Grocy.
+
+The goal is to let OpenClaw agents read and, later, modify a user's Grocy home inventory and shopping list through the Grocy REST API.
+
+This must be developed as a reusable public skill, not as a one-off private script.
+
+## Current scope
+
+The initial version is read-only.
+
+It may read Grocy system info, products, quantity units, shopping list items, and stock. It must not modify Grocy data until write commands are explicitly designed, documented, and tested.
+
+## Core principles
+
+- Build this as a reusable public OpenClaw skill.
+- Keep the first version small, reliable, and easy to install.
+- Prefer plain Node.js 18+ and built-in APIs.
+- Avoid external dependencies unless there is a strong reason.
+- Keep code readable, modular, and testable.
+- Support Russian output because the initial user workflow is Russian-speaking.
+- Configuration must come from environment variables.
+- Do not hardcode personal paths, IPs, Telegram IDs, VPS hostnames, or API keys.
+- Never commit `.env` or real secrets.
+- Never print `.env` contents in logs or command output.
+- Never reveal `GROCY_API_KEY`.
+
+## Required environment variables
+
+The skill must be configured through environment variables:
+
+```env
+GROCY_URL=http://grocy
+GROCY_API_KEY=replace_me
+```
+
+Required variables:
+
+- `GROCY_URL`
+- `GROCY_API_KEY`
+
+Rules:
+
+- `GROCY_URL` may include or omit a trailing slash.
+- `GROCY_API_KEY` must only be used in the `GROCY-API-KEY` request header.
+- Error messages must never include the API key.
+
+## Expected repository structure
+
+Create and maintain this structure:
+
+```text
+openclaw-grocy-skill/
+|-- AGENTS.md
+|-- README.md
+|-- SKILL.md
+|-- package.json
+|-- .env.example
+|-- .gitignore
+|-- bin/
+|   `-- grocy-openclaw.js
+|-- src/
+|   |-- grocy-client.js
+|   |-- format-shopping-list.js
+|   `-- commands/
+|       |-- shopping-list.js
+|       |-- products.js
+|       `-- stock.js
+|-- test/
+|   `-- format-shopping-list.test.js
+`-- scripts/
+    |-- deploy-local.sh
+    `-- smoke-test-openclaw.sh
+```
+
+## CLI commands
+
+Implement these commands:
+
+```bash
+node bin/grocy-openclaw.js shopping-list --format text
+node bin/grocy-openclaw.js shopping-list --format json
+node bin/grocy-openclaw.js products --format table
+node bin/grocy-openclaw.js products --format json
+node bin/grocy-openclaw.js stock --format table
+node bin/grocy-openclaw.js stock --format json
+```
+
+The CLI should:
+
+- Validate required environment variables.
+- Print readable errors.
+- Exit with non-zero status on failure.
+- Never print secrets.
+- Support `--help`.
+- Keep output suitable for OpenClaw to return to the user.
+
+## Grocy API
+
+Use the Grocy REST API.
+
+Required endpoints for the initial read-only version:
+
+```text
+GET /api/system/info
+GET /api/objects/products
+GET /api/objects/quantity_units
+GET /api/objects/shopping_list
+GET /api/stock
+```
+
+The Grocy client should:
+
+- Send the `GROCY-API-KEY` header.
+- Use `GROCY_URL` as the base URL.
+- Support `GROCY_URL` with or without a trailing slash.
+- Throw readable errors for non-2xx responses.
+- Avoid leaking secrets in error output.
+- Use built-in `fetch` from Node.js 18+.
+
+## Shopping list formatting
+
+Text output for a non-empty shopping list should look like this:
+
+```text
+Список покупок:
+
+• Заправка для Борща MAGGI — 2 Упаковка
+• Картофель — 0.5 кг
+• Свинина — 0.6 кг
+• Сметана — 0.4 кг
+```
+
+If the list is empty:
+
+```text
+Список покупок пуст.
+```
+
+Formatting rules:
+
+- Use Russian labels by default.
+- Include product name.
+- Include amount when present.
+- Include unit when present.
+- Include note when present.
+- Do not include completed shopping list items by default.
+- Keep output compact enough for Telegram.
+
+## Products output
+
+The products command should be read-only.
+
+For table output, show at least:
+
+- product id
+- product name
+- description if present
+- stock unit if useful
+- purchase unit if useful
+
+For JSON output, return structured data suitable for later automation.
+
+## Stock output
+
+The stock command should be read-only.
+
+For table output, show at least:
+
+- product id
+- product name
+- amount
+- unit
+- best-before date if available
+
+For JSON output, return structured data suitable for later automation.
+
+## OpenClaw skill behavior
+
+`SKILL.md` should teach OpenClaw when to use this skill.
+
+Use this skill when the user asks about:
+
+- Grocy
+- groceries
+- home inventory
+- household supplies
+- shopping list
+- stock
+- products in stock
+- список покупок
+- покупки
+- что купить
+- что есть дома
+- остатки
+- продукты дома
+- бытовые расходники
+
+The skill must tell OpenClaw:
+
+- how to load environment variables safely
+- how to run the CLI
+- not to reveal `.env`
+- not to reveal `GROCY_API_KEY`
+- not to modify Grocy unless the user explicitly asks
+- to return command output clearly to the user
+
+Initial version must be read-only.
+
+## Deploy target
+
+For local development, `scripts/deploy-local.sh` should copy the repository into the OpenClaw workspace.
+
+Default workspace:
+
+```bash
+~/.openclaw/workspace
+```
+
+Default skill target:
+
+```bash
+~/.openclaw/workspace/skills/grocy
+```
+
+The script should support:
+
+```bash
+OPENCLAW_WORKSPACE=/custom/workspace ./scripts/deploy-local.sh
+```
+
+If `OPENCLAW_COMPOSE_DIR` is set, the script may restart the OpenClaw gateway:
+
+```bash
+OPENCLAW_COMPOSE_DIR=~/home-server/openclaw ./scripts/deploy-local.sh
+```
+
+Deploy script requirements:
+
+- Create target directories if missing.
+- Copy `SKILL.md`, `bin/`, `src/`, `package.json`, and needed files.
+- Do not overwrite an existing `.env`.
+- Create `.env` from `.env.example` if missing.
+- `chmod +x` executable scripts.
+- Print clear next steps.
+- Do not print secrets.
+
+## Smoke test
+
+`scripts/smoke-test-openclaw.sh` should:
+
+- run from a deployed OpenClaw gateway environment
+- load `.env` from the deployed skill folder
+- run the shopping-list command
+- never print secrets
+
+Example expected command inside OpenClaw gateway:
+
+```bash
+cd /home/node/.openclaw/workspace/skills/grocy
+set -a
+. ./.env
+set +a
+node bin/grocy-openclaw.js shopping-list --format text
+```
+
+## Tests
+
+Use Node.js built-in test runner.
+
+```bash
+npm test
+```
+
+Add tests for shopping list formatting:
+
+- normal list
+- empty list
+- item without unit
+- item with note
+- completed items are ignored by default
+
+Keep tests fast and independent from a real Grocy instance.
+
+Use mocked data for formatting tests.
+
+## README requirements
+
+`README.md` should include:
+
+- What this skill does
+- Requirements
+- Installation
+- Environment variables
+- Local CLI usage
+- Deploy to OpenClaw workspace
+- How to test inside OpenClaw gateway Docker container
+- Security notes
+- Roadmap
+
+Roadmap should include:
+
+- add item to shopping list
+- search products by name
+- mark shopping item done
+- stock summaries
+- expiring products
+
+## Security requirements
+
+Never commit or expose:
+
+- `.env`
+- `GROCY_API_KEY`
+- Telegram bot token
+- OpenClaw gateway token
+- real VPS IPs or hostnames unless they are intentionally documentation examples
+
+All examples must use placeholders.
+
+Bad:
+
+```env
+GROCY_API_KEY=actual-secret-value
+```
+
+Good:
+
+```env
+GROCY_API_KEY=replace_me
+```
+
+## Current prototype behavior
+
+The current working prototype can output a Grocy shopping list like:
+
+```text
+Список покупок:
+
+• Заправка для Борща MAGGI — 2 Упаковка
+• Картофель — 0.5 кг
+• Свинина — 0.6 кг
+• Сметана — 0.4 кг
+```
+
+Build a clean reusable version of this behavior.
+
+## Development workflow
+
+Prefer small, reviewable changes.
+
+For each change:
+
+1. Update code.
+2. Update tests.
+3. Run `npm test`.
+4. Update README or SKILL.md if user-facing behavior changes.
+5. Summarize what changed and what remains.
+
+## Future write operations
+
+Write operations are planned but must be added carefully.
+
+Examples:
+
+- add item to shopping list
+- mark shopping item done
+- consume stock
+- add stock entry
+
+Rules for future write operations:
+
+- Keep read-only commands separate from write commands.
+- Require explicit user intent before modifying Grocy.
+- Document write behavior clearly in `SKILL.md`.
+- Add tests where possible.
+- Prefer confirmation-oriented wording in the skill instructions.
+
+Initial version remains read-only.
