@@ -2,6 +2,11 @@
 
 'use strict';
 
+const { createGrocyClientFromEnv } = require('../src/grocy-client');
+const { runProductsCommand } = require('../src/commands/products');
+const { runShoppingListCommand } = require('../src/commands/shopping-list');
+const { runStockCommand } = require('../src/commands/stock');
+
 const HELP = `Usage:
   node bin/grocy-openclaw.js <command> --format <format>
 
@@ -56,7 +61,7 @@ function printHelp() {
   process.stdout.write(HELP);
 }
 
-function main(argv) {
+async function main(argv, env = process.env) {
   if (argv.length === 0 || argv.includes('--help') || argv.includes('-h')) {
     printHelp();
     return 0;
@@ -77,16 +82,39 @@ function main(argv) {
     throw new Error(`Unsupported format for ${command}: ${format}`);
   }
 
-  throw new Error(`${command} command is not implemented yet.`);
+  const client = createGrocyClientFromEnv(env);
+  let output;
+
+  switch (command) {
+    case 'shopping-list':
+      output = await runShoppingListCommand({ client, format });
+      break;
+    case 'products':
+      output = await runProductsCommand({ client, format });
+      break;
+    case 'stock':
+      output = await runStockCommand({ client, format });
+      break;
+    default:
+      throw new Error(`${command} command is not implemented yet.`);
+  }
+
+  if (output) {
+    process.stdout.write(`${output}\n`);
+  }
+
+  return 0;
 }
 
 if (require.main === module) {
-  try {
-    process.exitCode = main(process.argv.slice(2));
-  } catch (error) {
-    process.stderr.write(`Error: ${error.message}\n`);
-    process.exitCode = 1;
-  }
+  main(process.argv.slice(2))
+    .then((exitCode) => {
+      process.exitCode = exitCode;
+    })
+    .catch((error) => {
+      process.stderr.write(`Error: ${error.message}\n`);
+      process.exitCode = 1;
+    });
 }
 
 module.exports = {
