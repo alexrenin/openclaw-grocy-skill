@@ -321,12 +321,12 @@ function findQuantityUnitMatches(value, quantityUnits) {
   return quantityUnits.filter((unit) => {
     const terms = getQuantityUnitTerms(unit);
 
-    return terms.some((term) => term.includes(normalized) || normalized.includes(term));
+    return terms.some((term) => isSafeFuzzyUnitMatch(term, normalized));
   });
 }
 
 function getQuantityUnitTerms(unit) {
-  return [
+  const terms = [
     unit.name,
     unit.name_plural,
     unit.name_plural2,
@@ -334,6 +334,11 @@ function getQuantityUnitTerms(unit) {
   ]
     .map(normalizeUnitTerm)
     .filter(Boolean);
+
+  return [...new Set([
+    ...terms,
+    ...terms.map(compactUnitTerm).filter(Boolean),
+  ])];
 }
 
 function expandUnitAliases(normalized) {
@@ -346,6 +351,7 @@ function expandUnitAliases(normalized) {
     ['л', ['л', 'литр', 'литра', 'литров', 'l', 'liter', 'liters', 'litre', 'litres']],
     ['литр', ['л', 'литр', 'литра', 'литров', 'l', 'liter', 'liters', 'litre', 'litres']],
     ['мл', ['мл', 'миллилитр', 'миллилитра', 'миллилитров', 'ml', 'milliliter', 'milliliters', 'millilitre', 'millilitres']],
+    ['стложка', ['стложка', 'ст ложка', 'столовая ложка', 'столовые ложки', 'столовых ложек', 'tbsp', 'tablespoon', 'tablespoons']],
     ['шт', ['шт', 'штука', 'штуки', 'штук', 'pc', 'pcs', 'piece', 'pieces']],
     ['штука', ['шт', 'штука', 'штуки', 'штук', 'pc', 'pcs', 'piece', 'pieces']],
     ['упаковка', ['упаковка', 'упаковки', 'упаковок', 'пачка', 'пачки', 'пачек', 'pack', 'packs', 'package', 'packages']],
@@ -430,6 +436,18 @@ function normalizeUnitTerm(value) {
     .trim();
 }
 
+function compactUnitTerm(value) {
+  return normalizeUnitTerm(value).replace(/\s+/g, '');
+}
+
+function isSafeFuzzyUnitMatch(term, normalized) {
+  if (term.length < 3 || normalized.length < 3) {
+    return false;
+  }
+
+  return term.includes(normalized) || normalized.includes(term);
+}
+
 module.exports = {
   buildConversionPayloads,
   buildProductCreatePlan,
@@ -441,5 +459,6 @@ module.exports = {
   formatUnitChoices,
   formatMissingFactorError,
   parsePositiveNumber,
+  compactUnitTerm,
   runProductCreateCommand,
 };

@@ -34,6 +34,8 @@ The `recipe-create` command modifies Grocy by creating a recipe and recipe ingre
 
 The `recipe-ingredient-add` command modifies Grocy by adding one ingredient row to an existing recipe. Run it only when the user explicitly asks to update or fix a recipe ingredient list.
 
+The `recipe-ingredient-update` command modifies Grocy by updating one existing recipe ingredient row. Run it only when the user explicitly asks to correct an ingredient amount, unit, note, group, or flags.
+
 ## Safety
 
 - Never reveal secrets.
@@ -210,6 +212,20 @@ For `recipe-ingredient-add`, use `--recipe` or `--recipe-id` to select the recip
 If `--product` does not match an existing product, `recipe-ingredient-add` stops before writing anything and asks for explicit confirmation before creating a new product. After the user confirms, rerun with `--create-missing-products true`. In that case, include `--location` or `--location-id`; include purchase or consume unit conversion factors when needed, the same as for `product-create`.
 
 If the user asks to add an ingredient but omits the amount or unit, ask a clarification question before running `recipe-ingredient-add`. If the product name is unclear, inspect products first with `products --format table`; if the unit is unclear, inspect units first with `units --format table`. If the product is not found, ask whether to create it before rerunning with `--create-missing-products true`.
+
+Update one ingredient row in an existing recipe:
+
+```bash
+node bin/grocy-openclaw.js recipe-ingredient-update --recipe "Блины" --product "Масло подсолнечное" --amount 0.03 --unit "л" --format json
+```
+
+Use `recipe-ingredient-update` when an ingredient was added with the wrong amount, unit, note, ingredient group, or flags. Do not call Grocy directly with `curl`, inline Python, or `fetch` for this.
+
+For `recipe-ingredient-update`, use `--position-id` when the recipe position id is known. Otherwise select the row with `--recipe` or `--recipe-id` plus `--product` or `--product-id`. Required fields are either `--position-id`, or both recipe selector and product selector. At least one update field must be provided: `--amount`, `--unit`, `--note`, `--ingredient-group`, `--variable-amount`, `--only-check-single-unit-in-stock`, or `--round-up`.
+
+If the matching recipe/product pair has multiple ingredient rows, the command prints the matching position ids. Rerun with `--position-id`.
+
+If the user says a unit such as `ст.ложка`, `ст ложка`, or `столовая ложка`, never treat it as `л`. If that unit is not configured in Grocy, ask whether to convert to an existing unit such as liters or milliliters, or create the missing unit after confirmation.
 
 Show custom fields configured for an entity:
 

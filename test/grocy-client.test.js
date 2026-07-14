@@ -205,6 +205,37 @@ test('creates recipe positions through Grocy objects API', async () => {
   assert.equal(requestOptions.body, JSON.stringify(payload));
 });
 
+test('updates recipe positions through Grocy objects API', async () => {
+  let requestUrl;
+  let requestOptions;
+
+  const client = new GrocyClient({
+    baseUrl: 'http://grocy',
+    apiKey: 'secret-key',
+    fetchImpl: async (url, options) => {
+      requestUrl = url;
+      requestOptions = options;
+
+      return {
+        ok: true,
+        text: async () => '{"updated":true}',
+      };
+    },
+  });
+
+  const payload = {
+    amount: 0.03,
+    qu_id: 1,
+  };
+  const data = await client.updateRecipePosition(12, payload);
+
+  assert.deepEqual(data, { updated: true });
+  assert.equal(requestUrl, 'http://grocy/api/objects/recipes_pos/12');
+  assert.equal(requestOptions.method, 'PUT');
+  assert.equal(requestOptions.headers['Content-Type'], 'application/json');
+  assert.equal(requestOptions.body, JSON.stringify(payload));
+});
+
 test('reads userfield definitions through Grocy objects API', async () => {
   let requestUrl;
 

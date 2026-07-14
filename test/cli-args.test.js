@@ -95,6 +95,18 @@ test('allows recipe-ingredient-add options', () => {
   }));
 });
 
+test('allows recipe-ingredient-update options', () => {
+  assert.doesNotThrow(() => validateOptions('recipe-ingredient-update', {
+    recipe: 'Блины',
+    product: 'Масло подсолнечное',
+    amount: '0.03',
+    unit: 'л',
+    note: 'в тесто',
+    'ingredient-group': 'Тесто',
+    'round-up': 'false',
+  }));
+});
+
 test('allows userfield command options', () => {
   assert.doesNotThrow(() => validateOptions('userfields', {
     entity: 'recipes',

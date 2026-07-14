@@ -14,7 +14,7 @@ The initial read commands remain read-only.
 
 The skill may read Grocy system info, products, product locations, quantity units, shopping list items, recipes, custom fields, and stock.
 
-Write commands include `product-create`, `unit-create`, `recipe-create`, `recipe-ingredient-add`, and `userfields-create`. Run them only when the user explicitly asks to modify Grocy. Keep write commands separate from read commands, clearly documented, and covered by tests.
+Write commands include `product-create`, `unit-create`, `recipe-create`, `recipe-ingredient-add`, `recipe-ingredient-update`, and `userfields-create`. Run them only when the user explicitly asks to modify Grocy. Keep write commands separate from read commands, clearly documented, and covered by tests.
 
 ## Core principles
 
@@ -76,6 +76,7 @@ openclaw-grocy-skill/
 |       |-- product-create.js
 |       |-- recipe-create.js
 |       |-- recipe-ingredient-add.js
+|       |-- recipe-ingredient-update.js
 |       |-- shopping-list.js
 |       |-- products.js
 |       |-- userfields.js
@@ -106,6 +107,7 @@ node bin/grocy-openclaw.js product-create --name "Молоко" --location "Хо
 node bin/grocy-openclaw.js product-create --name "Огурцы маринованные" --location "Кладовка" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --consume-unit "шт" --format json
 node bin/grocy-openclaw.js recipe-create --name "Оливье" --base-servings 4 --ingredients '[{"name":"Картофель","amount":3,"unit":"шт"}]' --format json
 node bin/grocy-openclaw.js recipe-ingredient-add --recipe "Блины" --product "Масло подсолнечное" --amount 30 --unit "мл" --note "в тесто" --format json
+node bin/grocy-openclaw.js recipe-ingredient-update --recipe "Блины" --product "Масло подсолнечное" --amount 0.03 --unit "л" --format json
 node bin/grocy-openclaw.js userfields --entity recipes --format table
 node bin/grocy-openclaw.js userfields-create --entity recipes --caption "Время готовки" --type text-single-line --format json
 node bin/grocy-openclaw.js userfields-get --entity recipes --object-id 10 --format json
@@ -279,8 +281,11 @@ The skill must tell OpenClaw:
 - to ask for confirmation before creating missing recipe ingredient products
 - to use `--create-missing-products true` only after the user explicitly confirmed creating missing products
 - to use `recipe-ingredient-add` when the user asks to add a missing ingredient to an existing recipe
+- to use `recipe-ingredient-update` when the user asks to correct an existing recipe ingredient amount, unit, note, group, or flags
 - to avoid deleting or recreating a recipe just to add one ingredient
+- to avoid direct Grocy API calls for recipe ingredient updates
 - to ask for missing ingredient amount or unit before `recipe-ingredient-add`
+- to never match tablespoon-like text such as `ст.ложка` to the liter unit `л`
 - to use `userfields` for configured custom fields and `userfields-get` for values on a specific object
 - to ask for the custom field type before `userfields-create` when the user did not provide it
 - to return command output clearly to the user
@@ -447,6 +452,7 @@ Implemented write operation:
 - create product object
 - create recipe object with ingredient rows
 - add one ingredient row to an existing recipe
+- update one ingredient row in an existing recipe
 
 Examples:
 

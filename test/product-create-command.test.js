@@ -153,6 +153,25 @@ test('matches natural unit aliases for chat input', () => {
   assert.equal(findQuantityUnit('штука', units).id, 1);
 });
 
+test('does not fuzzy match short unit names inside longer words', () => {
+  const matches = findQuantityUnitMatches('ст.ложка', [
+    { id: 1, name: 'л', name_plural: 'литры' },
+  ]);
+
+  assert.deepEqual(matches, []);
+});
+
+test('matches tablespoon aliases without confusing liters', () => {
+  const tablespoonUnits = [
+    { id: 1, name: 'л', name_plural: 'литры' },
+    { id: 2, name: 'ст. ложка', name_plural: 'ст. ложки' },
+  ];
+
+  assert.equal(findQuantityUnit('ст.ложка', tablespoonUnits).id, 2);
+  assert.equal(findQuantityUnit('столовая ложка', tablespoonUnits).id, 2);
+  assert.equal(findQuantityUnit('tbsp', tablespoonUnits).id, 2);
+});
+
 test('rejects missing product name', () => {
   assert.throws(
     () => buildProductPayload({ 'stock-unit': 'кг' }, units),

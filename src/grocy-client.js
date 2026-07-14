@@ -103,6 +103,13 @@ class GrocyClient {
     });
   }
 
+  updateObject(entity, objectId, payload) {
+    return this.request(`/api/objects/${entity}/${encodeURIComponent(objectId)}`, {
+      method: 'PUT',
+      body: payload,
+    });
+  }
+
   createProduct(payload) {
     return this.createObject('products', payload);
   }
@@ -113,6 +120,10 @@ class GrocyClient {
 
   createRecipePosition(payload) {
     return this.createObject('recipes_pos', payload);
+  }
+
+  updateRecipePosition(objectId, payload) {
+    return this.updateObject('recipes_pos', objectId, payload);
   }
 
   createQuantityUnit(payload) {

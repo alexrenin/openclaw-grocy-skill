@@ -9,6 +9,7 @@ const { runProductCreateCommand } = require('../src/commands/product-create');
 const { runProductsCommand } = require('../src/commands/products');
 const { runRecipeCreateCommand } = require('../src/commands/recipe-create');
 const { runRecipeIngredientAddCommand } = require('../src/commands/recipe-ingredient-add');
+const { runRecipeIngredientUpdateCommand } = require('../src/commands/recipe-ingredient-update');
 const { runShoppingListCommand } = require('../src/commands/shopping-list');
 const { runStockCommand } = require('../src/commands/stock');
 const { runSystemInfoCommand } = require('../src/commands/system-info');
@@ -33,6 +34,8 @@ Commands:
   recipe-create    Create a Grocy recipe with ingredients
   recipe-ingredient-add
                    Add an ingredient to an existing Grocy recipe
+  recipe-ingredient-update
+                   Update an ingredient row in an existing Grocy recipe
   userfields       Read configured custom fields for an entity
   userfields-create
                    Create a custom field for an entity
@@ -51,6 +54,8 @@ Formats:
   recipe-create    json
   recipe-ingredient-add
                    json
+  recipe-ingredient-update
+                   json
   userfields       table, json
   userfields-create
                    json
@@ -68,6 +73,7 @@ Examples:
   node bin/grocy-openclaw.js product-create --name "Pickles" --location "Pantry" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --format json
   node bin/grocy-openclaw.js recipe-create --name "Salad" --ingredients '[{"name":"Pickles","amount":3,"unit":"шт"}]' --format json
   node bin/grocy-openclaw.js recipe-ingredient-add --recipe "Pancakes" --product "Sunflower oil" --amount 2 --unit "tbsp" --format json
+  node bin/grocy-openclaw.js recipe-ingredient-update --recipe "Pancakes" --product "Sunflower oil" --amount 0.03 --unit "л" --format json
   node bin/grocy-openclaw.js userfields --entity recipes --format table
   node bin/grocy-openclaw.js userfields-create --entity recipes --caption "Время готовки" --type text-single-line --format json
   node bin/grocy-openclaw.js userfields-get --entity recipes --object-id 10 --format json
@@ -85,6 +91,7 @@ const COMMAND_FORMATS = new Map([
   ['product-create', new Set(['json'])],
   ['recipe-create', new Set(['json'])],
   ['recipe-ingredient-add', new Set(['json'])],
+  ['recipe-ingredient-update', new Set(['json'])],
   ['userfields', new Set(['table', 'json'])],
   ['userfields-create', new Set(['json'])],
   ['userfields-get', new Set(['table', 'json'])],
@@ -141,6 +148,21 @@ const COMMAND_OPTIONS = new Map([
     'consume-unit',
     'consume-to-stock-factor',
     'create-missing-products',
+  ])],
+  ['recipe-ingredient-update', new Set([
+    'position-id',
+    'recipe',
+    'recipe-id',
+    'product',
+    'product-id',
+    'name',
+    'amount',
+    'unit',
+    'note',
+    'ingredient-group',
+    'variable-amount',
+    'only-check-single-unit-in-stock',
+    'round-up',
   ])],
   ['userfields', new Set([
     'entity',
@@ -261,6 +283,9 @@ async function main(argv, env = process.env) {
       break;
     case 'recipe-ingredient-add':
       output = await runRecipeIngredientAddCommand({ client, format, options });
+      break;
+    case 'recipe-ingredient-update':
+      output = await runRecipeIngredientUpdateCommand({ client, format, options });
       break;
     case 'userfields':
       output = await runUserfieldsCommand({ client, format, options });

@@ -335,6 +335,7 @@ module.exports = {
   buildRecipePositionPayload,
   findProductByName,
   formatMissingProductConfirmationError,
+  parseIngredientAmount: parsePositiveNumber,
   parseIngredientsOption,
   parseCreateMissingProductsOption,
   runRecipeCreateCommand,
