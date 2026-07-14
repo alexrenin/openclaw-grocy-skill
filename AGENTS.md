@@ -14,7 +14,7 @@ The initial read commands remain read-only.
 
 The skill may read Grocy system info, products, quantity units, shopping list items, and stock.
 
-The first write command is `product-create`, which creates a Grocy product object only when the user explicitly asks to create a new product. Keep write commands separate from read commands, clearly documented, and covered by tests.
+Write commands include `product-create`, `unit-create`, and `recipe-create`. Run them only when the user explicitly asks to modify Grocy. Keep write commands separate from read commands, clearly documented, and covered by tests.
 
 ## Core principles
 
@@ -73,6 +73,7 @@ openclaw-grocy-skill/
 |       |-- units.js
 |       |-- unit-create.js
 |       |-- product-create.js
+|       |-- recipe-create.js
 |       |-- shopping-list.js
 |       |-- products.js
 |       `-- stock.js
@@ -96,6 +97,7 @@ node bin/grocy-openclaw.js units --format json
 node bin/grocy-openclaw.js unit-create --name "банка" --name-plural "банки" --format json
 node bin/grocy-openclaw.js product-create --name "Молоко" --stock-unit "л" --format json
 node bin/grocy-openclaw.js product-create --name "Огурцы маринованные" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --consume-unit "шт" --format json
+node bin/grocy-openclaw.js recipe-create --name "Оливье" --base-servings 4 --ingredients '[{"name":"Картофель","amount":3,"unit":"шт"}]' --format json
 node bin/grocy-openclaw.js shopping-list --format text
 node bin/grocy-openclaw.js shopping-list --format json
 node bin/grocy-openclaw.js products --format table
@@ -130,6 +132,8 @@ Required endpoints for the initial read-only version:
 ```text
 GET /api/system/info
 GET /api/objects/products
+GET /api/objects/recipes
+GET /api/objects/recipes_pos
 GET /api/objects/quantity_units
 GET /api/objects/shopping_list
 GET /api/stock
@@ -141,6 +145,8 @@ Required endpoints for explicit write commands:
 POST /api/objects/products
 POST /api/objects/quantity_units
 POST /api/objects/quantity_unit_conversions
+POST /api/objects/recipes
+POST /api/objects/recipes_pos
 ```
 
 Product-specific unit conversion factors must be stored as `quantity_unit_conversions` rows. Do not send `qu_factor_purchase_to_stock` or `qu_factor_consume_to_stock` fields in the `products` payload for Grocy 4.x.
@@ -246,6 +252,8 @@ The skill must tell OpenClaw:
 - to use `units` when the configured Grocy units need to be inspected
 - to require conversion factors when purchase or consume units differ from stock unit
 - to ask a clarification question before `product-create` when a required conversion factor is missing
+- to ask for missing recipe ingredient amounts or units before `recipe-create`
+- to let `recipe-create` create missing ingredient products only when the user explicitly asked to create the recipe
 - to return command output clearly to the user
 
 Read commands must remain read-only.

@@ -38,7 +38,7 @@ function buildApiDocsLinks(grocyVersion) {
     guidance: [
       'Use the version-specific OpenAPI URL first.',
       'Use master only when intentionally checking upcoming Grocy behavior.',
-      'Before adding a write command, verify the endpoint, entity name, and request payload fields in OpenAPI.',
+      'Before adding or changing a Grocy API command, verify the endpoint, entity name, query parameters, response shape, and request payload fields in OpenAPI.',
     ],
   };
 }
@@ -53,7 +53,7 @@ function formatApiDocsLinks(docs) {
     `Raw OpenAPI JSON: ${docs.openapi.rawUrl}`,
     `Latest OpenAPI on master: ${docs.openapi.latestGithubUrl}`,
     '',
-    'Use the version-specific OpenAPI before adding or changing write commands.',
+    'Use the version-specific OpenAPI before adding or changing any Grocy API command.',
   ].join('\n');
 }
 

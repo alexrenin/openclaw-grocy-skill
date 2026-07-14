@@ -69,3 +69,13 @@ test('allows product-create conversion factor options', () => {
 test('allows api-docs without command options', () => {
   assert.doesNotThrow(() => validateOptions('api-docs', {}));
 });
+
+test('allows recipe-create options', () => {
+  assert.doesNotThrow(() => validateOptions('recipe-create', {
+    name: 'Оливье',
+    description: 'Домашний рецепт',
+    'base-servings': '4',
+    'desired-servings': '4',
+    ingredients: '[{"name":"Картофель","amount":3,"unit":"шт"}]',
+  }));
+});

@@ -141,6 +141,37 @@ Implementation note: Grocy 4.x stores product-specific unit conversion factors i
 
 For chat agents: if the user asks to create a product with different units but does not give the conversion factor, ask before running `product-create`. For example, if the product is stored as `шт` and purchased as `банка`, ask how many pieces are in one jar.
 
+Create a recipe with ingredients:
+
+```bash
+node bin/grocy-openclaw.js recipe-create --name "Оливье" --base-servings 4 --ingredients '[{"name":"Картофель","amount":3,"unit":"шт"},{"name":"Огурцы маринованные","amount":2,"unit":"шт","note":"нарезать"}]' --format json
+```
+
+`recipe-create` creates the recipe object and its `recipes_pos` ingredient rows. Each ingredient must include:
+
+- `name` or `productId`: product name or known Grocy product id
+- `amount`: positive number
+- `unit`: Grocy quantity unit name or common alias
+
+Optional ingredient fields: `note`, `ingredientGroup`, `variableAmount`, `onlyCheckSingleUnitInStock`, and `roundUp`.
+
+If an ingredient product name does not exist, `recipe-create` creates a new product automatically using the ingredient unit as the stock, purchase, and consume unit. For more control, include a nested `product` object, for example:
+
+```json
+{
+  "name": "Огурцы маринованные",
+  "amount": 3,
+  "unit": "шт",
+  "product": {
+    "stockUnit": "шт",
+    "purchaseUnit": "банка",
+    "purchaseToStockFactor": 10
+  }
+}
+```
+
+For chat agents: if a recipe ingredient unit is unknown, inspect existing units first with `units --format table`. Create a new unit only after the user confirms none of the existing units fit.
+
 Show stock as a table:
 
 ```bash
@@ -238,6 +269,7 @@ Tests use mocked data and do not require a real Grocy instance.
 - Read commands are read-only.
 - `product-create` modifies Grocy and must only be run when the user explicitly asks to create a product.
 - `unit-create` modifies Grocy and must only be run after existing units were considered and the user confirms that a new unit is needed.
+- `recipe-create` modifies Grocy and may create missing products; run it only when the user explicitly asks to create a recipe.
 - Future write commands must be separate from read commands and require explicit user intent.
 
 ## API Documentation Workflow

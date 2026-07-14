@@ -64,6 +64,14 @@ class GrocyClient {
     return this.request('/api/objects/products');
   }
 
+  getRecipes() {
+    return this.request('/api/objects/recipes');
+  }
+
+  getRecipePositions() {
+    return this.request('/api/objects/recipes_pos');
+  }
+
   getQuantityUnits() {
     return this.request('/api/objects/quantity_units');
   }
@@ -85,6 +93,14 @@ class GrocyClient {
 
   createProduct(payload) {
     return this.createObject('products', payload);
+  }
+
+  createRecipe(payload) {
+    return this.createObject('recipes', payload);
+  }
+
+  createRecipePosition(payload) {
+    return this.createObject('recipes_pos', payload);
   }
 
   createQuantityUnit(payload) {

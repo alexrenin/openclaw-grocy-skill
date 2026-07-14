@@ -6,6 +6,7 @@ const { createGrocyClientFromEnv } = require('../src/grocy-client');
 const { runApiDocsCommand } = require('../src/commands/api-docs');
 const { runProductCreateCommand } = require('../src/commands/product-create');
 const { runProductsCommand } = require('../src/commands/products');
+const { runRecipeCreateCommand } = require('../src/commands/recipe-create');
 const { runShoppingListCommand } = require('../src/commands/shopping-list');
 const { runStockCommand } = require('../src/commands/stock');
 const { runSystemInfoCommand } = require('../src/commands/system-info');
@@ -23,6 +24,7 @@ Commands:
   shopping-list    Read Grocy shopping list
   products         Read Grocy products
   product-create   Create a Grocy product
+  recipe-create    Create a Grocy recipe with ingredients
   stock            Read Grocy stock
 
 Formats:
@@ -33,6 +35,7 @@ Formats:
   shopping-list    text, json
   products         table, json
   product-create   json
+  recipe-create    json
   stock            table, json
 
 Examples:
@@ -43,6 +46,7 @@ Examples:
   node bin/grocy-openclaw.js shopping-list --format text
   node bin/grocy-openclaw.js products --format table
   node bin/grocy-openclaw.js product-create --name "Pickles" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --format json
+  node bin/grocy-openclaw.js recipe-create --name "Salad" --ingredients '[{"name":"Pickles","amount":3,"unit":"шт"}]' --format json
   node bin/grocy-openclaw.js stock --format json
 `;
 
@@ -54,6 +58,7 @@ const COMMAND_FORMATS = new Map([
   ['shopping-list', new Set(['text', 'json'])],
   ['products', new Set(['table', 'json'])],
   ['product-create', new Set(['json'])],
+  ['recipe-create', new Set(['json'])],
   ['stock', new Set(['table', 'json'])],
 ]);
 
@@ -74,6 +79,13 @@ const COMMAND_OPTIONS = new Map([
     'name',
     'name-plural',
     'description',
+  ])],
+  ['recipe-create', new Set([
+    'name',
+    'description',
+    'base-servings',
+    'desired-servings',
+    'ingredients',
   ])],
 ]);
 
@@ -167,6 +179,9 @@ async function main(argv, env = process.env) {
       break;
     case 'product-create':
       output = await runProductCreateCommand({ client, format, options });
+      break;
+    case 'recipe-create':
+      output = await runRecipeCreateCommand({ client, format, options });
       break;
     case 'stock':
       output = await runStockCommand({ client, format });

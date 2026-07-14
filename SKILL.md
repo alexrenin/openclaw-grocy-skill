@@ -30,6 +30,8 @@ You may read Grocy products, stock, and shopping list data.
 
 The `product-create` command modifies Grocy by creating a product object. Run it only when the user explicitly asks to create a new product.
 
+The `recipe-create` command modifies Grocy by creating a recipe, recipe ingredient rows, and any missing ingredient products. Run it only when the user explicitly asks to create a recipe.
+
 ## Safety
 
 - Never reveal secrets.
@@ -154,6 +156,18 @@ node bin/grocy-openclaw.js product-create --name "Картофель" --stock-un
 ```
 
 `--purchase-unit` and `--consume-unit` are optional and default to the stock unit.
+
+Create a recipe with ingredients:
+
+```bash
+node bin/grocy-openclaw.js recipe-create --name "Оливье" --base-servings 4 --ingredients '[{"name":"Картофель","amount":3,"unit":"шт"},{"name":"Огурцы маринованные","amount":2,"unit":"шт","note":"нарезать"}]' --format json
+```
+
+For `recipe-create`, build `--ingredients` as a JSON array. Each ingredient must include `name` or `productId`, `amount`, and `unit`. Optional fields are `note`, `ingredientGroup`, `variableAmount`, `onlyCheckSingleUnitInStock`, `roundUp`, and a nested `product` object.
+
+If an ingredient product does not exist, `recipe-create` creates it automatically using the ingredient unit as stock, purchase, and consume unit. If the product needs different purchase or consume units, include a nested `product` object with `stockUnit`, `purchaseUnit`, `purchaseToStockFactor`, `consumeUnit`, and `consumeToStockFactor` as needed.
+
+If the user asks to create a recipe but omits ingredient amounts or units, ask a clarification question before running `recipe-create`. If a unit is unclear, inspect existing units first with `units --format table`; create a new unit only after the user confirms none fit.
 
 Show Grocy stock as a table:
 
