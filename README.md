@@ -54,6 +54,12 @@ set -a
 set +a
 ```
 
+Check Grocy connectivity and API key validity:
+
+```bash
+node bin/grocy-openclaw.js system-info --format json
+```
+
 Show the active shopping list as compact Russian text:
 
 ```bash

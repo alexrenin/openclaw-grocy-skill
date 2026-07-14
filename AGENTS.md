@@ -66,6 +66,7 @@ openclaw-grocy-skill/
 |   |-- grocy-client.js
 |   |-- format-shopping-list.js
 |   `-- commands/
+|       |-- system-info.js
 |       |-- shopping-list.js
 |       |-- products.js
 |       `-- stock.js
@@ -81,6 +82,7 @@ openclaw-grocy-skill/
 Implement these commands:
 
 ```bash
+node bin/grocy-openclaw.js system-info --format json
 node bin/grocy-openclaw.js shopping-list --format text
 node bin/grocy-openclaw.js shopping-list --format json
 node bin/grocy-openclaw.js products --format table
