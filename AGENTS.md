@@ -104,7 +104,7 @@ node bin/grocy-openclaw.js units --format json
 node bin/grocy-openclaw.js unit-create --name "банка" --name-plural "банки" --format json
 node bin/grocy-openclaw.js product-create --name "Молоко" --location "Холодильник" --stock-unit "л" --format json
 node bin/grocy-openclaw.js product-create --name "Огурцы маринованные" --location "Кладовка" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --consume-unit "шт" --format json
-node bin/grocy-openclaw.js recipe-create --name "Оливье" --base-servings 4 --ingredients '[{"name":"Картофель","amount":3,"unit":"шт"},{"name":"Огурцы маринованные","amount":2,"unit":"шт","location":"Кладовка"}]' --format json
+node bin/grocy-openclaw.js recipe-create --name "Оливье" --base-servings 4 --ingredients '[{"name":"Картофель","amount":3,"unit":"шт"}]' --format json
 node bin/grocy-openclaw.js recipe-ingredient-add --recipe "Блины" --product "Масло подсолнечное" --amount 30 --unit "мл" --note "в тесто" --format json
 node bin/grocy-openclaw.js userfields --entity recipes --format table
 node bin/grocy-openclaw.js userfields-create --entity recipes --caption "Время готовки" --type text-single-line --format json
@@ -276,7 +276,8 @@ The skill must tell OpenClaw:
 - to ask a clarification question before `product-create` when a required conversion factor is missing
 - to ask for missing recipe ingredient amounts or units before `recipe-create`
 - to ask for a storage location before `recipe-create` when the recipe includes missing products without locations
-- to let `recipe-create` create missing ingredient products only when the user explicitly asked to create the recipe
+- to ask for confirmation before creating missing recipe ingredient products
+- to use `--create-missing-products true` only after the user explicitly confirmed creating missing products
 - to use `recipe-ingredient-add` when the user asks to add a missing ingredient to an existing recipe
 - to avoid deleting or recreating a recipe just to add one ingredient
 - to ask for missing ingredient amount or unit before `recipe-ingredient-add`

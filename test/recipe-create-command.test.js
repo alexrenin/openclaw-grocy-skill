@@ -52,7 +52,7 @@ test('builds recipe plan with existing and missing products', () => {
       { name: 'Картофель', amount: 3, unit: 'шт' },
       { name: 'Огурцы маринованные', amount: 2, unit: 'шт', location: 'Кладовка', note: 'нарезать' },
     ]),
-  }, products, units, locations);
+  }, products, units, locations, { createMissingProducts: true });
 
   assert.deepEqual(plan.recipePayload, {
     name: 'Оливье',
@@ -102,6 +102,18 @@ test('rejects unknown ingredient unit', () => {
   );
 });
 
+test('rejects missing ingredient product without explicit creation confirmation', () => {
+  assert.throws(
+    () => buildRecipeCreatePlan({
+      name: 'Оливье',
+      ingredients: JSON.stringify([
+        { name: 'Огурцы маринованные', amount: 2, unit: 'шт', location: 'Кладовка' },
+      ]),
+    }, products, units, locations),
+    /Ask the user to confirm creating this new product, then rerun with --create-missing-products true/,
+  );
+});
+
 test('runs recipe-create json command and creates missing products', async () => {
   const calls = [];
 
@@ -109,6 +121,7 @@ test('runs recipe-create json command and creates missing products', async () =>
     format: 'json',
     options: {
       name: 'Оливье',
+      'create-missing-products': 'true',
       ingredients: JSON.stringify([
         { name: 'Картофель', amount: 3, unit: 'шт' },
         { name: 'Огурцы маринованные', amount: 2, unit: 'шт', location: 'Кладовка' },

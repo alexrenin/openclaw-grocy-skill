@@ -77,6 +77,7 @@ test('allows recipe-create options', () => {
     'base-servings': '4',
     'desired-servings': '4',
     ingredients: '[{"name":"Картофель","amount":3,"unit":"шт"}]',
+    'create-missing-products': 'true',
   }));
 });
 
@@ -90,6 +91,7 @@ test('allows recipe-ingredient-add options', () => {
     'ingredient-group': 'Тесто',
     location: 'Кладовка',
     'stock-unit': 'мл',
+    'create-missing-products': 'true',
   }));
 });
 

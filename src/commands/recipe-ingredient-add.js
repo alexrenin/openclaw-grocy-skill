@@ -3,6 +3,7 @@
 const {
   buildIngredientPlan,
   buildRecipePositionPayload,
+  parseCreateMissingProductsOption,
 } = require('./recipe-create');
 
 async function runRecipeIngredientAddCommand({ client, format, options }) {
@@ -16,7 +17,8 @@ async function runRecipeIngredientAddCommand({ client, format, options }) {
     client.getQuantityUnits(),
     client.getLocations(),
   ]);
-  const plan = buildRecipeIngredientAddPlan(options, recipes, products, quantityUnits, locations);
+  const createMissingProducts = parseCreateMissingProductsOption(options['create-missing-products'], '--create-missing-products');
+  const plan = buildRecipeIngredientAddPlan(options, recipes, products, quantityUnits, locations, { createMissingProducts });
   let createdProduct;
 
   if (plan.ingredient.productPlan) {
@@ -61,14 +63,16 @@ async function runRecipeIngredientAddCommand({ client, format, options }) {
   }, null, 2);
 }
 
-function buildRecipeIngredientAddPlan(options, recipes, products, quantityUnits, locations = []) {
+function buildRecipeIngredientAddPlan(options, recipes, products, quantityUnits, locations = [], settings = {}) {
   const recipe = resolveRecipeOption({
     idValue: options['recipe-id'],
     nameValue: options.recipe,
     recipes,
   });
   const ingredientInput = buildIngredientInput(options);
-  const ingredient = buildIngredientPlan(ingredientInput, 0, products, quantityUnits, locations);
+  const ingredient = buildIngredientPlan(ingredientInput, 0, products, quantityUnits, locations, {
+    createMissingProduct: Boolean(settings.createMissingProducts),
+  });
 
   return { recipe, ingredient };
 }

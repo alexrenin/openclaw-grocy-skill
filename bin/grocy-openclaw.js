@@ -66,7 +66,7 @@ Examples:
   node bin/grocy-openclaw.js shopping-list --format text
   node bin/grocy-openclaw.js products --format table
   node bin/grocy-openclaw.js product-create --name "Pickles" --location "Pantry" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --format json
-  node bin/grocy-openclaw.js recipe-create --name "Salad" --ingredients '[{"name":"Pickles","amount":3,"unit":"шт","location":"Pantry"}]' --format json
+  node bin/grocy-openclaw.js recipe-create --name "Salad" --ingredients '[{"name":"Pickles","amount":3,"unit":"шт"}]' --format json
   node bin/grocy-openclaw.js recipe-ingredient-add --recipe "Pancakes" --product "Sunflower oil" --amount 2 --unit "tbsp" --format json
   node bin/grocy-openclaw.js userfields --entity recipes --format table
   node bin/grocy-openclaw.js userfields-create --entity recipes --caption "Время готовки" --type text-single-line --format json
@@ -117,6 +117,7 @@ const COMMAND_OPTIONS = new Map([
     'base-servings',
     'desired-servings',
     'ingredients',
+    'create-missing-products',
   ])],
   ['recipe-ingredient-add', new Set([
     'recipe',
@@ -139,6 +140,7 @@ const COMMAND_OPTIONS = new Map([
     'purchase-to-stock-factor',
     'consume-unit',
     'consume-to-stock-factor',
+    'create-missing-products',
   ])],
   ['userfields', new Set([
     'entity',

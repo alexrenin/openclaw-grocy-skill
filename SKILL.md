@@ -30,7 +30,7 @@ You may read Grocy products, stock, and shopping list data.
 
 The `product-create` command modifies Grocy by creating a product object. Run it only when the user explicitly asks to create a new product.
 
-The `recipe-create` command modifies Grocy by creating a recipe, recipe ingredient rows, and any missing ingredient products. Run it only when the user explicitly asks to create a recipe.
+The `recipe-create` command modifies Grocy by creating a recipe and recipe ingredient rows. It may create missing ingredient products only when `--create-missing-products true` is used after explicit user confirmation. Run it only when the user explicitly asks to create a recipe.
 
 The `recipe-ingredient-add` command modifies Grocy by adding one ingredient row to an existing recipe. Run it only when the user explicitly asks to update or fix a recipe ingredient list.
 
@@ -191,11 +191,11 @@ Create a recipe with ingredients:
 node bin/grocy-openclaw.js recipe-create --name "Оливье" --base-servings 4 --ingredients '[{"name":"Картофель","amount":3,"unit":"шт"},{"name":"Огурцы маринованные","amount":2,"unit":"шт","location":"Кладовка","note":"нарезать"}]' --format json
 ```
 
-For `recipe-create`, build `--ingredients` as a JSON array. Each ingredient must include `name` or `productId`, `amount`, and `unit`. Optional fields are `note`, `ingredientGroup`, `variableAmount`, `onlyCheckSingleUnitInStock`, `roundUp`, `location`, `locationId`, and a nested `product` object.
+For `recipe-create`, build `--ingredients` as a JSON array. Each ingredient must include `name` or `productId`, `amount`, and `unit`. Optional fields are `note`, `ingredientGroup`, `variableAmount`, `onlyCheckSingleUnitInStock`, `roundUp`, `location`, `locationId`, and a nested `product` object. Use `--create-missing-products true` only after the user explicitly confirms creating missing ingredient products.
 
-If an ingredient product does not exist, `recipe-create` creates it automatically using the ingredient unit as stock, purchase, and consume unit. A missing ingredient product still needs a Grocy location, so include `location` or `locationId` on the ingredient or nested product object. If the product needs different purchase or consume units, include a nested `product` object with `location`, `stockUnit`, `purchaseUnit`, `purchaseToStockFactor`, `consumeUnit`, and `consumeToStockFactor` as needed.
+If an ingredient product does not exist, `recipe-create` stops before writing anything and asks for explicit confirmation before creating a new product. After the user confirms, rerun with `--create-missing-products true`. A missing ingredient product still needs a Grocy location, so include `location` or `locationId` on the ingredient or nested product object. If the product needs different purchase or consume units, include a nested `product` object with `location`, `stockUnit`, `purchaseUnit`, `purchaseToStockFactor`, `consumeUnit`, and `consumeToStockFactor` as needed.
 
-If the user asks to create a recipe but omits ingredient amounts or units, ask a clarification question before running `recipe-create`. If a unit is unclear, inspect existing units first with `units --format table`; create a new unit only after the user confirms none fit. If the recipe includes new products and the user did not specify where to store them, inspect existing locations first with `locations --format table` and ask which location to use.
+If the user asks to create a recipe but omits ingredient amounts or units, ask a clarification question before running `recipe-create`. If a unit is unclear, inspect existing units first with `units --format table`; create a new unit only after the user confirms none fit. If the recipe includes products that are not found in Grocy, ask the user whether to create those products before rerunning with `--create-missing-products true`. If product creation was confirmed but the user did not specify where to store the new products, inspect existing locations first with `locations --format table` and ask which location to use.
 
 Add one ingredient to an existing recipe:
 
@@ -205,11 +205,11 @@ node bin/grocy-openclaw.js recipe-ingredient-add --recipe "Блины" --product
 
 Use `recipe-ingredient-add` when the user says an existing recipe is missing an ingredient or one ingredient was misunderstood. This command creates only one `recipes_pos` row and does not delete or recreate the recipe.
 
-For `recipe-ingredient-add`, use `--recipe` or `--recipe-id` to select the recipe, and `--product` or `--product-id` to select the product. Prefer names in chat workflows. Required fields are recipe selector, product selector, `--amount`, and `--unit`. Optional fields are `--note`, `--ingredient-group`, `--variable-amount`, `--only-check-single-unit-in-stock`, and `--round-up`.
+For `recipe-ingredient-add`, use `--recipe` or `--recipe-id` to select the recipe, and `--product` or `--product-id` to select the product. Prefer names in chat workflows. Required fields are recipe selector, product selector, `--amount`, and `--unit`. Optional fields are `--note`, `--ingredient-group`, `--variable-amount`, `--only-check-single-unit-in-stock`, `--round-up`, and `--create-missing-products true`.
 
-If `--product` does not match an existing product, `recipe-ingredient-add` can create it before adding the ingredient. In that case, include `--location` or `--location-id`; include purchase or consume unit conversion factors when needed, the same as for `product-create`.
+If `--product` does not match an existing product, `recipe-ingredient-add` stops before writing anything and asks for explicit confirmation before creating a new product. After the user confirms, rerun with `--create-missing-products true`. In that case, include `--location` or `--location-id`; include purchase or consume unit conversion factors when needed, the same as for `product-create`.
 
-If the user asks to add an ingredient but omits the amount or unit, ask a clarification question before running `recipe-ingredient-add`. If the product name is unclear, inspect products first with `products --format table`; if the unit is unclear, inspect units first with `units --format table`.
+If the user asks to add an ingredient but omits the amount or unit, ask a clarification question before running `recipe-ingredient-add`. If the product name is unclear, inspect products first with `products --format table`; if the unit is unclear, inspect units first with `units --format table`. If the product is not found, ask whether to create it before rerunning with `--create-missing-products true`.
 
 Show custom fields configured for an entity:
 

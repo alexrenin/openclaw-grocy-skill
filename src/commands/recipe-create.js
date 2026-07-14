@@ -17,7 +17,8 @@ async function runRecipeCreateCommand({ client, format, options }) {
     client.getQuantityUnits(),
     client.getLocations(),
   ]);
-  const plan = buildRecipeCreatePlan(options, products, quantityUnits, locations);
+  const createMissingProducts = parseCreateMissingProductsOption(options['create-missing-products'], '--create-missing-products');
+  const plan = buildRecipeCreatePlan(options, products, quantityUnits, locations, { createMissingProducts });
   const createdProducts = [];
 
   for (const ingredient of plan.ingredients) {
@@ -79,7 +80,7 @@ async function runRecipeCreateCommand({ client, format, options }) {
   }, null, 2);
 }
 
-function buildRecipeCreatePlan(options, products, quantityUnits, locations = []) {
+function buildRecipeCreatePlan(options, products, quantityUnits, locations = [], settings = {}) {
   const name = normalizeText(options.name);
 
   if (!name) {
@@ -115,12 +116,14 @@ function buildRecipeCreatePlan(options, products, quantityUnits, locations = [])
   return {
     recipePayload,
     ingredients: ingredients.map((ingredient, index) => {
-      return buildIngredientPlan(ingredient, index, products, quantityUnits, locations);
+      return buildIngredientPlan(ingredient, index, products, quantityUnits, locations, {
+        createMissingProduct: Boolean(settings.createMissingProducts),
+      });
     }),
   };
 }
 
-function buildIngredientPlan(ingredient, index, products, quantityUnits, locations = []) {
+function buildIngredientPlan(ingredient, index, products, quantityUnits, locations = [], settings = {}) {
   if (!ingredient || typeof ingredient !== 'object' || Array.isArray(ingredient)) {
     throw new Error(`Ingredient #${index + 1} must be an object.`);
   }
@@ -152,6 +155,11 @@ function buildIngredientPlan(ingredient, index, products, quantityUnits, locatio
 
   const existingProduct = productId == null ? findProductByName(name, products) : undefined;
   const resolvedProductId = productId == null ? existingProduct?.id : parsePositiveInteger(productId, `ingredient #${index + 1} productId`);
+
+  if (resolvedProductId == null && !settings.createMissingProduct) {
+    throw new Error(formatMissingProductConfirmationError(name, index));
+  }
+
   const productPlan = resolvedProductId == null
     ? buildMissingProductPlan(ingredient, name, unitName, quantityUnits, locations)
     : undefined;
@@ -288,6 +296,26 @@ function parseBooleanFlag(value) {
   throw new Error(`Boolean flag must be true/false or 1/0, got: ${value}`);
 }
 
+function parseCreateMissingProductsOption(value, optionName) {
+  if (value == null || value === '') {
+    return false;
+  }
+
+  if (value === true || value === 1 || value === '1' || value === 'true') {
+    return true;
+  }
+
+  if (value === false || value === 0 || value === '0' || value === 'false') {
+    return false;
+  }
+
+  throw new Error(`${optionName} must be true/false or 1/0`);
+}
+
+function formatMissingProductConfirmationError(name, index) {
+  return `Ingredient #${index + 1} product was not found: ${name}. Ask the user to confirm creating this new product, then rerun with --create-missing-products true.`;
+}
+
 function normalizeText(value) {
   if (value == null) {
     return '';
@@ -306,6 +334,8 @@ module.exports = {
   buildRecipeCreatePlan,
   buildRecipePositionPayload,
   findProductByName,
+  formatMissingProductConfirmationError,
   parseIngredientsOption,
+  parseCreateMissingProductsOption,
   runRecipeCreateCommand,
 };

@@ -114,6 +114,37 @@ test('builds add ingredient plan for existing recipe and product', () => {
   assert.equal(plan.ingredient.note, 'в тесто');
 });
 
+test('rejects missing product without explicit creation confirmation', () => {
+  assert.throws(
+    () => buildRecipeIngredientAddPlan({
+      recipe: 'Блины',
+      product: 'Растительное масло',
+      amount: '30',
+      unit: 'мл',
+      location: 'Кладовка',
+    }, recipes, products, units, locations),
+    /Ask the user to confirm creating this new product, then rerun with --create-missing-products true/,
+  );
+});
+
+test('plans missing product creation only with explicit confirmation', () => {
+  const plan = buildRecipeIngredientAddPlan({
+    recipe: 'Блины',
+    product: 'Растительное масло',
+    amount: '30',
+    unit: 'мл',
+    location: 'Кладовка',
+  }, recipes, products, units, locations, { createMissingProducts: true });
+
+  assert.deepEqual(plan.ingredient.productPlan.productPayload, {
+    name: 'Растительное масло',
+    location_id: 1,
+    qu_id_stock: 2,
+    qu_id_purchase: 2,
+    qu_id_consume: 2,
+  });
+});
+
 test('runs recipe-ingredient-add json command', async () => {
   const calls = [];
   const output = await runRecipeIngredientAddCommand({
