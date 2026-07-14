@@ -84,6 +84,27 @@ Show products as JSON:
 node bin/grocy-openclaw.js products --format json
 ```
 
+Create a new Grocy product object:
+
+```bash
+node bin/grocy-openclaw.js product-create --name "Молоко" --stock-unit "л" --format json
+```
+
+You may specify units by exact unit name or by id:
+
+```bash
+node bin/grocy-openclaw.js product-create --name "Картофель" --stock-unit-id 2 --format json
+```
+
+Supported `product-create` options:
+
+- `--name`: required product name
+- `--stock-unit` or `--stock-unit-id`: required stock unit
+- `--purchase-unit` or `--purchase-unit-id`: optional purchase unit, defaults to stock unit
+- `--consume-unit` or `--consume-unit-id`: optional consume unit, defaults to stock unit
+- `--description`: optional product description
+- `--format json`: required output format
+
 Show stock as a table:
 
 ```bash
@@ -145,6 +166,12 @@ set +a
 node bin/grocy-openclaw.js shopping-list --format text
 ```
 
+To verify Grocy connectivity from the deployed skill folder:
+
+```bash
+node bin/grocy-openclaw.js system-info --format json
+```
+
 ## Development
 
 Run tests:
@@ -166,7 +193,8 @@ Tests use mocked data and do not require a real Grocy instance.
 - Never commit `.env` or real secrets.
 - Never expose `GROCY_API_KEY`, Telegram bot tokens, OpenClaw gateway tokens, private IPs, or private hostnames.
 - Error output must not include `GROCY_API_KEY`.
-- The current CLI is read-only.
+- Read commands are read-only.
+- `product-create` modifies Grocy and must only be run when the user explicitly asks to create a product.
 - Future write commands must be separate from read commands and require explicit user intent.
 
 ## Roadmap

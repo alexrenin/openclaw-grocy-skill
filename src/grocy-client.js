@@ -20,13 +20,23 @@ class GrocyClient {
   }
 
   async request(path, options = {}) {
+    const headers = {
+      Accept: 'application/json',
+      'GROCY-API-KEY': this.apiKey,
+      ...(options.headers || {}),
+    };
+    const requestOptions = { ...options, headers };
+
+    if (hasJsonBody(options.body)) {
+      requestOptions.body = JSON.stringify(options.body);
+      requestOptions.headers = {
+        'Content-Type': 'application/json',
+        ...headers,
+      };
+    }
+
     const response = await this.fetchImpl(`${this.baseUrl}${normalizePath(path)}`, {
-      ...options,
-      headers: {
-        Accept: 'application/json',
-        'GROCY-API-KEY': this.apiKey,
-        ...(options.headers || {}),
-      },
+      ...requestOptions,
     });
 
     const text = await response.text();
@@ -65,6 +75,17 @@ class GrocyClient {
   getStock() {
     return this.request('/api/stock');
   }
+
+  createObject(entity, payload) {
+    return this.request(`/api/objects/${entity}`, {
+      method: 'POST',
+      body: payload,
+    });
+  }
+
+  createProduct(payload) {
+    return this.createObject('products', payload);
+  }
 }
 
 function createGrocyClientFromEnv(env) {
@@ -80,6 +101,10 @@ function normalizeBaseUrl(baseUrl) {
 
 function normalizePath(path) {
   return path.startsWith('/') ? path : `/${path}`;
+}
+
+function hasJsonBody(body) {
+  return body && typeof body === 'object' && !Buffer.isBuffer(body);
 }
 
 function formatHttpError(response, body) {

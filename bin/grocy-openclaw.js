@@ -3,6 +3,7 @@
 'use strict';
 
 const { createGrocyClientFromEnv } = require('../src/grocy-client');
+const { runProductCreateCommand } = require('../src/commands/product-create');
 const { runProductsCommand } = require('../src/commands/products');
 const { runShoppingListCommand } = require('../src/commands/shopping-list');
 const { runStockCommand } = require('../src/commands/stock');
@@ -15,18 +16,21 @@ Commands:
   system-info      Read Grocy system info
   shopping-list    Read Grocy shopping list
   products         Read Grocy products
+  product-create   Create a Grocy product
   stock            Read Grocy stock
 
 Formats:
   system-info      json
   shopping-list    text, json
   products         table, json
+  product-create   json
   stock            table, json
 
 Examples:
   node bin/grocy-openclaw.js system-info --format json
   node bin/grocy-openclaw.js shopping-list --format text
   node bin/grocy-openclaw.js products --format table
+  node bin/grocy-openclaw.js product-create --name "Milk" --stock-unit "l" --format json
   node bin/grocy-openclaw.js stock --format json
 `;
 
@@ -34,32 +38,60 @@ const COMMAND_FORMATS = new Map([
   ['system-info', new Set(['json'])],
   ['shopping-list', new Set(['text', 'json'])],
   ['products', new Set(['table', 'json'])],
+  ['product-create', new Set(['json'])],
   ['stock', new Set(['table', 'json'])],
+]);
+
+const COMMAND_OPTIONS = new Map([
+  ['product-create', new Set([
+    'name',
+    'description',
+    'stock-unit',
+    'stock-unit-id',
+    'purchase-unit',
+    'purchase-unit-id',
+    'consume-unit',
+    'consume-unit-id',
+  ])],
 ]);
 
 function parseArgs(argv) {
   const args = [...argv];
   const command = args[0];
   let format;
+  const options = {};
 
   for (let index = 1; index < args.length; index += 1) {
     const arg = args[index];
 
-    if (arg === '--format') {
-      format = args[index + 1];
+    if (!arg.startsWith('--')) {
+      throw new Error(`Unknown argument: ${arg}`);
+    }
+
+    const [rawName, inlineValue] = arg.slice(2).split(/=(.*)/s, 2);
+    const value = inlineValue === undefined ? args[index + 1] : inlineValue;
+
+    if (!rawName) {
+      throw new Error(`Unknown argument: ${arg}`);
+    }
+
+    if (value === undefined || (inlineValue === undefined && value.startsWith('--'))) {
+      throw new Error(`Missing value for --${rawName}`);
+    }
+
+    if (inlineValue === undefined) {
       index += 1;
+    }
+
+    if (rawName === 'format') {
+      format = value;
       continue;
     }
 
-    if (arg.startsWith('--format=')) {
-      format = arg.slice('--format='.length);
-      continue;
-    }
-
-    throw new Error(`Unknown argument: ${arg}`);
+    options[rawName] = value;
   }
 
-  return { command, format };
+  return { command, format, options };
 }
 
 function printHelp() {
@@ -72,7 +104,7 @@ async function main(argv, env = process.env) {
     return 0;
   }
 
-  const { command, format } = parseArgs(argv);
+  const { command, format, options } = parseArgs(argv);
   const allowedFormats = COMMAND_FORMATS.get(command);
 
   if (!allowedFormats) {
@@ -87,6 +119,8 @@ async function main(argv, env = process.env) {
     throw new Error(`Unsupported format for ${command}: ${format}`);
   }
 
+  validateOptions(command, options);
+
   const client = createGrocyClientFromEnv(env);
   let output;
 
@@ -100,6 +134,9 @@ async function main(argv, env = process.env) {
     case 'products':
       output = await runProductsCommand({ client, format });
       break;
+    case 'product-create':
+      output = await runProductCreateCommand({ client, format, options });
+      break;
     case 'stock':
       output = await runStockCommand({ client, format });
       break;
@@ -112,6 +149,16 @@ async function main(argv, env = process.env) {
   }
 
   return 0;
+}
+
+function validateOptions(command, options) {
+  const allowedOptions = COMMAND_OPTIONS.get(command) || new Set();
+
+  for (const option of Object.keys(options)) {
+    if (!allowedOptions.has(option)) {
+      throw new Error(`Unsupported option for ${command}: --${option}`);
+    }
+  }
 }
 
 if (require.main === module) {
@@ -128,4 +175,5 @@ if (require.main === module) {
 module.exports = {
   main,
   parseArgs,
+  validateOptions,
 };

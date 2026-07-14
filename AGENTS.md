@@ -10,9 +10,11 @@ This must be developed as a reusable public skill, not as a one-off private scri
 
 ## Current scope
 
-The initial version is read-only.
+The initial read commands remain read-only.
 
-It may read Grocy system info, products, quantity units, shopping list items, and stock. It must not modify Grocy data until write commands are explicitly designed, documented, and tested.
+The skill may read Grocy system info, products, quantity units, shopping list items, and stock.
+
+The first write command is `product-create`, which creates a Grocy product object only when the user explicitly asks to create a new product. Keep write commands separate from read commands, clearly documented, and covered by tests.
 
 ## Core principles
 
@@ -67,6 +69,7 @@ openclaw-grocy-skill/
 |   |-- format-shopping-list.js
 |   `-- commands/
 |       |-- system-info.js
+|       |-- product-create.js
 |       |-- shopping-list.js
 |       |-- products.js
 |       `-- stock.js
@@ -83,6 +86,7 @@ Implement these commands:
 
 ```bash
 node bin/grocy-openclaw.js system-info --format json
+node bin/grocy-openclaw.js product-create --name "Молоко" --stock-unit "л" --format json
 node bin/grocy-openclaw.js shopping-list --format text
 node bin/grocy-openclaw.js shopping-list --format json
 node bin/grocy-openclaw.js products --format table
@@ -112,6 +116,12 @@ GET /api/objects/products
 GET /api/objects/quantity_units
 GET /api/objects/shopping_list
 GET /api/stock
+```
+
+Required endpoints for explicit write commands:
+
+```text
+POST /api/objects/products
 ```
 
 The Grocy client should:
@@ -193,6 +203,8 @@ Use this skill when the user asks about:
 - shopping list
 - stock
 - products in stock
+- create product
+- add product
 - список покупок
 - покупки
 - что купить
@@ -208,9 +220,10 @@ The skill must tell OpenClaw:
 - not to reveal `.env`
 - not to reveal `GROCY_API_KEY`
 - not to modify Grocy unless the user explicitly asks
+- to keep write commands separate from read commands
 - to return command output clearly to the user
 
-Initial version must be read-only.
+Read commands must remain read-only.
 
 ## Deploy target
 
@@ -362,9 +375,13 @@ For each change:
 4. Update README or SKILL.md if user-facing behavior changes.
 5. Summarize what changed and what remains.
 
-## Future write operations
+## Write operations
 
-Write operations are planned but must be added carefully.
+Write operations must be added carefully.
+
+Implemented write operation:
+
+- create product object
 
 Examples:
 
@@ -380,5 +397,3 @@ Rules for future write operations:
 - Document write behavior clearly in `SKILL.md`.
 - Add tests where possible.
 - Prefer confirmation-oriented wording in the skill instructions.
-
-Initial version remains read-only.

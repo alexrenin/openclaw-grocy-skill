@@ -24,9 +24,11 @@ Use this skill when the user asks about:
 
 ## Scope
 
-The current version is read-only.
+Read commands are read-only.
 
-You may read Grocy products, stock, and shopping list data. Do not modify Grocy unless the user explicitly asks and a documented write command exists.
+You may read Grocy products, stock, and shopping list data.
+
+The `product-create` command modifies Grocy by creating a product object. Run it only when the user explicitly asks to create a new product.
 
 ## Safety
 
@@ -35,6 +37,7 @@ You may read Grocy products, stock, and shopping list data. Do not modify Grocy 
 - Never reveal `GROCY_API_KEY`.
 - Do not include `GROCY_API_KEY` in command output, errors, summaries, or logs.
 - Use `GROCY_API_KEY` only through the `GROCY-API-KEY` request header.
+- Do not run write commands unless the user's intent to modify Grocy is explicit.
 
 ## Environment
 
@@ -86,6 +89,20 @@ Return Grocy products as JSON:
 ```bash
 node bin/grocy-openclaw.js products --format json
 ```
+
+Create a new Grocy product object:
+
+```bash
+node bin/grocy-openclaw.js product-create --name "Молоко" --stock-unit "л" --format json
+```
+
+Use exact Grocy quantity unit names or ids:
+
+```bash
+node bin/grocy-openclaw.js product-create --name "Картофель" --stock-unit-id 2 --format json
+```
+
+`--purchase-unit` and `--consume-unit` are optional and default to the stock unit.
 
 Show Grocy stock as a table:
 
