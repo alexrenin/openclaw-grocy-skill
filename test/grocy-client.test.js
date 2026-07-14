@@ -630,6 +630,20 @@ test('creates userfields through Grocy objects API', async () => {
   assert.equal(requestOptions.body, JSON.stringify(payload));
 });
 
+test('updates and deletes userfields through Grocy objects API', async () => {
+  const requests = [];
+  const client = new GrocyClient({
+    baseUrl: 'http://grocy', apiKey: 'secret-key',
+    fetchImpl: async (url, options) => { requests.push({ url, options }); return { ok: true, text: async () => '' }; },
+  });
+  await client.updateUserfield(14, { caption: 'Cooking time' });
+  await client.deleteUserfield(14);
+  assert.equal(requests[0].url, 'http://grocy/api/objects/userfields/14');
+  assert.equal(requests[0].options.method, 'PUT');
+  assert.equal(requests[1].url, 'http://grocy/api/objects/userfields/14');
+  assert.equal(requests[1].options.method, 'DELETE');
+});
+
 test('redacts API key from Grocy API error body', async () => {
   const client = new GrocyClient({
     baseUrl: 'http://grocy',

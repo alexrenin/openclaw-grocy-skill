@@ -199,6 +199,12 @@ test('allows userfield command options', () => {
     config: 'one\nper\nline',
     'default-value': '30 минут',
   }));
+  assert.doesNotThrow(() => validateOptions('userfields-update', {
+    entity: 'recipes', field: 'cook_time', caption: 'Cooking time',
+  }));
+  assert.doesNotThrow(() => validateOptions('userfields-delete', {
+    'userfield-id': '14', 'confirm-field-name': 'cook_time', 'delete-values': 'true',
+  }));
   assert.doesNotThrow(() => validateOptions('userfields-get', {
     entity: 'recipes',
     'object-id': '42',

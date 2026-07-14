@@ -14,7 +14,7 @@ The initial read commands remain read-only.
 
 The skill may read Grocy system info, products, product locations, quantity units, shopping list items, recipes, custom fields, and stock.
 
-Write commands include `product-create`, `product-update`, `product-delete`, `unit-create`, `unit-update`, `unit-delete`, `recipe-create`, `recipe-ingredient-add`, `recipe-ingredient-update`, `userfields-create`, `userfields-set`, `stock-add`, and `stock-transaction-undo`. Run them only after explicit user confirmation for that specific data manipulation. Keep write commands separate from read commands, clearly documented, and covered by tests.
+Write commands include `product-create`, `product-update`, `product-delete`, `unit-create`, `unit-update`, `unit-delete`, `recipe-create`, `recipe-ingredient-add`, `recipe-ingredient-update`, `userfields-create`, `userfields-update`, `userfields-delete`, `userfields-set`, `stock-add`, and `stock-transaction-undo`. Run them only after explicit user confirmation for that specific data manipulation. Keep write commands separate from read commands, clearly documented, and covered by tests.
 
 ## Project tracking
 
@@ -109,6 +109,8 @@ openclaw-grocy-skill/
 |       |-- products.js
 |       |-- userfields.js
 |       |-- userfields-create.js
+|       |-- userfields-update.js
+|       |-- userfields-delete.js
 |       |-- userfields-get.js
 |       |-- userfields-set.js
 |       |-- stock-add.js
@@ -142,6 +144,8 @@ node bin/grocy-openclaw.js recipe-ingredient-add --recipe "Блины" --product
 node bin/grocy-openclaw.js recipe-ingredient-update --recipe "Блины" --product "Масло подсолнечное" --amount 0.03 --unit "л" --format json
 node bin/grocy-openclaw.js userfields --entity recipes --format table
 node bin/grocy-openclaw.js userfields-create --entity recipes --caption "Время готовки" --type text-single-line --format json
+node bin/grocy-openclaw.js userfields-update --entity recipes --field cook_time --caption "Время готовки, мин" --format json
+node bin/grocy-openclaw.js userfields-delete --userfield-id 14 --confirm-field-name cook_time --format json
 node bin/grocy-openclaw.js userfields-get --entity recipes --object-id 10 --format json
 node bin/grocy-openclaw.js userfields-set --entity recipes --object-name "Быстрые блины" --values '{"Уровень сложности":"легкий","Время готовки":"10 минут"}' --format json
 node bin/grocy-openclaw.js shopping-list --format text
@@ -211,6 +215,8 @@ POST /api/objects/quantity_unit_conversions
 POST /api/objects/recipes
 POST /api/objects/recipes_pos
 POST /api/objects/userfields
+PUT /api/objects/userfields/{objectId}
+DELETE /api/objects/userfields/{objectId}
 POST /api/stock/products/{productId}/add
 ```
 
@@ -344,6 +350,9 @@ The skill must tell OpenClaw:
 - to use `userfields` for configured custom fields and `userfields-get` for values on a specific object
 - to use `userfields-set` for setting custom field values on an object
 - to ask for the custom field type before `userfields-create` when the user did not provide it
+- to use `userfields-update` to correct a custom field definition instead of creating a duplicate
+- to use `userfields-delete` only after confirming the technical name and checking whether object values would be lost
+- to require a separate explicit confirmation before `userfields-delete --delete-values true`
 - to avoid direct Grocy API calls for custom field updates
 - to use `stock-add` when the user explicitly asks to add purchased products or stock
 - to avoid parsing receipts inside this skill; OpenClaw may parse receipts, then use the CLI for confirmed stock writes

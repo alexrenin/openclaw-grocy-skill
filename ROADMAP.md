@@ -38,12 +38,15 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
 - `[x]` Delete recipe ingredients with `recipe-ingredient-delete`.
 - `[x]` Create custom fields with `userfields-create`.
 - `[x]` Set custom field values with `userfields-set`.
+- `[x]` Update custom field definitions with `userfields-update` and safely delete them with `userfields-delete`.
 - `[x]` Add purchased product amounts to stock with `stock-add`, including optional latest purchase price and best-before date.
 - `[x]` Undo stock transactions with `stock-transaction-undo`.
 
 ## Current Verification Notes
 
-- `npm.cmd test` passed locally with 191 tests.
+- `npm.cmd test` passed locally with 199 tests.
+- Grocy 4.6.0 OpenAPI was checked before implementing the custom field lifecycle. The commands use generic userfields object `PUT` and `DELETE`.
+- Custom field lifecycle was live-verified against the configured Grocy 4.6.0 instance after explicit confirmations for each write. The test created recipe custom field `OPENCLAW_TEST_20260714_CUSTOM_FIELD_LIFECYCLE` as id 7, updated its caption to `OPENCLAW_TEST_20260714_CUSTOM_FIELD_LIFECYCLE_UPDATED`, inspected 7 recipes and found no populated values, deleted field id 7, and verified the test marker was absent afterward.
 - `recipe-update`, `recipe-delete`, and `recipe-ingredient-delete` are implemented, documented, covered by mocked unit tests, and live-verified against the configured Grocy 4.6.0 instance after explicit user confirmation.
 - Recipe lifecycle live test first exposed a Grocy 4.6.0 mismatch when `recipe-update` sent returned service fields back to `PUT /api/objects/recipes/{objectId}`. The command was corrected to send only supported recipe fields.
 - Recipe lifecycle live test created `OPENCLAW_TEST_20260714_RECIPE_LIFECYCLE` as recipe id 6 with ingredient row ids 17 and 18, updated it to `OPENCLAW_TEST_20260714_RECIPE_LIFECYCLE_UPDATED`, deleted row 17 with `recipe-ingredient-delete`, then deleted recipe id 6 and remaining row 18 with `recipe-delete --delete-ingredients true`.
@@ -76,7 +79,7 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
    - `[x]` Unit lifecycle: `unit-update` and safe `unit-delete`; fallback is to update dependent records first or leave referenced units in Grocy.
    - `[x]` Recipe lifecycle: `recipe-update` and safe `recipe-delete`; `recipe-delete` refuses recipes with ingredient rows unless `--delete-ingredients true` is explicitly confirmed.
    - `[x]` Recipe ingredient lifecycle: `recipe-ingredient-delete` for removing one incorrect ingredient row.
-   - Custom field lifecycle: `userfields-update` and a safe `userfields-delete` or documented alternative.
+   - `[x]` Custom field lifecycle: `userfields-update` and `userfields-delete`; deletion inspects existing values and requires `--delete-values true` when values would be lost.
    - Stock lifecycle: `stock-transaction-undo` is implemented and live-verified during the controlled `stock-add` test.
    - Purpose: OpenClaw must be able to fix or undo a record it just created instead of creating duplicates or leaving bad data behind.
 

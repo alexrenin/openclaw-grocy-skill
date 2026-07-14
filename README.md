@@ -354,6 +354,22 @@ node bin/grocy-openclaw.js userfields-create --entity recipes --caption "Вре�
 
 `--name` is optional. If omitted, the command generates a technical name from the caption, for example `Время готовки` becomes `vremya_gotovki`.
 
+Update a custom field definition:
+
+```bash
+node bin/grocy-openclaw.js userfields-update --entity recipes --field cook_time --caption "Cooking time" --type number-integral --format json
+```
+
+Select the field either by `--userfield-id`, or by `--entity` plus `--field` (technical name or caption). Only explicitly supplied properties are changed.
+
+Safely delete a custom field definition:
+
+```bash
+node bin/grocy-openclaw.js userfields-delete --userfield-id 14 --confirm-field-name cook_time --format json
+```
+
+The delete command inspects values on all objects of the field entity and refuses deletion when populated values exist. Deleting the definition and those values requires a newly confirmed command with `--delete-values true`. `--confirm-field-name` must exactly match the technical name.
+
 Show custom field values for one object:
 
 ```bash
@@ -539,6 +555,8 @@ Automated tests must not depend on or modify the configured Grocy instance.
 - `recipe-ingredient-update` modifies Grocy by updating an existing ingredient row; run it only after the user confirms the correction.
 - `recipe-ingredient-delete` modifies Grocy by deleting one ingredient row; run it only after the user confirms removing that exact row.
 - `userfields-create` modifies Grocy and must only be run after the user confirms creating the custom field.
+- `userfields-update` modifies Grocy and must only be run after the user confirms the exact definition changes.
+- `userfields-delete` modifies Grocy and must only be run after the user confirms the exact field deletion; populated values require separate confirmation with `--delete-values true`.
 - `userfields-set` modifies Grocy and must only be run after the user confirms setting or updating custom field values.
 - `stock-add` modifies Grocy by adding a purchased product amount to stock and may record `price`; run it only after the user confirms adding those purchases or stock entries.
 - `stock-transaction-undo` modifies Grocy by undoing a stock transaction; run it only after the user confirms the exact transaction id to undo.
@@ -560,4 +578,4 @@ Use the version-specific OpenAPI link first, because `master` can describe a dif
 
 See [ROADMAP.md](ROADMAP.md) for the current implementation status, planned commands, and verification notes.
 
-Current status: read commands, product search, product create/update/delete, unit create/update/delete, recipe create/update/delete, recipe ingredient add/update/delete, custom-field creation and value setting, stock add, and stock transaction undo are implemented. Planned work includes custom field lifecycle, stock monitoring, shopping list write commands, recipe read commands, and menu planning helpers.
+Current status: read commands, product search, product create/update/delete, unit create/update/delete, recipe create/update/delete, recipe ingredient add/update/delete, custom-field create/update/delete and value setting, stock add, and stock transaction undo are implemented. Planned work includes stock monitoring, shopping list write commands, recipe read commands, and menu planning helpers.

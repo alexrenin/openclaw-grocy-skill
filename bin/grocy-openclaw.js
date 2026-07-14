@@ -28,8 +28,10 @@ const { runUnitUpdateCommand } = require('../src/commands/unit-update');
 const { runUnitsCommand } = require('../src/commands/units');
 const { runUserfieldsCommand } = require('../src/commands/userfields');
 const { runUserfieldsCreateCommand } = require('../src/commands/userfields-create');
+const { runUserfieldsDeleteCommand } = require('../src/commands/userfields-delete');
 const { runUserfieldsGetCommand } = require('../src/commands/userfields-get');
 const { runUserfieldsSetCommand } = require('../src/commands/userfields-set');
+const { runUserfieldsUpdateCommand } = require('../src/commands/userfields-update');
 
 const HELP = `Usage:
   node bin/grocy-openclaw.js <command> --format <format>
@@ -60,6 +62,10 @@ Commands:
   userfields       Read configured custom fields for an entity
   userfields-create
                    Create a custom field for an entity
+  userfields-update
+                   Update a custom field definition
+  userfields-delete
+                   Safely delete a custom field definition
   userfields-get   Read custom field values of one object
   userfields-set   Set custom field values of one object
   stock            Read Grocy stock
@@ -93,6 +99,10 @@ Formats:
   userfields       table, json
   userfields-create
                    json
+  userfields-update
+                   json
+  userfields-delete
+                   json
   userfields-get   table, json
   userfields-set   json
   stock            table, json
@@ -122,6 +132,8 @@ Examples:
   node bin/grocy-openclaw.js recipe-ingredient-delete --position-id 12 --format json
   node bin/grocy-openclaw.js userfields --entity recipes --format table
   node bin/grocy-openclaw.js userfields-create --entity recipes --caption "Время готовки" --type text-single-line --format json
+  node bin/grocy-openclaw.js userfields-update --entity recipes --field cook_time --caption "Cooking time" --format json
+  node bin/grocy-openclaw.js userfields-delete --userfield-id 14 --confirm-field-name cook_time --format json
   node bin/grocy-openclaw.js userfields-get --entity recipes --object-id 10 --format json
   node bin/grocy-openclaw.js userfields-set --entity recipes --object-name "Pancakes" --values '{"difficulty":"easy","cook_time":"10 minutes"}' --format json
   node bin/grocy-openclaw.js stock --format json
@@ -151,6 +163,8 @@ const COMMAND_FORMATS = new Map([
   ['recipe-ingredient-delete', new Set(['json'])],
   ['userfields', new Set(['table', 'json'])],
   ['userfields-create', new Set(['json'])],
+  ['userfields-update', new Set(['json'])],
+  ['userfields-delete', new Set(['json'])],
   ['userfields-get', new Set(['table', 'json'])],
   ['userfields-set', new Set(['json'])],
   ['stock', new Set(['table', 'json'])],
@@ -294,6 +308,26 @@ const COMMAND_OPTIONS = new Map([
     'sort-number',
     'config',
     'default-value',
+  ])],
+  ['userfields-update', new Set([
+    'userfield-id',
+    'entity',
+    'field',
+    'name',
+    'caption',
+    'type',
+    'show-as-column',
+    'input-required',
+    'sort-number',
+    'config',
+    'default-value',
+  ])],
+  ['userfields-delete', new Set([
+    'userfield-id',
+    'entity',
+    'field',
+    'confirm-field-name',
+    'delete-values',
   ])],
   ['userfields-get', new Set([
     'entity',
@@ -455,6 +489,12 @@ async function main(argv, env = process.env) {
       break;
     case 'userfields-create':
       output = await runUserfieldsCreateCommand({ client, format, options });
+      break;
+    case 'userfields-update':
+      output = await runUserfieldsUpdateCommand({ client, format, options });
+      break;
+    case 'userfields-delete':
+      output = await runUserfieldsDeleteCommand({ client, format, options });
       break;
     case 'userfields-get':
       output = await runUserfieldsGetCommand({ client, format, options });

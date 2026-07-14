@@ -348,6 +348,22 @@ node bin/grocy-openclaw.js userfields-create --entity recipes --caption "Вре�
 
 `--name` is optional. If omitted, the command generates a technical name from the caption, for example `Время готовки` becomes `vremya_gotovki`.
 
+Update a custom field definition:
+
+```bash
+node bin/grocy-openclaw.js userfields-update --entity recipes --field cook_time --caption "Cooking time" --format json
+```
+
+Use either `--userfield-id`, or `--entity` plus `--field` (technical name or caption). Ask for confirmation of the exact changed properties immediately before execution.
+
+Safely delete a custom field definition:
+
+```bash
+node bin/grocy-openclaw.js userfields-delete --userfield-id 14 --confirm-field-name cook_time --format json
+```
+
+The command refuses deletion when objects contain values for the field. Prefer clearing or preserving those values. Use `--delete-values true` only after the user separately confirms losing all populated values, and ask again if the populated-object check changes the planned action.
+
 Show custom field values for one object:
 
 ```bash

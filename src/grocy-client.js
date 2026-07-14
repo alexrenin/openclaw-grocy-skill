@@ -207,6 +207,14 @@ class GrocyClient {
   createUserfield(payload) {
     return this.createObject('userfields', payload);
   }
+
+  updateUserfield(objectId, payload) {
+    return this.updateObject('userfields', objectId, payload);
+  }
+
+  deleteUserfield(objectId) {
+    return this.deleteObject('userfields', objectId);
+  }
 }
 
 function createGrocyClientFromEnv(env) {

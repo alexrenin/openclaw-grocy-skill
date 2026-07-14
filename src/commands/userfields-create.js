@@ -220,6 +220,9 @@ const CYRILLIC_TO_LATIN = new Map(Object.entries({
 module.exports = {
   buildUserfieldPayload,
   formatSupportedTypes,
+  normalizeText,
+  parseOptionalFlag,
+  parseOptionalInteger,
   parseUserfieldName,
   parseUserfieldType,
   runUserfieldsCreateCommand,
