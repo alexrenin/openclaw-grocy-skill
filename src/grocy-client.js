@@ -118,6 +118,10 @@ class GrocyClient {
   createQuantityUnitConversion(payload) {
     return this.createObject('quantity_unit_conversions', payload);
   }
+
+  createUserfield(payload) {
+    return this.createObject('userfields', payload);
+  }
 }
 
 function createGrocyClientFromEnv(env) {

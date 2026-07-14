@@ -13,6 +13,7 @@ const { runSystemInfoCommand } = require('../src/commands/system-info');
 const { runUnitCreateCommand } = require('../src/commands/unit-create');
 const { runUnitsCommand } = require('../src/commands/units');
 const { runUserfieldsCommand } = require('../src/commands/userfields');
+const { runUserfieldsCreateCommand } = require('../src/commands/userfields-create');
 const { runUserfieldsGetCommand } = require('../src/commands/userfields-get');
 
 const HELP = `Usage:
@@ -28,6 +29,8 @@ Commands:
   product-create   Create a Grocy product
   recipe-create    Create a Grocy recipe with ingredients
   userfields       Read configured custom fields for an entity
+  userfields-create
+                   Create a custom field for an entity
   userfields-get   Read custom field values of one object
   stock            Read Grocy stock
 
@@ -41,6 +44,8 @@ Formats:
   product-create   json
   recipe-create    json
   userfields       table, json
+  userfields-create
+                   json
   userfields-get   table, json
   stock            table, json
 
@@ -54,6 +59,7 @@ Examples:
   node bin/grocy-openclaw.js product-create --name "Pickles" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --format json
   node bin/grocy-openclaw.js recipe-create --name "Salad" --ingredients '[{"name":"Pickles","amount":3,"unit":"шт"}]' --format json
   node bin/grocy-openclaw.js userfields --entity recipes --format table
+  node bin/grocy-openclaw.js userfields-create --entity recipes --caption "Время готовки" --type text-single-line --format json
   node bin/grocy-openclaw.js userfields-get --entity recipes --object-id 10 --format json
   node bin/grocy-openclaw.js stock --format json
 `;
@@ -68,6 +74,7 @@ const COMMAND_FORMATS = new Map([
   ['product-create', new Set(['json'])],
   ['recipe-create', new Set(['json'])],
   ['userfields', new Set(['table', 'json'])],
+  ['userfields-create', new Set(['json'])],
   ['userfields-get', new Set(['table', 'json'])],
   ['stock', new Set(['table', 'json'])],
 ]);
@@ -99,6 +106,17 @@ const COMMAND_OPTIONS = new Map([
   ])],
   ['userfields', new Set([
     'entity',
+  ])],
+  ['userfields-create', new Set([
+    'entity',
+    'name',
+    'caption',
+    'type',
+    'show-as-column',
+    'input-required',
+    'sort-number',
+    'config',
+    'default-value',
   ])],
   ['userfields-get', new Set([
     'entity',
@@ -202,6 +220,9 @@ async function main(argv, env = process.env) {
       break;
     case 'userfields':
       output = await runUserfieldsCommand({ client, format, options });
+      break;
+    case 'userfields-create':
+      output = await runUserfieldsCreateCommand({ client, format, options });
       break;
     case 'userfields-get':
       output = await runUserfieldsGetCommand({ client, format, options });

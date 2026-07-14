@@ -175,6 +175,14 @@ Show custom fields configured for an entity:
 node bin/grocy-openclaw.js userfields --entity recipes --format table
 ```
 
+Create a custom field for an entity:
+
+```bash
+node bin/grocy-openclaw.js userfields-create --entity recipes --caption "Время готовки" --type text-single-line --format json
+```
+
+`--name` is optional. If omitted, the command generates a technical name from the caption, for example `Время готовки` becomes `vremya_gotovki`.
+
 Show custom field values for one object:
 
 ```bash
@@ -182,6 +190,10 @@ node bin/grocy-openclaw.js userfields-get --entity recipes --object-id 10 --form
 ```
 
 Use `userfields` when the user asks what custom fields an entity has. Use `userfields-get` when the user asks what custom field values are set on a specific object. For recipes, use `--entity recipes`; for products, use `--entity products`.
+
+Supported custom field types: `text-single-line`, `text-multi-line`, `number-integral`, `number-decimal`, `number-currency`, `date`, `datetime`, `checkbox`, `preset-list`, `preset-checklist`, `link`, `link-with-title`, `file`, and `image`.
+
+If the user asks to create a custom field but does not specify the type, ask a clarification question before running `userfields-create`. For cooking time, ask whether it should be free-form text such as `45 minutes` or a number such as minutes.
 
 Show Grocy stock as a table:
 

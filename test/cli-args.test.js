@@ -84,6 +84,17 @@ test('allows userfield command options', () => {
   assert.doesNotThrow(() => validateOptions('userfields', {
     entity: 'recipes',
   }));
+  assert.doesNotThrow(() => validateOptions('userfields-create', {
+    entity: 'recipes',
+    name: 'cook_time',
+    caption: 'Время готовки',
+    type: 'text-single-line',
+    'show-as-column': 'true',
+    'input-required': 'false',
+    'sort-number': '10',
+    config: 'one\nper\nline',
+    'default-value': '30 минут',
+  }));
   assert.doesNotThrow(() => validateOptions('userfields-get', {
     entity: 'recipes',
     'object-id': '42',

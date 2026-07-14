@@ -14,7 +14,7 @@ The initial read commands remain read-only.
 
 The skill may read Grocy system info, products, quantity units, shopping list items, and stock.
 
-Write commands include `product-create`, `unit-create`, and `recipe-create`. Run them only when the user explicitly asks to modify Grocy. Keep write commands separate from read commands, clearly documented, and covered by tests.
+Write commands include `product-create`, `unit-create`, `recipe-create`, and `userfields-create`. Run them only when the user explicitly asks to modify Grocy. Keep write commands separate from read commands, clearly documented, and covered by tests.
 
 ## Core principles
 
@@ -77,6 +77,7 @@ openclaw-grocy-skill/
 |       |-- shopping-list.js
 |       |-- products.js
 |       |-- userfields.js
+|       |-- userfields-create.js
 |       |-- userfields-get.js
 |       `-- stock.js
 |-- test/
@@ -101,6 +102,7 @@ node bin/grocy-openclaw.js product-create --name "Молоко" --stock-unit "л
 node bin/grocy-openclaw.js product-create --name "Огурцы маринованные" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --consume-unit "шт" --format json
 node bin/grocy-openclaw.js recipe-create --name "Оливье" --base-servings 4 --ingredients '[{"name":"Картофель","amount":3,"unit":"шт"}]' --format json
 node bin/grocy-openclaw.js userfields --entity recipes --format table
+node bin/grocy-openclaw.js userfields-create --entity recipes --caption "Время готовки" --type text-single-line --format json
 node bin/grocy-openclaw.js userfields-get --entity recipes --object-id 10 --format json
 node bin/grocy-openclaw.js shopping-list --format text
 node bin/grocy-openclaw.js shopping-list --format json
@@ -153,6 +155,7 @@ POST /api/objects/quantity_units
 POST /api/objects/quantity_unit_conversions
 POST /api/objects/recipes
 POST /api/objects/recipes_pos
+POST /api/objects/userfields
 ```
 
 Product-specific unit conversion factors must be stored as `quantity_unit_conversions` rows. Do not send `qu_factor_purchase_to_stock` or `qu_factor_consume_to_stock` fields in the `products` payload for Grocy 4.x.
@@ -261,6 +264,7 @@ The skill must tell OpenClaw:
 - to ask for missing recipe ingredient amounts or units before `recipe-create`
 - to let `recipe-create` create missing ingredient products only when the user explicitly asked to create the recipe
 - to use `userfields` for configured custom fields and `userfields-get` for values on a specific object
+- to ask for the custom field type before `userfields-create` when the user did not provide it
 - to return command output clearly to the user
 
 Read commands must remain read-only.

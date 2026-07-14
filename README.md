@@ -178,6 +178,14 @@ Show custom fields configured for an entity:
 node bin/grocy-openclaw.js userfields --entity recipes --format table
 ```
 
+Create a custom field for an entity:
+
+```bash
+node bin/grocy-openclaw.js userfields-create --entity recipes --caption "Время готовки" --type text-single-line --format json
+```
+
+`--name` is optional. If omitted, the command generates a technical name from the caption, for example `Время готовки` becomes `vremya_gotovki`.
+
 Show custom field values for one object:
 
 ```bash
@@ -185,6 +193,10 @@ node bin/grocy-openclaw.js userfields-get --entity recipes --object-id 10 --form
 ```
 
 Use `userfields` to answer which custom fields can exist on an entity. Use `userfields-get` to answer which values are set on a specific object. For recipes, use `--entity recipes`; for products, use `--entity products`.
+
+Supported custom field types: `text-single-line`, `text-multi-line`, `number-integral`, `number-decimal`, `number-currency`, `date`, `datetime`, `checkbox`, `preset-list`, `preset-checklist`, `link`, `link-with-title`, `file`, and `image`.
+
+For chat agents: if the user asks to create a custom field but does not specify the type, ask a clarification question before running `userfields-create`. For example, for cooking time ask whether it should be free-form text such as `45 minutes` or a number such as minutes.
 
 Show stock as a table:
 
@@ -284,6 +296,7 @@ Tests use mocked data and do not require a real Grocy instance.
 - `product-create` modifies Grocy and must only be run when the user explicitly asks to create a product.
 - `unit-create` modifies Grocy and must only be run after existing units were considered and the user confirms that a new unit is needed.
 - `recipe-create` modifies Grocy and may create missing products; run it only when the user explicitly asks to create a recipe.
+- `userfields-create` modifies Grocy and must only be run when the user explicitly asks to create a custom field.
 - Future write commands must be separate from read commands and require explicit user intent.
 
 ## API Documentation Workflow
