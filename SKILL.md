@@ -46,8 +46,6 @@ The `stock-add` command modifies Grocy by adding a purchased product amount to s
 - Do not include `GROCY_API_KEY` in command output, errors, summaries, or logs.
 - Use `GROCY_API_KEY` only through the `GROCY-API-KEY` request header.
 - Treat configured `.env` credentials as the user's real Grocy instance unless told otherwise.
-- Use mocked tests by default. Live write tests against the real Grocy instance require explicit confirmation of the exact test data and cleanup plan.
-- Delete or reverse temporary live test records immediately after verification.
 - Read-only commands do not require confirmation.
 - Do not run any command that changes Grocy data unless the user explicitly confirms that specific action immediately before execution.
 - Treat create, add, update, delete, remove, cancel, mark done, consume stock, stock add, and correction commands as data manipulation commands requiring confirmation.
@@ -73,7 +71,7 @@ GROCY_API_KEY=replace_me
 
 `GROCY_URL` may include or omit a trailing slash.
 
-The configured `.env` can point to real Grocy data. Do not print it or inspect it for display. Temporary test records are allowed only after explicit confirmation and must be cleaned up afterward.
+The configured `.env` can point to real Grocy data. Do not print it or inspect it for display.
 
 ## Execution rule
 
@@ -85,7 +83,7 @@ node bin/grocy-openclaw.js <command> --format <format>
 
 Do not call Grocy directly with inline Python, `fetch`, `curl`, or ad hoc scripts. The CLI is responsible for loading the API key safely, setting the `GROCY-API-KEY` header, formatting output, and keeping errors safe for chat.
 
-For live connectivity checks, prefer read-only commands. Run write commands against the configured Grocy instance only when the user confirms the exact test action and cleanup plan.
+For connectivity checks, prefer read-only commands. Run write commands against the configured Grocy instance only when the user confirms the exact data change.
 
 ## Commands
 
