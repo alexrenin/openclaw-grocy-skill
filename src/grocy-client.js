@@ -68,6 +68,10 @@ class GrocyClient {
     return this.request(`/api/objects/${encodeURIComponent(entity)}`);
   }
 
+  getObject(entity, objectId) {
+    return this.request(`/api/objects/${encodeURIComponent(entity)}/${encodeURIComponent(objectId)}`);
+  }
+
   getLocations() {
     return this.request('/api/objects/locations');
   }
@@ -138,8 +142,22 @@ class GrocyClient {
     });
   }
 
+  deleteObject(entity, objectId) {
+    return this.request(`/api/objects/${entity}/${encodeURIComponent(objectId)}`, {
+      method: 'DELETE',
+    });
+  }
+
   createProduct(payload) {
     return this.createObject('products', payload);
+  }
+
+  updateProduct(objectId, payload) {
+    return this.updateObject('products', objectId, payload);
+  }
+
+  deleteProduct(objectId) {
+    return this.deleteObject('products', objectId);
   }
 
   createRecipe(payload) {
@@ -160,6 +178,10 @@ class GrocyClient {
 
   createQuantityUnitConversion(payload) {
     return this.createObject('quantity_unit_conversions', payload);
+  }
+
+  updateQuantityUnitConversion(objectId, payload) {
+    return this.updateObject('quantity_unit_conversions', objectId, payload);
   }
 
   createUserfield(payload) {

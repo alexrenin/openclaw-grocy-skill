@@ -72,6 +72,32 @@ test('allows product-create conversion factor options', () => {
   }));
 });
 
+test('allows product lifecycle options', () => {
+  assert.doesNotThrow(() => validateOptions('product-update', {
+    product: 'Milk',
+    name: 'Milk 2.5%',
+    description: '',
+    active: 'false',
+    location: 'Fridge',
+    'stock-unit': 'л',
+    'purchase-unit': 'банка',
+    'purchase-to-stock-factor': '1',
+    'consume-unit': 'мл',
+    'consume-to-stock-factor': '0.001',
+  }));
+  assert.doesNotThrow(() => validateOptions('product-update', {
+    'product-id': '42',
+    'location-id': '2',
+    'stock-unit-id': '3',
+    'purchase-unit-id': '3',
+    'consume-unit-id': '3',
+  }));
+  assert.doesNotThrow(() => validateOptions('product-delete', {
+    'product-id': '42',
+    'confirm-product-name': 'Milk',
+  }));
+});
+
 test('allows api-docs without command options', () => {
   assert.doesNotThrow(() => validateOptions('api-docs', {}));
 });

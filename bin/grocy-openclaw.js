@@ -7,7 +7,9 @@ const { loadEnvWithDotEnvFallback } = require('../src/env');
 const { runApiDocsCommand } = require('../src/commands/api-docs');
 const { runLocationsCommand } = require('../src/commands/locations');
 const { runProductCreateCommand } = require('../src/commands/product-create');
+const { runProductDeleteCommand } = require('../src/commands/product-delete');
 const { runProductSearchCommand } = require('../src/commands/product-search');
+const { runProductUpdateCommand } = require('../src/commands/product-update');
 const { runProductsCommand } = require('../src/commands/products');
 const { runRecipeCreateCommand } = require('../src/commands/recipe-create');
 const { runRecipeIngredientAddCommand } = require('../src/commands/recipe-ingredient-add');
@@ -37,6 +39,8 @@ Commands:
   products         Read Grocy products
   product-search   Search Grocy products by name
   product-create   Create a Grocy product
+  product-update   Update a Grocy product
+  product-delete   Safely delete a Grocy product when unused
   recipe-create    Create a Grocy recipe with ingredients
   recipe-ingredient-add
                    Add an ingredient to an existing Grocy recipe
@@ -62,6 +66,8 @@ Formats:
   products         table, json
   product-search   table, json
   product-create   json
+  product-update   json
+  product-delete   json
   recipe-create    json
   recipe-ingredient-add
                    json
@@ -87,6 +93,8 @@ Examples:
   node bin/grocy-openclaw.js products --format table
   node bin/grocy-openclaw.js product-search --name "Milk" --format table
   node bin/grocy-openclaw.js product-create --name "Pickles" --location "Pantry" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --format json
+  node bin/grocy-openclaw.js product-update --product-id 42 --name "Milk 2.5%" --active true --format json
+  node bin/grocy-openclaw.js product-delete --product-id 42 --confirm-product-name "Milk 2.5%" --format json
   node bin/grocy-openclaw.js recipe-create --name "Salad" --ingredients '[{"name":"Pickles","amount":3,"unit":"шт"}]' --format json
   node bin/grocy-openclaw.js recipe-ingredient-add --recipe "Pancakes" --product "Sunflower oil" --amount 2 --unit "tbsp" --format json
   node bin/grocy-openclaw.js recipe-ingredient-update --recipe "Pancakes" --product "Sunflower oil" --amount 0.03 --unit "л" --format json
@@ -109,6 +117,8 @@ const COMMAND_FORMATS = new Map([
   ['products', new Set(['table', 'json'])],
   ['product-search', new Set(['table', 'json'])],
   ['product-create', new Set(['json'])],
+  ['product-update', new Set(['json'])],
+  ['product-delete', new Set(['json'])],
   ['recipe-create', new Set(['json'])],
   ['recipe-ingredient-add', new Set(['json'])],
   ['recipe-ingredient-update', new Set(['json'])],
@@ -138,6 +148,27 @@ const COMMAND_OPTIONS = new Map([
     'consume-unit',
     'consume-unit-id',
     'consume-to-stock-factor',
+  ])],
+  ['product-update', new Set([
+    'product',
+    'product-id',
+    'name',
+    'description',
+    'active',
+    'location',
+    'location-id',
+    'stock-unit',
+    'stock-unit-id',
+    'purchase-unit',
+    'purchase-unit-id',
+    'purchase-to-stock-factor',
+    'consume-unit',
+    'consume-unit-id',
+    'consume-to-stock-factor',
+  ])],
+  ['product-delete', new Set([
+    'product-id',
+    'confirm-product-name',
   ])],
   ['unit-create', new Set([
     'name',
@@ -328,6 +359,12 @@ async function main(argv, env = process.env) {
       break;
     case 'product-create':
       output = await runProductCreateCommand({ client, format, options });
+      break;
+    case 'product-update':
+      output = await runProductUpdateCommand({ client, format, options });
+      break;
+    case 'product-delete':
+      output = await runProductDeleteCommand({ client, format, options });
       break;
     case 'recipe-create':
       output = await runRecipeCreateCommand({ client, format, options });

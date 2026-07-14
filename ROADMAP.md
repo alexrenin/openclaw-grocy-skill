@@ -20,6 +20,8 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
 - `[x]` Read quantity units with `units`.
 - `[x]` Read products with `products`.
 - `[x]` Search products by name with `product-search`.
+- `[x]` Update products with `product-update`, including product-specific unit conversion upsert.
+- `[x]` Safely delete unused products with `product-delete`, with documented deactivation fallback.
 - `[x]` Read shopping list with `shopping-list`.
 - `[x]` Read stock with `stock`.
 - `[x]` Read configured custom fields with `userfields`.
@@ -36,8 +38,11 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
 
 ## Current Verification Notes
 
-- `npm.cmd test` passed locally with 141 tests.
+- `npm.cmd test` passed locally with 157 tests.
 - `api-docs --format text` passed locally using the `.env` fallback and reported installed Grocy version 4.6.0.
+- `product-update` and `product-delete` are implemented locally, covered by mocked unit tests, and live-verified against the configured Grocy 4.6.0 instance after explicit user confirmation.
+- Product lifecycle live test created `OPENCLAW_TEST_20260714_PRODUCT_LIFECYCLE` as product id 15, updated it to `OPENCLAW_TEST_20260714_PRODUCT_LIFECYCLE_UPDATED` with `active: false`, deleted it with `product-delete`, and verified both test names no longer appear in `product-search`.
+- Grocy 4.6.0 OpenAPI was checked before implementing product lifecycle commands. Generic object endpoints support `PUT /objects/{entity}/{objectId}` and `DELETE /objects/{entity}/{objectId}`.
 - `product-search` is implemented locally and covered by mocked unit tests.
 - `stock-add` is covered by mocked unit tests.
 - `stock-add` endpoint and payload were checked against the installed Grocy 4.6.0 OpenAPI. The endpoint is `POST /stock/products/{productId}/add`; supported request fields include `amount`, `best_before_date`, `transaction_type`, and `price`.
@@ -56,7 +61,7 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
    - `[x]` Adjust the payload to match the installed Grocy version.
 
 2. `[ ]` Add correction and removal workflows for created records.
-   - Product lifecycle: `product-update` and a safe `product-delete` or documented alternative.
+   - `[x]` Product lifecycle: `product-update` and safe `product-delete`; fallback is `product-update --active false` when deletion is unsafe or rejected.
    - Unit lifecycle: `unit-update` and a safe `unit-delete` or documented alternative.
    - Recipe lifecycle: `recipe-update` and a safe `recipe-delete` or documented alternative.
    - Recipe ingredient lifecycle: `recipe-ingredient-delete` for removing one incorrect ingredient row.

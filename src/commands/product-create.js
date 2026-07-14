@@ -458,7 +458,12 @@ module.exports = {
   formatLocationChoices,
   formatUnitChoices,
   formatMissingFactorError,
+  normalizeText,
   parsePositiveNumber,
+  parsePositiveInteger,
+  resolveFactorOption,
+  resolveLocationOption,
+  resolveUnitOption,
   compactUnitTerm,
   runProductCreateCommand,
 };

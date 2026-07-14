@@ -172,6 +172,41 @@ Implementation note: Grocy 4.x stores product-specific unit conversion factors i
 
 For chat agents: if the user asks to create a product but does not specify the product location, inspect locations with `locations --format table` and ask which existing location to use. If the user asks to create a product with different units but does not give the conversion factor, ask before running `product-create`. For example, if the product is stored as `шт` and purchased as `банка`, ask how many pieces are in one jar.
 
+Update an existing Grocy product:
+
+```bash
+node bin/grocy-openclaw.js product-update --product "Milk" --name "Milk 2.5%" --location "Fridge" --active true --format json
+node bin/grocy-openclaw.js product-update --product-id 42 --purchase-unit "bottle" --purchase-to-stock-factor 1 --format json
+```
+
+`product-update` modifies Grocy. Use it only after the user confirms the exact product and fields to change. It preserves existing product fields that are not mentioned. It can update name, description, active flag, location, stock unit, purchase unit, consume unit, and product-specific conversion factors.
+
+Supported `product-update` options:
+
+- `--product` or `--product-id`: required product selector; prefer `--product` for chat when the name is unique
+- `--name`: optional new product name
+- `--description`: optional product description; pass an empty value to clear it
+- `--active`: optional `true` or `false`; use `false` as the documented fallback when deletion is not safe
+- `--location` or `--location-id`: optional new product location
+- `--stock-unit` or `--stock-unit-id`: optional new stock unit
+- `--purchase-unit` or `--purchase-unit-id`: optional new purchase unit
+- `--purchase-to-stock-factor`: required when the new purchase unit differs from stock unit and no matching conversion exists
+- `--consume-unit` or `--consume-unit-id`: optional new consume unit
+- `--consume-to-stock-factor`: required when the new consume unit differs from stock unit and no matching conversion exists
+- `--format json`: required output format
+
+Safely delete an unused Grocy product:
+
+```bash
+node bin/grocy-openclaw.js product-delete --product-id 42 --confirm-product-name "Milk 2.5%" --format json
+```
+
+`product-delete` modifies Grocy and is intentionally conservative. It only accepts `--product-id`, optionally checks `--confirm-product-name`, and refuses to delete when the product has non-zero stock, recipe ingredient rows, or shopping list rows. If deletion is refused or Grocy rejects it because of other references, ask for confirmation to deactivate the product instead:
+
+```bash
+node bin/grocy-openclaw.js product-update --product-id 42 --active false --format json
+```
+
 Create a recipe with ingredients:
 
 ```bash
@@ -436,6 +471,8 @@ Automated tests must not depend on or modify the configured Grocy instance.
 - Do not run write commands as smoke tests against the real Grocy instance unless the user confirms the exact write test and cleanup plan.
 - Temporary live test records must use obvious unique names, should capture created ids, and must be deleted or reversed immediately after the test.
 - `product-create` modifies Grocy and must only be run after the user explicitly confirms creating the product.
+- `product-update` modifies Grocy and must only be run after the user explicitly confirms the exact product correction.
+- `product-delete` modifies Grocy and must only be run after especially clear confirmation of the exact product id; prefer `product-update --active false` when deletion is unsafe.
 - `unit-create` modifies Grocy and must only be run after existing units were considered and the user confirms that a new unit should be created.
 - `recipe-create` modifies Grocy and may create missing products only when `--create-missing-products true` is used after explicit confirmation; run it only after the user confirms creating the recipe.
 - `recipe-ingredient-add` modifies Grocy by adding an ingredient row to an existing recipe; run it only after the user confirms adding that ingredient.
@@ -462,4 +499,4 @@ Use the version-specific OpenAPI link first, because `master` can describe a dif
 
 See [ROADMAP.md](ROADMAP.md) for the current implementation status, planned commands, and verification notes.
 
-Current status: read commands, product search, product/unit/recipe/custom-field creation, recipe ingredient add/update, stock add, and stock transaction undo are implemented. Planned work includes broader correction/removal workflows, stock monitoring, shopping list write commands, recipe read commands, and menu planning helpers.
+Current status: read commands, product search, product create/update/delete, unit/recipe/custom-field creation, recipe ingredient add/update, stock add, and stock transaction undo are implemented. Planned work includes broader correction/removal workflows, stock monitoring, shopping list write commands, recipe read commands, and menu planning helpers.

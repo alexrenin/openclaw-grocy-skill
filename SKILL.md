@@ -30,6 +30,10 @@ You may read Grocy products, stock, and shopping list data.
 
 The `product-create` command modifies Grocy by creating a product object. Run it only after the user explicitly confirms creating that product.
 
+The `product-update` command modifies Grocy by updating a product object or product-specific unit conversion. Run it only after the user explicitly confirms the exact product and fields to change.
+
+The `product-delete` command modifies Grocy by deleting an unused product object. Run it only after especially clear confirmation of the exact product id. Prefer deactivating with `product-update --active false` when deletion is not safe.
+
 The `recipe-create` command modifies Grocy by creating a recipe and recipe ingredient rows. It may create missing ingredient products only when `--create-missing-products true` is used after explicit user confirmation. Run it only after the user confirms creating that recipe.
 
 The `recipe-ingredient-add` command modifies Grocy by adding one ingredient row to an existing recipe. Run it only after the user confirms adding that ingredient row.
@@ -210,6 +214,29 @@ node bin/grocy-openclaw.js product-create --name "Картофель" --location
 ```
 
 `--purchase-unit` and `--consume-unit` are optional and default to the stock unit.
+
+Update an existing Grocy product:
+
+```bash
+node bin/grocy-openclaw.js product-update --product "Milk" --name "Milk 2.5%" --location "Fridge" --active true --format json
+node bin/grocy-openclaw.js product-update --product-id 42 --purchase-unit "bottle" --purchase-to-stock-factor 1 --format json
+```
+
+Use `product-update` when the user asks to correct a product name, description, active flag, location, stock unit, purchase unit, consume unit, or conversion factor. Do not create a duplicate product to fix a wrong product. Confirm the exact target product and payload before running it.
+
+For `product-update`, use `--product` or `--product-id` to select the product. Optional update fields are `--name`, `--description`, `--active`, `--location` / `--location-id`, `--stock-unit` / `--stock-unit-id`, `--purchase-unit` / `--purchase-unit-id`, `--consume-unit` / `--consume-unit-id`, `--purchase-to-stock-factor`, and `--consume-to-stock-factor`. If a changed purchase or consume unit differs from stock unit and no matching conversion exists, ask for the conversion factor before running the command.
+
+Delete an unused Grocy product:
+
+```bash
+node bin/grocy-openclaw.js product-delete --product-id 42 --confirm-product-name "Milk 2.5%" --format json
+```
+
+Use `product-delete` only for a product that should be removed and only after especially clear confirmation of the exact product id. It refuses deletion when the product has non-zero stock, recipe ingredient rows, or shopping list rows. If deletion is refused or Grocy rejects it because of other references, ask for confirmation to deactivate the product instead:
+
+```bash
+node bin/grocy-openclaw.js product-update --product-id 42 --active false --format json
+```
 
 Create a recipe with ingredients:
 

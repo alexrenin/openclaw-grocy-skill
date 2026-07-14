@@ -63,6 +63,81 @@ test('posts JSON object payloads', async () => {
   assert.equal(requestOptions.body, '{"name":"Молоко","qu_id_stock":1}');
 });
 
+test('reads a single object through Grocy objects API', async () => {
+  let requestUrl;
+
+  const client = new GrocyClient({
+    baseUrl: 'http://grocy',
+    apiKey: 'secret-key',
+    fetchImpl: async (url) => {
+      requestUrl = url;
+
+      return {
+        ok: true,
+        text: async () => '{"id":42,"name":"Milk"}',
+      };
+    },
+  });
+
+  const data = await client.getObject('products', 42);
+
+  assert.deepEqual(data, { id: 42, name: 'Milk' });
+  assert.equal(requestUrl, 'http://grocy/api/objects/products/42');
+});
+
+test('updates products through Grocy objects API', async () => {
+  let requestUrl;
+  let requestOptions;
+
+  const client = new GrocyClient({
+    baseUrl: 'http://grocy',
+    apiKey: 'secret-key',
+    fetchImpl: async (url, options) => {
+      requestUrl = url;
+      requestOptions = options;
+
+      return {
+        ok: true,
+        text: async () => '',
+      };
+    },
+  });
+
+  const payload = { id: 42, name: 'Milk 2.5%' };
+  const data = await client.updateProduct(42, payload);
+
+  assert.equal(data, null);
+  assert.equal(requestUrl, 'http://grocy/api/objects/products/42');
+  assert.equal(requestOptions.method, 'PUT');
+  assert.equal(requestOptions.headers['Content-Type'], 'application/json');
+  assert.equal(requestOptions.body, JSON.stringify(payload));
+});
+
+test('deletes products through Grocy objects API', async () => {
+  let requestUrl;
+  let requestOptions;
+
+  const client = new GrocyClient({
+    baseUrl: 'http://grocy',
+    apiKey: 'secret-key',
+    fetchImpl: async (url, options) => {
+      requestUrl = url;
+      requestOptions = options;
+
+      return {
+        ok: true,
+        text: async () => '',
+      };
+    },
+  });
+
+  const data = await client.deleteProduct(42);
+
+  assert.equal(data, null);
+  assert.equal(requestUrl, 'http://grocy/api/objects/products/42');
+  assert.equal(requestOptions.method, 'DELETE');
+});
+
 test('reads locations through Grocy objects API', async () => {
   let requestUrl;
 
