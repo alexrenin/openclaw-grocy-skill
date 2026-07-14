@@ -3,9 +3,11 @@
 'use strict';
 
 const { createGrocyClientFromEnv } = require('../src/grocy-client');
+const { loadEnvWithDotEnvFallback } = require('../src/env');
 const { runApiDocsCommand } = require('../src/commands/api-docs');
 const { runLocationsCommand } = require('../src/commands/locations');
 const { runProductCreateCommand } = require('../src/commands/product-create');
+const { runProductSearchCommand } = require('../src/commands/product-search');
 const { runProductsCommand } = require('../src/commands/products');
 const { runRecipeCreateCommand } = require('../src/commands/recipe-create');
 const { runRecipeIngredientAddCommand } = require('../src/commands/recipe-ingredient-add');
@@ -33,6 +35,7 @@ Commands:
   unit-create      Create a Grocy quantity unit
   shopping-list    Read Grocy shopping list
   products         Read Grocy products
+  product-search   Search Grocy products by name
   product-create   Create a Grocy product
   recipe-create    Create a Grocy recipe with ingredients
   recipe-ingredient-add
@@ -57,6 +60,7 @@ Formats:
   unit-create      json
   shopping-list    text, json
   products         table, json
+  product-search   table, json
   product-create   json
   recipe-create    json
   recipe-ingredient-add
@@ -81,6 +85,7 @@ Examples:
   node bin/grocy-openclaw.js unit-create --name "банка" --name-plural "банки" --format json
   node bin/grocy-openclaw.js shopping-list --format text
   node bin/grocy-openclaw.js products --format table
+  node bin/grocy-openclaw.js product-search --name "Milk" --format table
   node bin/grocy-openclaw.js product-create --name "Pickles" --location "Pantry" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --format json
   node bin/grocy-openclaw.js recipe-create --name "Salad" --ingredients '[{"name":"Pickles","amount":3,"unit":"шт"}]' --format json
   node bin/grocy-openclaw.js recipe-ingredient-add --recipe "Pancakes" --product "Sunflower oil" --amount 2 --unit "tbsp" --format json
@@ -102,6 +107,7 @@ const COMMAND_FORMATS = new Map([
   ['unit-create', new Set(['json'])],
   ['shopping-list', new Set(['text', 'json'])],
   ['products', new Set(['table', 'json'])],
+  ['product-search', new Set(['table', 'json'])],
   ['product-create', new Set(['json'])],
   ['recipe-create', new Set(['json'])],
   ['recipe-ingredient-add', new Set(['json'])],
@@ -116,6 +122,9 @@ const COMMAND_FORMATS = new Map([
 ]);
 
 const COMMAND_OPTIONS = new Map([
+  ['product-search', new Set([
+    'name',
+  ])],
   ['product-create', new Set([
     'name',
     'description',
@@ -289,7 +298,7 @@ async function main(argv, env = process.env) {
 
   validateOptions(command, options);
 
-  const client = createGrocyClientFromEnv(env);
+  const client = createGrocyClientFromEnv(loadEnvWithDotEnvFallback(env));
   let output;
 
   switch (command) {
@@ -313,6 +322,9 @@ async function main(argv, env = process.env) {
       break;
     case 'products':
       output = await runProductsCommand({ client, format });
+      break;
+    case 'product-search':
+      output = await runProductSearchCommand({ client, format, options });
       break;
     case 'product-create':
       output = await runProductCreateCommand({ client, format, options });

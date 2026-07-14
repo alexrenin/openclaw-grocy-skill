@@ -12,12 +12,14 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
 ## Implemented
 
 - `[x]` CLI foundation with `--help`, command validation, safe error output, and environment-based configuration.
+- `[x]` CLI `.env` fallback loading when required environment variables are not already set.
 - `[x]` Grocy client using `GROCY_URL` and `GROCY_API_KEY` through the `GROCY-API-KEY` header.
 - `[x]` Read system info with `system-info`.
 - `[x]` Read API documentation links with `api-docs`.
 - `[x]` Read locations with `locations`.
 - `[x]` Read quantity units with `units`.
 - `[x]` Read products with `products`.
+- `[x]` Search products by name with `product-search`.
 - `[x]` Read shopping list with `shopping-list`.
 - `[x]` Read stock with `stock`.
 - `[x]` Read configured custom fields with `userfields`.
@@ -34,7 +36,9 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
 
 ## Current Verification Notes
 
-- `npm.cmd test` passed locally with 129 tests.
+- `npm.cmd test` passed locally with 141 tests.
+- `api-docs --format text` passed locally using the `.env` fallback and reported installed Grocy version 4.6.0.
+- `product-search` is implemented locally and covered by mocked unit tests.
 - `stock-add` is covered by mocked unit tests.
 - `stock-add` endpoint and payload were checked against the installed Grocy 4.6.0 OpenAPI. The endpoint is `POST /stock/products/{productId}/add`; supported request fields include `amount`, `best_before_date`, `transaction_type`, and `price`.
 - Grocy 4.6.0 also supports `POST /stock/transactions/{transactionId}/undo`; `stock-transaction-undo` is implemented and live-verified as the precise correction path for a mistaken `stock-add`.
@@ -60,9 +64,9 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
    - Stock lifecycle: `stock-transaction-undo` is implemented and live-verified during the controlled `stock-add` test.
    - Purpose: OpenClaw must be able to fix or undo a record it just created instead of creating duplicates or leaving bad data behind.
 
-3. `[ ]` Add product search.
-   - Command: `product-search --name "молоко" --format table`
-   - Command: `product-search --name "молоко" --format json`
+3. `[x]` Add product search.
+   - `[x]` Command: `product-search --name "молоко" --format table`
+   - `[x]` Command: `product-search --name "молоко" --format json`
    - Purpose: support receipt-derived names and natural chat queries without forcing exact product names.
 
 4. `[ ]` Add stock monitoring.

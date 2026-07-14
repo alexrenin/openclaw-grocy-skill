@@ -47,7 +47,9 @@ Security rules:
 
 ## Local CLI Usage
 
-Load environment variables before running commands:
+The CLI reads `GROCY_URL` and `GROCY_API_KEY` from the process environment. If either variable is missing, it falls back to a local `.env` file in the current working directory. Existing process environment values take priority over `.env`.
+
+You may still load `.env` manually before running commands:
 
 ```bash
 set -a
@@ -114,6 +116,15 @@ Show products as JSON:
 ```bash
 node bin/grocy-openclaw.js products --format json
 ```
+
+Search existing products by name:
+
+```bash
+node bin/grocy-openclaw.js product-search --name "молоко" --format table
+node bin/grocy-openclaw.js product-search --name "молоко" --format json
+```
+
+`product-search` is read-only. Use it before product-related writes when a receipt item or chat query may not match a Grocy product name exactly. Results include product id, name, description, stock unit, purchase unit, and a match score.
 
 Create a new Grocy product object:
 
@@ -313,7 +324,7 @@ Supported `stock-add` options:
 - `--transaction-type`: optional Grocy stock transaction type, defaults to `purchase`; allowed values are `purchase`, `consume`, `inventory-correction`, and `product-opened`
 - `--format json`: required output format
 
-For chat agents: if the user asks to add purchases to stock and the product is not found, inspect products with `products --format table` and ask which existing product to use. Do not create a missing product unless the user explicitly asks for product creation. If the supplied unit differs from the product stock unit, ask the user to convert the amount to the stock unit before running `stock-add`.
+For chat agents: if the user asks to add purchases to stock and the product is not found, search existing products first with `product-search --name "<name>" --format table`; if the result is still ambiguous, ask which existing product to use. Do not create a missing product unless the user explicitly asks for product creation. If the supplied unit differs from the product stock unit, ask the user to convert the amount to the stock unit before running `stock-add`.
 
 Undo a stock transaction created by `stock-add`:
 
@@ -450,3 +461,5 @@ Use the version-specific OpenAPI link first, because `master` can describe a dif
 ## Roadmap
 
 See [ROADMAP.md](ROADMAP.md) for the current implementation status, planned commands, and verification notes.
+
+Current status: read commands, product search, product/unit/recipe/custom-field creation, recipe ingredient add/update, stock add, and stock transaction undo are implemented. Planned work includes broader correction/removal workflows, stock monitoring, shopping list write commands, recipe read commands, and menu planning helpers.

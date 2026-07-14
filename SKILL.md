@@ -56,7 +56,9 @@ The `stock-transaction-undo` command modifies Grocy by undoing one stock transac
 
 ## Environment
 
-Before running commands, load environment variables from the deployed skill directory:
+Run commands from the deployed skill directory. The CLI reads `GROCY_URL` and `GROCY_API_KEY` from the process environment; if either variable is missing, it falls back to a local `.env` file in the current working directory. Existing process environment values take priority over `.env`.
+
+Manual loading is also supported when needed:
 
 ```bash
 set -a
@@ -142,6 +144,15 @@ Return Grocy products as JSON:
 ```bash
 node bin/grocy-openclaw.js products --format json
 ```
+
+Search existing Grocy products by name:
+
+```bash
+node bin/grocy-openclaw.js product-search --name "молоко" --format table
+node bin/grocy-openclaw.js product-search --name "молоко" --format json
+```
+
+Use `product-search` when a user, receipt parser, or natural-language request gives an inexact product name. It is read-only and does not require confirmation. Prefer this before asking the user to choose an existing product for `stock-add`, recipe ingredient commands, or product correction workflows.
 
 Create a new Grocy product object:
 
@@ -312,10 +323,10 @@ node bin/grocy-openclaw.js stock-transaction-undo --transaction-id "abc123" --fo
 
 Use `stock-transaction-undo` to reverse a mistaken `stock-add` when the transaction id is known. Do not guess transaction ids. Ask for confirmation again if the transaction id changes.
 
-If the product is not found, inspect products first with:
+If the product is not found, search existing products first with:
 
 ```bash
-node bin/grocy-openclaw.js products --format table
+node bin/grocy-openclaw.js product-search --name "<name>" --format table
 ```
 
 Ask which existing product to use. Do not create a missing product unless the user explicitly asks for product creation.

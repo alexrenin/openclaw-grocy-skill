@@ -47,6 +47,12 @@ test('rejects unsupported options for a command', () => {
   );
 });
 
+test('allows product-search options', () => {
+  assert.doesNotThrow(() => validateOptions('product-search', {
+    name: 'Молоко',
+  }));
+});
+
 test('allows unit-create options', () => {
   assert.doesNotThrow(() => validateOptions('unit-create', {
     name: 'банка',
