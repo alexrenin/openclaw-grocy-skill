@@ -80,9 +80,12 @@ test('allows recipe-create options', () => {
   }));
 });
 
-test('allows recipe userfield commands options', () => {
-  assert.doesNotThrow(() => validateOptions('recipe-userfields', {}));
-  assert.doesNotThrow(() => validateOptions('recipe-userfields-get', {
-    'recipe-id': '42',
+test('allows userfield command options', () => {
+  assert.doesNotThrow(() => validateOptions('userfields', {
+    entity: 'recipes',
+  }));
+  assert.doesNotThrow(() => validateOptions('userfields-get', {
+    entity: 'recipes',
+    'object-id': '42',
   }));
 });

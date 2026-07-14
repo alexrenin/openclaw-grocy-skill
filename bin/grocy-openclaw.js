@@ -7,13 +7,13 @@ const { runApiDocsCommand } = require('../src/commands/api-docs');
 const { runProductCreateCommand } = require('../src/commands/product-create');
 const { runProductsCommand } = require('../src/commands/products');
 const { runRecipeCreateCommand } = require('../src/commands/recipe-create');
-const { runRecipeUserfieldsCommand } = require('../src/commands/recipe-userfields');
-const { runRecipeUserfieldsGetCommand } = require('../src/commands/recipe-userfields-get');
 const { runShoppingListCommand } = require('../src/commands/shopping-list');
 const { runStockCommand } = require('../src/commands/stock');
 const { runSystemInfoCommand } = require('../src/commands/system-info');
 const { runUnitCreateCommand } = require('../src/commands/unit-create');
 const { runUnitsCommand } = require('../src/commands/units');
+const { runUserfieldsCommand } = require('../src/commands/userfields');
+const { runUserfieldsGetCommand } = require('../src/commands/userfields-get');
 
 const HELP = `Usage:
   node bin/grocy-openclaw.js <command> --format <format>
@@ -27,10 +27,8 @@ Commands:
   products         Read Grocy products
   product-create   Create a Grocy product
   recipe-create    Create a Grocy recipe with ingredients
-  recipe-userfields
-                   Read configured custom fields for recipes
-  recipe-userfields-get
-                   Read custom field values of one recipe
+  userfields       Read configured custom fields for an entity
+  userfields-get   Read custom field values of one object
   stock            Read Grocy stock
 
 Formats:
@@ -42,10 +40,8 @@ Formats:
   products         table, json
   product-create   json
   recipe-create    json
-  recipe-userfields
-                   table, json
-  recipe-userfields-get
-                   table, json
+  userfields       table, json
+  userfields-get   table, json
   stock            table, json
 
 Examples:
@@ -57,8 +53,8 @@ Examples:
   node bin/grocy-openclaw.js products --format table
   node bin/grocy-openclaw.js product-create --name "Pickles" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --format json
   node bin/grocy-openclaw.js recipe-create --name "Salad" --ingredients '[{"name":"Pickles","amount":3,"unit":"шт"}]' --format json
-  node bin/grocy-openclaw.js recipe-userfields --format table
-  node bin/grocy-openclaw.js recipe-userfields-get --recipe-id 10 --format json
+  node bin/grocy-openclaw.js userfields --entity recipes --format table
+  node bin/grocy-openclaw.js userfields-get --entity recipes --object-id 10 --format json
   node bin/grocy-openclaw.js stock --format json
 `;
 
@@ -71,8 +67,8 @@ const COMMAND_FORMATS = new Map([
   ['products', new Set(['table', 'json'])],
   ['product-create', new Set(['json'])],
   ['recipe-create', new Set(['json'])],
-  ['recipe-userfields', new Set(['table', 'json'])],
-  ['recipe-userfields-get', new Set(['table', 'json'])],
+  ['userfields', new Set(['table', 'json'])],
+  ['userfields-get', new Set(['table', 'json'])],
   ['stock', new Set(['table', 'json'])],
 ]);
 
@@ -101,8 +97,12 @@ const COMMAND_OPTIONS = new Map([
     'desired-servings',
     'ingredients',
   ])],
-  ['recipe-userfields-get', new Set([
-    'recipe-id',
+  ['userfields', new Set([
+    'entity',
+  ])],
+  ['userfields-get', new Set([
+    'entity',
+    'object-id',
   ])],
 ]);
 
@@ -200,11 +200,11 @@ async function main(argv, env = process.env) {
     case 'recipe-create':
       output = await runRecipeCreateCommand({ client, format, options });
       break;
-    case 'recipe-userfields':
-      output = await runRecipeUserfieldsCommand({ client, format });
+    case 'userfields':
+      output = await runUserfieldsCommand({ client, format, options });
       break;
-    case 'recipe-userfields-get':
-      output = await runRecipeUserfieldsGetCommand({ client, format, options });
+    case 'userfields-get':
+      output = await runUserfieldsGetCommand({ client, format, options });
       break;
     case 'stock':
       output = await runStockCommand({ client, format });

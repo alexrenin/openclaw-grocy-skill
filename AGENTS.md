@@ -74,10 +74,10 @@ openclaw-grocy-skill/
 |       |-- unit-create.js
 |       |-- product-create.js
 |       |-- recipe-create.js
-|       |-- recipe-userfields.js
-|       |-- recipe-userfields-get.js
 |       |-- shopping-list.js
 |       |-- products.js
+|       |-- userfields.js
+|       |-- userfields-get.js
 |       `-- stock.js
 |-- test/
 |   `-- format-shopping-list.test.js
@@ -100,8 +100,8 @@ node bin/grocy-openclaw.js unit-create --name "банка" --name-plural "бан
 node bin/grocy-openclaw.js product-create --name "Молоко" --stock-unit "л" --format json
 node bin/grocy-openclaw.js product-create --name "Огурцы маринованные" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --consume-unit "шт" --format json
 node bin/grocy-openclaw.js recipe-create --name "Оливье" --base-servings 4 --ingredients '[{"name":"Картофель","amount":3,"unit":"шт"}]' --format json
-node bin/grocy-openclaw.js recipe-userfields --format table
-node bin/grocy-openclaw.js recipe-userfields-get --recipe-id 10 --format json
+node bin/grocy-openclaw.js userfields --entity recipes --format table
+node bin/grocy-openclaw.js userfields-get --entity recipes --object-id 10 --format json
 node bin/grocy-openclaw.js shopping-list --format text
 node bin/grocy-openclaw.js shopping-list --format json
 node bin/grocy-openclaw.js products --format table
@@ -139,7 +139,7 @@ GET /api/objects/products
 GET /api/objects/recipes
 GET /api/objects/recipes_pos
 GET /api/objects/userfields
-GET /api/userfields/recipes/{recipeId}
+GET /api/userfields/{entity}/{objectId}
 GET /api/objects/quantity_units
 GET /api/objects/shopping_list
 GET /api/stock
@@ -260,7 +260,7 @@ The skill must tell OpenClaw:
 - to ask a clarification question before `product-create` when a required conversion factor is missing
 - to ask for missing recipe ingredient amounts or units before `recipe-create`
 - to let `recipe-create` create missing ingredient products only when the user explicitly asked to create the recipe
-- to use `recipe-userfields` for configured recipe custom fields and `recipe-userfields-get` for values on a specific recipe
+- to use `userfields` for configured custom fields and `userfields-get` for values on a specific object
 - to return command output clearly to the user
 
 Read commands must remain read-only.

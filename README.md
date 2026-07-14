@@ -172,19 +172,19 @@ If an ingredient product name does not exist, `recipe-create` creates a new prod
 
 For chat agents: if a recipe ingredient unit is unknown, inspect existing units first with `units --format table`. Create a new unit only after the user confirms none of the existing units fit.
 
-Show custom fields configured for recipes:
+Show custom fields configured for an entity:
 
 ```bash
-node bin/grocy-openclaw.js recipe-userfields --format table
+node bin/grocy-openclaw.js userfields --entity recipes --format table
 ```
 
-Show custom field values for one recipe:
+Show custom field values for one object:
 
 ```bash
-node bin/grocy-openclaw.js recipe-userfields-get --recipe-id 10 --format json
+node bin/grocy-openclaw.js userfields-get --entity recipes --object-id 10 --format json
 ```
 
-Use `recipe-userfields` to answer which custom fields can exist on recipes. Use `recipe-userfields-get` to answer which values are set on a specific recipe.
+Use `userfields` to answer which custom fields can exist on an entity. Use `userfields-get` to answer which values are set on a specific object. For recipes, use `--entity recipes`; for products, use `--entity products`.
 
 Show stock as a table:
 

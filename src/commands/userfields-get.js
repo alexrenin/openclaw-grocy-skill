@@ -1,10 +1,12 @@
 'use strict';
 
 const { formatTable } = require('../format-table');
+const { parseEntity } = require('./userfields');
 
-async function runRecipeUserfieldsGetCommand({ client, format, options }) {
-  const recipeId = parsePositiveInteger(options['recipe-id'], '--recipe-id');
-  const values = await client.getObjectUserfields('recipes', recipeId);
+async function runUserfieldsGetCommand({ client, format, options }) {
+  const entity = parseEntity(options.entity);
+  const objectId = parseObjectId(options['object-id']);
+  const values = await client.getObjectUserfields(entity, objectId);
   const rows = normalizeUserfieldValues(values);
 
   if (format === 'json') {
@@ -18,7 +20,7 @@ async function runRecipeUserfieldsGetCommand({ client, format, options }) {
     ]);
   }
 
-  throw new Error(`Unsupported format for recipe-userfields-get: ${format}`);
+  throw new Error(`Unsupported format for userfields-get: ${format}`);
 }
 
 function normalizeUserfieldValues(values) {
@@ -42,17 +44,22 @@ function stringifyValue(value) {
   return String(value);
 }
 
-function parsePositiveInteger(value, optionName) {
-  const numberValue = Number(value);
+function parseObjectId(value) {
+  const objectId = String(value || '').trim();
 
-  if (!Number.isInteger(numberValue) || numberValue <= 0) {
-    throw new Error(`${optionName} must be a positive integer`);
+  if (!objectId) {
+    throw new Error('Missing required option: --object-id');
   }
 
-  return numberValue;
+  if (!/^[A-Za-z0-9_-]+$/.test(objectId)) {
+    throw new Error('--object-id must contain only letters, digits, underscores, and hyphens');
+  }
+
+  return objectId;
 }
 
 module.exports = {
   normalizeUserfieldValues,
-  runRecipeUserfieldsGetCommand,
+  parseObjectId,
+  runUserfieldsGetCommand,
 };

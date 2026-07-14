@@ -2,9 +2,10 @@
 
 const { formatTable } = require('../format-table');
 
-async function runRecipeUserfieldsCommand({ client, format }) {
+async function runUserfieldsCommand({ client, format, options }) {
+  const entity = parseEntity(options.entity);
   const userfields = await client.getUserfields();
-  const rows = normalizeRecipeUserfields(userfields);
+  const rows = normalizeUserfields(userfields, entity);
 
   if (format === 'json') {
     return JSON.stringify(rows, null, 2);
@@ -20,14 +21,15 @@ async function runRecipeUserfieldsCommand({ client, format }) {
     ]);
   }
 
-  throw new Error(`Unsupported format for recipe-userfields: ${format}`);
+  throw new Error(`Unsupported format for userfields: ${format}`);
 }
 
-function normalizeRecipeUserfields(userfields) {
+function normalizeUserfields(userfields, entity) {
   return (userfields || [])
-    .filter((field) => field.entity === 'recipes')
+    .filter((field) => field.entity === entity)
     .map((field) => ({
       id: field.id,
+      entity: field.entity || '',
       name: field.name || '',
       caption: field.caption || '',
       type: field.type || '',
@@ -42,7 +44,22 @@ function normalizeRecipeUserfields(userfields) {
     });
 }
 
+function parseEntity(value) {
+  const entity = String(value || '').trim();
+
+  if (!entity) {
+    throw new Error('Missing required option: --entity');
+  }
+
+  if (!/^[A-Za-z0-9_]+$/.test(entity)) {
+    throw new Error('--entity must contain only letters, digits, and underscores');
+  }
+
+  return entity;
+}
+
 module.exports = {
-  normalizeRecipeUserfields,
-  runRecipeUserfieldsCommand,
+  normalizeUserfields,
+  parseEntity,
+  runUserfieldsCommand,
 };
