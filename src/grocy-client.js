@@ -176,6 +176,14 @@ class GrocyClient {
     return this.createObject('quantity_units', payload);
   }
 
+  updateQuantityUnit(objectId, payload) {
+    return this.updateObject('quantity_units', objectId, payload);
+  }
+
+  deleteQuantityUnit(objectId) {
+    return this.deleteObject('quantity_units', objectId);
+  }
+
   createQuantityUnitConversion(payload) {
     return this.createObject('quantity_unit_conversions', payload);
   }

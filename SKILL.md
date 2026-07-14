@@ -34,6 +34,12 @@ The `product-update` command modifies Grocy by updating a product object or prod
 
 The `product-delete` command modifies Grocy by deleting an unused product object. Run it only after especially clear confirmation of the exact product id. Prefer deactivating with `product-update --active false` when deletion is not safe.
 
+The `unit-create` command modifies Grocy by creating a quantity unit. Run it only after existing units were considered and the user confirms that a new unit should be created.
+
+The `unit-update` command modifies Grocy by updating a quantity unit. Run it only after the user explicitly confirms the exact unit and fields to change.
+
+The `unit-delete` command modifies Grocy by deleting an unused quantity unit. Run it only after especially clear confirmation of the exact unit id. Do not delete units that are still referenced by products, recipe ingredients, shopping list rows, or conversion rows.
+
 The `recipe-create` command modifies Grocy by creating a recipe and recipe ingredient rows. It may create missing ingredient products only when `--create-missing-products true` is used after explicit user confirmation. Run it only after the user confirms creating that recipe.
 
 The `recipe-ingredient-add` command modifies Grocy by adding one ingredient row to an existing recipe. Run it only after the user confirms adding that ingredient row.
@@ -206,6 +212,22 @@ node bin/grocy-openclaw.js unit-create --name "банка" --name-plural "бан
 ```
 
 Then create the product using the new unit name.
+
+Use `unit-update` when the user asks to correct a quantity unit name, plural name, or description. Do not create a duplicate unit to fix a typo. Confirm the exact target unit and payload before running it.
+
+```bash
+node bin/grocy-openclaw.js unit-update --unit-id 7 --name "стеклянная банка" --name-plural "стеклянные банки" --format json
+```
+
+For `unit-update`, use `--unit` or `--unit-id` to select the unit. Optional update fields are `--name`, `--name-plural`, and `--description`. At least one update field is required.
+
+Use `unit-delete` only for an unused unit, preferably a mistaken unit that was just created. Confirm the exact id before running it; include `--confirm-unit-name` when known.
+
+```bash
+node bin/grocy-openclaw.js unit-delete --unit-id 7 --confirm-unit-name "стеклянная банка" --format json
+```
+
+If `unit-delete` reports blockers, do not call Grocy directly to force deletion. Update dependent products, recipe ingredients, shopping list rows, or conversion rows through supported CLI commands first. If there is no safe correction path yet, leave the unit in Grocy and explain the limitation.
 
 Use ids only when an automation already knows the id:
 

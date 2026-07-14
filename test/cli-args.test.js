@@ -61,6 +61,22 @@ test('allows unit-create options', () => {
   }));
 });
 
+test('allows unit lifecycle options', () => {
+  assert.doesNotThrow(() => validateOptions('unit-update', {
+    unit: 'jar',
+    name: 'glass jar',
+    'name-plural': 'glass jars',
+    description: '',
+  }));
+  assert.doesNotThrow(() => validateOptions('unit-update', {
+    'unit-id': '7',
+  }));
+  assert.doesNotThrow(() => validateOptions('unit-delete', {
+    'unit-id': '7',
+    'confirm-unit-name': 'jar',
+  }));
+});
+
 test('allows product-create conversion factor options', () => {
   assert.doesNotThrow(() => validateOptions('product-create', {
     name: 'Огурцы маринованные',

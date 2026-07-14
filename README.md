@@ -93,6 +93,20 @@ Create a new Grocy quantity unit:
 node bin/grocy-openclaw.js unit-create --name "банка" --name-plural "банки" --format json
 ```
 
+Update an existing Grocy quantity unit:
+
+```bash
+node bin/grocy-openclaw.js unit-update --unit-id 7 --name "стеклянная банка" --name-plural "стеклянные банки" --format json
+```
+
+Delete an unused Grocy quantity unit:
+
+```bash
+node bin/grocy-openclaw.js unit-delete --unit-id 7 --confirm-unit-name "стеклянная банка" --format json
+```
+
+`unit-update` and `unit-delete` modify Grocy. Use them only after the user confirms the exact unit and change. `unit-delete` checks products, recipe ingredient rows, shopping list rows, and quantity unit conversion rows before deleting; if the unit is still referenced, update dependent records first or leave the unit in Grocy.
+
 Show the active shopping list as compact Russian text:
 
 ```bash
@@ -474,6 +488,8 @@ Automated tests must not depend on or modify the configured Grocy instance.
 - `product-update` modifies Grocy and must only be run after the user explicitly confirms the exact product correction.
 - `product-delete` modifies Grocy and must only be run after especially clear confirmation of the exact product id; prefer `product-update --active false` when deletion is unsafe.
 - `unit-create` modifies Grocy and must only be run after existing units were considered and the user confirms that a new unit should be created.
+- `unit-update` modifies Grocy and must only be run after the user explicitly confirms the exact unit correction.
+- `unit-delete` modifies Grocy and must only be run after especially clear confirmation of the exact unit id; delete only unused units.
 - `recipe-create` modifies Grocy and may create missing products only when `--create-missing-products true` is used after explicit confirmation; run it only after the user confirms creating the recipe.
 - `recipe-ingredient-add` modifies Grocy by adding an ingredient row to an existing recipe; run it only after the user confirms adding that ingredient.
 - `recipe-ingredient-update` modifies Grocy by updating an existing ingredient row; run it only after the user confirms the correction.
@@ -499,4 +515,4 @@ Use the version-specific OpenAPI link first, because `master` can describe a dif
 
 See [ROADMAP.md](ROADMAP.md) for the current implementation status, planned commands, and verification notes.
 
-Current status: read commands, product search, product create/update/delete, unit/recipe/custom-field creation, recipe ingredient add/update, stock add, and stock transaction undo are implemented. Planned work includes broader correction/removal workflows, stock monitoring, shopping list write commands, recipe read commands, and menu planning helpers.
+Current status: read commands, product search, product create/update/delete, unit create/update/delete, recipe/custom-field creation, recipe ingredient add/update, stock add, and stock transaction undo are implemented. Planned work includes broader correction/removal workflows, stock monitoring, shopping list write commands, recipe read commands, and menu planning helpers.

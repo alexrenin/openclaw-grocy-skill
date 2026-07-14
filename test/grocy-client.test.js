@@ -187,6 +187,59 @@ test('creates quantity units through Grocy objects API', async () => {
   assert.equal(requestOptions.body, '{"name":"банка","name_plural":"банки"}');
 });
 
+test('updates quantity units through Grocy objects API', async () => {
+  let requestUrl;
+  let requestOptions;
+
+  const client = new GrocyClient({
+    baseUrl: 'http://grocy',
+    apiKey: 'secret-key',
+    fetchImpl: async (url, options) => {
+      requestUrl = url;
+      requestOptions = options;
+
+      return {
+        ok: true,
+        text: async () => '',
+      };
+    },
+  });
+
+  const payload = { id: 7, name: 'jar', name_plural: 'jars' };
+  const data = await client.updateQuantityUnit(7, payload);
+
+  assert.equal(data, null);
+  assert.equal(requestUrl, 'http://grocy/api/objects/quantity_units/7');
+  assert.equal(requestOptions.method, 'PUT');
+  assert.equal(requestOptions.headers['Content-Type'], 'application/json');
+  assert.equal(requestOptions.body, JSON.stringify(payload));
+});
+
+test('deletes quantity units through Grocy objects API', async () => {
+  let requestUrl;
+  let requestOptions;
+
+  const client = new GrocyClient({
+    baseUrl: 'http://grocy',
+    apiKey: 'secret-key',
+    fetchImpl: async (url, options) => {
+      requestUrl = url;
+      requestOptions = options;
+
+      return {
+        ok: true,
+        text: async () => '',
+      };
+    },
+  });
+
+  const data = await client.deleteQuantityUnit(7);
+
+  assert.equal(data, null);
+  assert.equal(requestUrl, 'http://grocy/api/objects/quantity_units/7');
+  assert.equal(requestOptions.method, 'DELETE');
+});
+
 test('adds product amount through Grocy stock API', async () => {
   let requestUrl;
   let requestOptions;

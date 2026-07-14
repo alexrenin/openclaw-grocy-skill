@@ -14,7 +14,7 @@ The initial read commands remain read-only.
 
 The skill may read Grocy system info, products, product locations, quantity units, shopping list items, recipes, custom fields, and stock.
 
-Write commands include `product-create`, `unit-create`, `recipe-create`, `recipe-ingredient-add`, `recipe-ingredient-update`, `userfields-create`, `userfields-set`, and `stock-add`. Run them only after explicit user confirmation for that specific data manipulation. Keep write commands separate from read commands, clearly documented, and covered by tests.
+Write commands include `product-create`, `product-update`, `product-delete`, `unit-create`, `unit-update`, `unit-delete`, `recipe-create`, `recipe-ingredient-add`, `recipe-ingredient-update`, `userfields-create`, `userfields-set`, `stock-add`, and `stock-transaction-undo`. Run them only after explicit user confirmation for that specific data manipulation. Keep write commands separate from read commands, clearly documented, and covered by tests.
 
 ## Project tracking
 
@@ -99,6 +99,8 @@ openclaw-grocy-skill/
 |       |-- locations.js
 |       |-- units.js
 |       |-- unit-create.js
+|       |-- unit-update.js
+|       |-- unit-delete.js
 |       |-- product-create.js
 |       |-- recipe-create.js
 |       |-- recipe-ingredient-add.js
@@ -131,6 +133,8 @@ node bin/grocy-openclaw.js locations --format json
 node bin/grocy-openclaw.js units --format table
 node bin/grocy-openclaw.js units --format json
 node bin/grocy-openclaw.js unit-create --name "банка" --name-plural "банки" --format json
+node bin/grocy-openclaw.js unit-update --unit-id 7 --name "стеклянная банка" --name-plural "стеклянные банки" --format json
+node bin/grocy-openclaw.js unit-delete --unit-id 7 --confirm-unit-name "стеклянная банка" --format json
 node bin/grocy-openclaw.js product-create --name "Молоко" --location "Холодильник" --stock-unit "л" --format json
 node bin/grocy-openclaw.js product-create --name "Огурцы маринованные" --location "Кладовка" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --consume-unit "шт" --format json
 node bin/grocy-openclaw.js recipe-create --name "Оливье" --base-servings 4 --ingredients '[{"name":"Картофель","amount":3,"unit":"шт"}]' --format json
@@ -201,6 +205,8 @@ Required endpoints for explicit write commands:
 ```text
 POST /api/objects/products
 POST /api/objects/quantity_units
+PUT /api/objects/quantity_units/{objectId}
+DELETE /api/objects/quantity_units/{objectId}
 POST /api/objects/quantity_unit_conversions
 POST /api/objects/recipes
 POST /api/objects/recipes_pos
@@ -318,6 +324,8 @@ The skill must tell OpenClaw:
 - to ask for a new confirmation if the planned command, target object, amount, unit, price, or payload changes
 - to prefer quantity unit names and aliases in chat workflows, not raw ids
 - to use `units` when the configured Grocy units need to be inspected
+- to use `unit-update` when correcting a quantity unit name, plural name, or description
+- to use `unit-delete` only for unused quantity units and to stop when products, recipe ingredients, shopping list rows, or conversion rows still reference the unit
 - to prefer location names in chat workflows, not raw ids
 - to use `locations` when configured Grocy product locations need to be inspected
 - to ask which existing location to use before `product-create` when the product location is missing
@@ -505,6 +513,8 @@ Write operations must be added carefully.
 Implemented write operation:
 
 - create quantity unit object
+- update quantity unit object
+- delete unused quantity unit object
 - create product object
 - create recipe object with ingredient rows
 - add one ingredient row to an existing recipe

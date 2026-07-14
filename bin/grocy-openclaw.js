@@ -20,6 +20,8 @@ const { runStockTransactionUndoCommand } = require('../src/commands/stock-transa
 const { runStockCommand } = require('../src/commands/stock');
 const { runSystemInfoCommand } = require('../src/commands/system-info');
 const { runUnitCreateCommand } = require('../src/commands/unit-create');
+const { runUnitDeleteCommand } = require('../src/commands/unit-delete');
+const { runUnitUpdateCommand } = require('../src/commands/unit-update');
 const { runUnitsCommand } = require('../src/commands/units');
 const { runUserfieldsCommand } = require('../src/commands/userfields');
 const { runUserfieldsCreateCommand } = require('../src/commands/userfields-create');
@@ -35,6 +37,8 @@ Commands:
   locations        Read Grocy locations
   units            Read Grocy quantity units
   unit-create      Create a Grocy quantity unit
+  unit-update      Update a Grocy quantity unit
+  unit-delete      Safely delete an unused Grocy quantity unit
   shopping-list    Read Grocy shopping list
   products         Read Grocy products
   product-search   Search Grocy products by name
@@ -62,6 +66,8 @@ Formats:
   locations        table, json
   units            table, json
   unit-create      json
+  unit-update      json
+  unit-delete      json
   shopping-list    text, json
   products         table, json
   product-search   table, json
@@ -89,6 +95,8 @@ Examples:
   node bin/grocy-openclaw.js locations --format table
   node bin/grocy-openclaw.js units --format table
   node bin/grocy-openclaw.js unit-create --name "банка" --name-plural "банки" --format json
+  node bin/grocy-openclaw.js unit-update --unit-id 7 --name "jar" --name-plural "jars" --format json
+  node bin/grocy-openclaw.js unit-delete --unit-id 7 --confirm-unit-name "jar" --format json
   node bin/grocy-openclaw.js shopping-list --format text
   node bin/grocy-openclaw.js products --format table
   node bin/grocy-openclaw.js product-search --name "Milk" --format table
@@ -113,6 +121,8 @@ const COMMAND_FORMATS = new Map([
   ['locations', new Set(['table', 'json'])],
   ['units', new Set(['table', 'json'])],
   ['unit-create', new Set(['json'])],
+  ['unit-update', new Set(['json'])],
+  ['unit-delete', new Set(['json'])],
   ['shopping-list', new Set(['text', 'json'])],
   ['products', new Set(['table', 'json'])],
   ['product-search', new Set(['table', 'json'])],
@@ -174,6 +184,17 @@ const COMMAND_OPTIONS = new Map([
     'name',
     'name-plural',
     'description',
+  ])],
+  ['unit-update', new Set([
+    'unit',
+    'unit-id',
+    'name',
+    'name-plural',
+    'description',
+  ])],
+  ['unit-delete', new Set([
+    'unit-id',
+    'confirm-unit-name',
   ])],
   ['recipe-create', new Set([
     'name',
@@ -347,6 +368,12 @@ async function main(argv, env = process.env) {
       break;
     case 'unit-create':
       output = await runUnitCreateCommand({ client, format, options });
+      break;
+    case 'unit-update':
+      output = await runUnitUpdateCommand({ client, format, options });
+      break;
+    case 'unit-delete':
+      output = await runUnitDeleteCommand({ client, format, options });
       break;
     case 'shopping-list':
       output = await runShoppingListCommand({ client, format });

@@ -27,6 +27,8 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
 - `[x]` Read configured custom fields with `userfields`.
 - `[x]` Read custom field values with `userfields-get`.
 - `[x]` Create quantity units with `unit-create`.
+- `[x]` Update quantity units with `unit-update`.
+- `[x]` Safely delete unused quantity units with `unit-delete`.
 - `[x]` Create products with `product-create`, including product-specific unit conversions.
 - `[x]` Create recipes with `recipe-create`.
 - `[x]` Add recipe ingredients with `recipe-ingredient-add`.
@@ -38,10 +40,12 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
 
 ## Current Verification Notes
 
-- `npm.cmd test` passed locally with 157 tests.
+- `npm.cmd test` passed locally with 171 tests.
 - `api-docs --format text` passed locally using the `.env` fallback and reported installed Grocy version 4.6.0.
 - `product-update` and `product-delete` are implemented locally, covered by mocked unit tests, and live-verified against the configured Grocy 4.6.0 instance after explicit user confirmation.
 - Product lifecycle live test created `OPENCLAW_TEST_20260714_PRODUCT_LIFECYCLE` as product id 15, updated it to `OPENCLAW_TEST_20260714_PRODUCT_LIFECYCLE_UPDATED` with `active: false`, deleted it with `product-delete`, and verified both test names no longer appear in `product-search`.
+- `unit-update` and `unit-delete` are implemented locally, covered by mocked unit tests, and live-verified against the configured Grocy 4.6.0 instance after explicit user confirmation.
+- Unit lifecycle live test created `OPENCLAW_TEST_20260714_UNIT_LIFECYCLE` as quantity unit id 8, updated it to `OPENCLAW_TEST_20260714_UNIT_LIFECYCLE_UPDATED`, deleted it with `unit-delete`, and verified both test names no longer appear in `units`.
 - Grocy 4.6.0 OpenAPI was checked before implementing product lifecycle commands. Generic object endpoints support `PUT /objects/{entity}/{objectId}` and `DELETE /objects/{entity}/{objectId}`.
 - `product-search` is implemented locally and covered by mocked unit tests.
 - `stock-add` is covered by mocked unit tests.
@@ -62,7 +66,7 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
 
 2. `[ ]` Add correction and removal workflows for created records.
    - `[x]` Product lifecycle: `product-update` and safe `product-delete`; fallback is `product-update --active false` when deletion is unsafe or rejected.
-   - Unit lifecycle: `unit-update` and a safe `unit-delete` or documented alternative.
+   - `[x]` Unit lifecycle: `unit-update` and safe `unit-delete`; fallback is to update dependent records first or leave referenced units in Grocy.
    - Recipe lifecycle: `recipe-update` and a safe `recipe-delete` or documented alternative.
    - Recipe ingredient lifecycle: `recipe-ingredient-delete` for removing one incorrect ingredient row.
    - Custom field lifecycle: `userfields-update` and a safe `userfields-delete` or documented alternative.
