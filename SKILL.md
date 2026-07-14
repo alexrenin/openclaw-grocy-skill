@@ -38,6 +38,8 @@ The `recipe-ingredient-update` command modifies Grocy by updating one existing r
 
 The `stock-add` command modifies Grocy by adding a purchased product amount to stock and may record the latest purchase price. Run it only after the user confirms adding those purchases or stock entries.
 
+The `stock-transaction-undo` command modifies Grocy by undoing one stock transaction. Run it only after the user confirms the exact transaction id to undo.
+
 ## Safety
 
 - Never reveal secrets.
@@ -298,7 +300,17 @@ node bin/grocy-openclaw.js stock-add --product "Молоко" --amount 1 --unit 
 
 Use `stock-add` when OpenClaw has already understood the purchase item. Do not parse receipts inside this skill. Do not call Grocy directly with `curl`, inline Python, or `fetch` for stock additions.
 
-For `stock-add`, use `--product` or `--product-id` to select an existing product. Required fields are product selector and `--amount`. Optional fields are `--unit` or `--unit-id`, `--price`, `--best-before-date`, and `--transaction-type`. The amount must be in the product stock unit; if the user gives a purchase unit that differs from the stock unit, ask the user or convert only when the conversion is known.
+For `stock-add`, use `--product` or `--product-id` to select an existing product. Required fields are product selector and `--amount`. Optional fields are `--unit` or `--unit-id`, `--price`, `--best-before-date`, and `--transaction-type`. The default transaction type is `purchase`; allowed values are `purchase`, `consume`, `inventory-correction`, and `product-opened`. The amount must be in the product stock unit; if the user gives a purchase unit that differs from the stock unit, ask the user or convert only when the conversion is known.
+
+The JSON output from `stock-add` includes `transaction_ids` when Grocy returns stock log entries. Keep the transaction id if the user may need to undo the stock addition.
+
+Undo a mistaken stock transaction:
+
+```bash
+node bin/grocy-openclaw.js stock-transaction-undo --transaction-id "abc123" --format json
+```
+
+Use `stock-transaction-undo` to reverse a mistaken `stock-add` when the transaction id is known. Do not guess transaction ids. Ask for confirmation again if the transaction id changes.
 
 If the product is not found, inspect products first with:
 

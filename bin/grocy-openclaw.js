@@ -12,6 +12,7 @@ const { runRecipeIngredientAddCommand } = require('../src/commands/recipe-ingred
 const { runRecipeIngredientUpdateCommand } = require('../src/commands/recipe-ingredient-update');
 const { runShoppingListCommand } = require('../src/commands/shopping-list');
 const { runStockAddCommand } = require('../src/commands/stock-add');
+const { runStockTransactionUndoCommand } = require('../src/commands/stock-transaction-undo');
 const { runStockCommand } = require('../src/commands/stock');
 const { runSystemInfoCommand } = require('../src/commands/system-info');
 const { runUnitCreateCommand } = require('../src/commands/unit-create');
@@ -45,6 +46,8 @@ Commands:
   userfields-set   Set custom field values of one object
   stock            Read Grocy stock
   stock-add        Add a purchased product amount to Grocy stock
+  stock-transaction-undo
+                   Undo a Grocy stock transaction
 
 Formats:
   api-docs        text, json
@@ -67,6 +70,8 @@ Formats:
   userfields-set   json
   stock            table, json
   stock-add        json
+  stock-transaction-undo
+                   json
 
 Examples:
   node bin/grocy-openclaw.js api-docs --format text
@@ -86,6 +91,7 @@ Examples:
   node bin/grocy-openclaw.js userfields-set --entity recipes --object-name "Pancakes" --values '{"difficulty":"easy","cook_time":"10 minutes"}' --format json
   node bin/grocy-openclaw.js stock --format json
   node bin/grocy-openclaw.js stock-add --product "Milk" --amount 1 --unit "l" --price 2.49 --format json
+  node bin/grocy-openclaw.js stock-transaction-undo --transaction-id "abc123" --format json
 `;
 
 const COMMAND_FORMATS = new Map([
@@ -106,6 +112,7 @@ const COMMAND_FORMATS = new Map([
   ['userfields-set', new Set(['json'])],
   ['stock', new Set(['table', 'json'])],
   ['stock-add', new Set(['json'])],
+  ['stock-transaction-undo', new Set(['json'])],
 ]);
 
 const COMMAND_OPTIONS = new Map([
@@ -210,6 +217,9 @@ const COMMAND_OPTIONS = new Map([
     'price',
     'best-before-date',
     'transaction-type',
+  ])],
+  ['stock-transaction-undo', new Set([
+    'transaction-id',
   ])],
 ]);
 
@@ -333,6 +343,9 @@ async function main(argv, env = process.env) {
       break;
     case 'stock-add':
       output = await runStockAddCommand({ client, format, options });
+      break;
+    case 'stock-transaction-undo':
+      output = await runStockTransactionUndoCommand({ client, format, options });
       break;
     default:
       throw new Error(`${command} command is not implemented yet.`);

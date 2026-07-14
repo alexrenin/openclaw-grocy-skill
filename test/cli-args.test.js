@@ -154,3 +154,9 @@ test('allows stock-add options', () => {
     'transaction-type': 'purchase',
   }));
 });
+
+test('allows stock-transaction-undo options', () => {
+  assert.doesNotThrow(() => validateOptions('stock-transaction-undo', {
+    'transaction-id': 'tx-1',
+  }));
+});

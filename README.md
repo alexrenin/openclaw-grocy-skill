@@ -301,6 +301,8 @@ node bin/grocy-openclaw.js stock-add --product "Молоко" --amount 1 --unit 
 
 `stock-add` modifies Grocy. Use it only when the user explicitly asks to add purchased products to stock. It does not parse receipts and does not create products automatically; OpenClaw should first identify the product, amount, unit, and price, then call this command.
 
+The JSON output includes `transaction_ids` when Grocy returns stock log entries. Keep those ids when a newly added stock transaction may need to be reversed.
+
 Supported `stock-add` options:
 
 - `--product` or `--product-id`: required product selector; prefer `--product` for chat
@@ -308,10 +310,23 @@ Supported `stock-add` options:
 - `--unit` or `--unit-id`: optional check that the supplied amount uses the product stock unit; prefer `--unit` for chat
 - `--price`: optional non-negative latest purchase price
 - `--best-before-date`: optional best-before date in `YYYY-MM-DD` format
-- `--transaction-type`: optional Grocy stock transaction type, defaults to `purchase`
+- `--transaction-type`: optional Grocy stock transaction type, defaults to `purchase`; allowed values are `purchase`, `consume`, `inventory-correction`, and `product-opened`
 - `--format json`: required output format
 
 For chat agents: if the user asks to add purchases to stock and the product is not found, inspect products with `products --format table` and ask which existing product to use. Do not create a missing product unless the user explicitly asks for product creation. If the supplied unit differs from the product stock unit, ask the user to convert the amount to the stock unit before running `stock-add`.
+
+Undo a stock transaction created by `stock-add`:
+
+```bash
+node bin/grocy-openclaw.js stock-transaction-undo --transaction-id "abc123" --format json
+```
+
+`stock-transaction-undo` modifies Grocy. Use it only after the user confirms undoing that exact stock transaction id. Prefer this command over consuming an equivalent amount when correcting a mistaken `stock-add`, because it targets the original Grocy transaction.
+
+Supported `stock-transaction-undo` options:
+
+- `--transaction-id`: required Grocy stock transaction id, normally copied from `stock-add` output
+- `--format json`: required output format
 
 Show help:
 
@@ -417,6 +432,7 @@ Automated tests must not depend on or modify the configured Grocy instance.
 - `userfields-create` modifies Grocy and must only be run after the user confirms creating the custom field.
 - `userfields-set` modifies Grocy and must only be run after the user confirms setting or updating custom field values.
 - `stock-add` modifies Grocy by adding a purchased product amount to stock and may record `price`; run it only after the user confirms adding those purchases or stock entries.
+- `stock-transaction-undo` modifies Grocy by undoing a stock transaction; run it only after the user confirms the exact transaction id to undo.
 - Future write commands must be separate from read commands and require explicit user confirmation.
 - Future write commands must document their confirmation requirement.
 - Write command design must cover the full lifecycle where possible: create/add, update/edit, and delete/remove/cancel. This lets OpenClaw correct or undo records it just created instead of creating duplicates or requiring direct API calls.

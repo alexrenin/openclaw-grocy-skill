@@ -3,7 +3,13 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 
-const { buildStockAddPlan, parseDate, runStockAddCommand } = require('../src/commands/stock-add');
+const {
+  buildStockAddPlan,
+  extractTransactionIds,
+  parseDate,
+  parseStockTransactionType,
+  runStockAddCommand,
+} = require('../src/commands/stock-add');
 
 const products = [
   { id: 1, name: 'Молоко', qu_id_stock: 3 },
@@ -83,6 +89,15 @@ test('validates stock add date', () => {
   );
 });
 
+test('validates stock add transaction type', () => {
+  assert.equal(parseStockTransactionType(undefined), 'purchase');
+  assert.equal(parseStockTransactionType('inventory-correction'), 'inventory-correction');
+  assert.throws(
+    () => parseStockTransactionType('typo'),
+    /--transaction-type must be one of/,
+  );
+});
+
 test('runs stock-add json command', async () => {
   let addedProductId;
   let addedPayload;
@@ -100,7 +115,7 @@ test('runs stock-add json command', async () => {
       addStockProduct: async (productId, payload) => {
         addedProductId = productId;
         addedPayload = payload;
-        return { ok: true };
+        return [{ id: 11, transaction_id: 'tx-1' }];
       },
     },
   });
@@ -120,6 +135,17 @@ test('runs stock-add json command', async () => {
       qu_id_stock: 3,
     },
     payload: addedPayload,
-    result: { ok: true },
+    transaction_ids: ['tx-1'],
+    result: [{ id: 11, transaction_id: 'tx-1' }],
   }, null, 2));
+});
+
+test('extracts unique transaction ids from stock-add result', () => {
+  assert.deepEqual(extractTransactionIds([
+    { transaction_id: 'tx-1' },
+    { transaction_id: 'tx-1' },
+    { transaction_id: 'tx-2' },
+    { transaction_id: '' },
+  ]), ['tx-1', 'tx-2']);
+  assert.deepEqual(extractTransactionIds({ ok: true }), []);
 });

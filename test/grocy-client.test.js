@@ -144,6 +144,54 @@ test('adds product amount through Grocy stock API', async () => {
   assert.equal(requestOptions.body, JSON.stringify(payload));
 });
 
+test('reads stock transaction through Grocy stock API', async () => {
+  let requestUrl;
+
+  const client = new GrocyClient({
+    baseUrl: 'http://grocy',
+    apiKey: 'secret-key',
+    fetchImpl: async (url) => {
+      requestUrl = url;
+
+      return {
+        ok: true,
+        text: async () => '[{"id":1,"transaction_id":"tx-1"}]',
+      };
+    },
+  });
+
+  const data = await client.getStockTransaction('tx-1');
+
+  assert.deepEqual(data, [{ id: 1, transaction_id: 'tx-1' }]);
+  assert.equal(requestUrl, 'http://grocy/api/stock/transactions/tx-1');
+});
+
+test('undoes stock transaction through Grocy stock API', async () => {
+  let requestUrl;
+  let requestOptions;
+
+  const client = new GrocyClient({
+    baseUrl: 'http://grocy',
+    apiKey: 'secret-key',
+    fetchImpl: async (url, options) => {
+      requestUrl = url;
+      requestOptions = options;
+
+      return {
+        ok: true,
+        text: async () => '',
+      };
+    },
+  });
+
+  const data = await client.undoStockTransaction('tx-1');
+
+  assert.equal(data, null);
+  assert.equal(requestUrl, 'http://grocy/api/stock/transactions/tx-1/undo');
+  assert.equal(requestOptions.method, 'POST');
+  assert.equal(requestOptions.headers['GROCY-API-KEY'], 'secret-key');
+});
+
 test('creates quantity unit conversions through Grocy objects API', async () => {
   let requestUrl;
   let requestOptions;

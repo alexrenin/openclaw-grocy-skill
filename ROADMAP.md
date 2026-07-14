@@ -29,22 +29,27 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
 - `[x]` Update recipe ingredients with `recipe-ingredient-update`.
 - `[x]` Create custom fields with `userfields-create`.
 - `[x]` Set custom field values with `userfields-set`.
-- `[~]` Add purchased product amounts to stock with `stock-add`, including optional latest purchase price and best-before date.
+- `[x]` Add purchased product amounts to stock with `stock-add`, including optional latest purchase price and best-before date.
+- `[x]` Undo stock transactions with `stock-transaction-undo`.
 
 ## Current Verification Notes
 
-- `npm.cmd test` passed locally with 122 tests.
+- `npm.cmd test` passed locally with 129 tests.
 - `stock-add` is covered by mocked unit tests.
+- `stock-add` endpoint and payload were checked against the installed Grocy 4.6.0 OpenAPI. The endpoint is `POST /stock/products/{productId}/add`; supported request fields include `amount`, `best_before_date`, `transaction_type`, and `price`.
+- Grocy 4.6.0 also supports `POST /stock/transactions/{transactionId}/undo`; `stock-transaction-undo` is implemented and live-verified as the precise correction path for a mistaken `stock-add`.
+- `api-docs --format text` passed against the configured Grocy instance and reported installed Grocy version 4.6.0.
 - The user has added a local `.env` for the real Grocy instance they plan to use after setup.
 - Treat that Grocy instance as real data, not a disposable test system.
-- `stock-add` still needs live verification against the installed Grocy version. Verify with read-only OpenAPI/system checks first. A live write test is acceptable only after the user confirms the exact test data and cleanup plan; remove or reverse the test entry immediately afterward.
+- `stock-add` was live-tested against the configured Grocy instance after explicit user confirmation. The controlled test added 1 package of an existing product with `price: 0.01` and `best_before_date: 2026-12-31`, received a stock transaction id, immediately undid that transaction with `stock-transaction-undo`, and verified that final stock returned to the original amount.
 
 ## Priority Roadmap
 
-1. `[~]` Finalize `stock-add`.
-   - Verify the endpoint and payload against the installed Grocy OpenAPI via `api-docs`.
-   - Confirm that `price` is saved in Grocy as expected for the latest purchase price workflow.
-   - If needed, adjust the payload to match the installed Grocy version.
+1. `[x]` Finalize `stock-add`.
+   - `[x]` Verify the endpoint and payload against the installed Grocy OpenAPI via `api-docs`.
+   - `[x]` Add a precise rollback command using Grocy stock transaction undo.
+   - `[x]` Confirm that the installed Grocy accepts the `price` payload for the latest purchase price workflow.
+   - `[x]` Adjust the payload to match the installed Grocy version.
 
 2. `[ ]` Add correction and removal workflows for created records.
    - Product lifecycle: `product-update` and a safe `product-delete` or documented alternative.
@@ -52,7 +57,7 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
    - Recipe lifecycle: `recipe-update` and a safe `recipe-delete` or documented alternative.
    - Recipe ingredient lifecycle: `recipe-ingredient-delete` for removing one incorrect ingredient row.
    - Custom field lifecycle: `userfields-update` and a safe `userfields-delete` or documented alternative.
-   - Stock lifecycle: a command to correct or reverse an incorrect `stock-add` transaction, verified against Grocy's stock API.
+   - Stock lifecycle: `stock-transaction-undo` is implemented and live-verified during the controlled `stock-add` test.
    - Purpose: OpenClaw must be able to fix or undo a record it just created instead of creating duplicates or leaving bad data behind.
 
 3. `[ ]` Add product search.

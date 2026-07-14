@@ -18,12 +18,14 @@ async function runStockAddCommand({ client, format, options }) {
   ]);
   const plan = buildStockAddPlan(options, products, quantityUnits);
   const result = await client.addStockProduct(plan.product.id, plan.payload);
+  const transactionIds = extractTransactionIds(result);
 
   return JSON.stringify({
     action: 'added',
     entity: 'stock',
     product: plan.product,
     payload: plan.payload,
+    transaction_ids: transactionIds,
     result,
   }, null, 2);
 }
@@ -37,7 +39,7 @@ function buildStockAddPlan(options, products, quantityUnits) {
   const amount = parsePositiveNumber(options.amount, '--amount');
   const payload = {
     amount,
-    transaction_type: normalizeText(options['transaction-type']) || 'purchase',
+    transaction_type: parseStockTransactionType(options['transaction-type']),
   };
   const unitName = normalizeText(options.unit);
   const unitId = options['unit-id'] ? parsePositiveInteger(options['unit-id'], '--unit-id') : undefined;
@@ -188,6 +190,22 @@ function parseDate(value, label) {
   return normalized;
 }
 
+function parseStockTransactionType(value) {
+  const type = normalizeText(value) || 'purchase';
+  const allowed = new Set([
+    'purchase',
+    'consume',
+    'inventory-correction',
+    'product-opened',
+  ]);
+
+  if (!allowed.has(type)) {
+    throw new Error(`--transaction-type must be one of: ${[...allowed].join(', ')}`);
+  }
+
+  return type;
+}
+
 function normalizeText(value) {
   if (value == null) {
     return '';
@@ -196,9 +214,21 @@ function normalizeText(value) {
   return String(value).trim();
 }
 
+function extractTransactionIds(result) {
+  if (!Array.isArray(result)) {
+    return [];
+  }
+
+  return [...new Set(result
+    .map((entry) => normalizeText(entry?.transaction_id))
+    .filter(Boolean))];
+}
+
 module.exports = {
   buildStockAddPlan,
+  extractTransactionIds,
   formatProductChoices,
   parseDate,
+  parseStockTransactionType,
   runStockAddCommand,
 };

@@ -114,6 +114,16 @@ class GrocyClient {
     });
   }
 
+  getStockTransaction(transactionId) {
+    return this.request(`/api/stock/transactions/${encodeURIComponent(transactionId)}`);
+  }
+
+  undoStockTransaction(transactionId) {
+    return this.request(`/api/stock/transactions/${encodeURIComponent(transactionId)}/undo`, {
+      method: 'POST',
+    });
+  }
+
   createObject(entity, payload) {
     return this.request(`/api/objects/${entity}`, {
       method: 'POST',
