@@ -60,6 +60,16 @@ GROCY_API_KEY=replace_me
 
 `GROCY_URL` may include or omit a trailing slash.
 
+## Execution rule
+
+Always use the provided Node.js CLI for Grocy work:
+
+```bash
+node bin/grocy-openclaw.js <command> --format <format>
+```
+
+Do not call Grocy directly with inline Python, `fetch`, `curl`, or ad hoc scripts. The CLI is responsible for loading the API key safely, setting the `GROCY-API-KEY` header, formatting output, and keeping errors safe for chat.
+
 ## Commands
 
 Check Grocy connectivity and API key validity:

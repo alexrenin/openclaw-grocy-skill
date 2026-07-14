@@ -54,6 +54,8 @@ set -a
 set +a
 ```
 
+Always use the CLI for Grocy work. Do not call Grocy directly with inline Python, `fetch`, `curl`, or ad hoc scripts; the CLI handles the API key header, safe errors, and chat-friendly output.
+
 Check Grocy connectivity and API key validity:
 
 ```bash

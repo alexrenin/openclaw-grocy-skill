@@ -121,6 +121,8 @@ The CLI should:
 - Support `--help`.
 - Keep output suitable for OpenClaw to return to the user.
 
+OpenClaw agents should always use the CLI for Grocy work. Do not call Grocy directly with inline Python, `fetch`, `curl`, or ad hoc scripts; the CLI owns API key handling, safe errors, and chat-friendly output.
+
 ## Grocy API
 
 Use the Grocy REST API.
