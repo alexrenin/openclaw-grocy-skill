@@ -253,7 +253,24 @@ Show custom field values for one object:
 node bin/grocy-openclaw.js userfields-get --entity recipes --object-id 10 --format json
 ```
 
-Use `userfields` to answer which custom fields can exist on an entity. Use `userfields-get` to answer which values are set on a specific object. For recipes, use `--entity recipes`; for products, use `--entity products`.
+Set custom field values for one object:
+
+```bash
+node bin/grocy-openclaw.js userfields-set --entity recipes --object-name "Быстрые блины" --values '{"Уровень сложности":"легкий","Время готовки":"10 минут"}' --format json
+```
+
+Use `userfields` to answer which custom fields can exist on an entity. Use `userfields-get` to answer which values are set on a specific object. Use `userfields-set` when the user explicitly asks to set or update custom field values. For recipes, use `--entity recipes`; for products, use `--entity products`.
+
+`userfields-set` accepts either `--object-id` or `--object-name`. For chat workflows, prefer `--object-name` when the object has a unique name. Values can be passed as a JSON object through `--values`; keys can be custom field technical names or captions. For a single field, use `--field` and `--value`.
+
+Examples:
+
+```bash
+node bin/grocy-openclaw.js userfields-set --entity recipes --object-name "Быстрые блины" --field "Время готовки" --value "10 минут" --format json
+node bin/grocy-openclaw.js userfields-set --entity recipes --object-name "Быстрые блины" --values '{"difficulty":"легкий","cook_time":"10 минут"}' --format json
+```
+
+For chat agents: if the user asks to update custom fields, use `userfields-set`. Do not call Grocy directly with `curl`, inline Python, or `fetch` for this. If a field name is unclear, inspect configured fields first with `userfields --entity <entity> --format table`.
 
 Supported custom field types: `text-single-line`, `text-multi-line`, `number-integral`, `number-decimal`, `number-currency`, `date`, `datetime`, `checkbox`, `preset-list`, `preset-checklist`, `link`, `link-with-title`, `file`, and `image`.
 
@@ -366,6 +383,7 @@ Tests use mocked data and do not require a real Grocy instance.
 - `recipe-ingredient-add` modifies Grocy by adding an ingredient row to an existing recipe; run it only when the user explicitly asks to update a recipe.
 - `recipe-ingredient-update` modifies Grocy by updating an existing ingredient row; run it only when the user explicitly asks to correct a recipe ingredient.
 - `userfields-create` modifies Grocy and must only be run when the user explicitly asks to create a custom field.
+- `userfields-set` modifies Grocy and must only be run when the user explicitly asks to set or update custom field values.
 - Future write commands must be separate from read commands and require explicit user intent.
 
 ## API Documentation Workflow

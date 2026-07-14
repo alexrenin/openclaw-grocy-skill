@@ -280,6 +280,37 @@ test('reads object userfield values through Grocy userfields API', async () => {
   assert.equal(requestUrl, 'http://grocy/api/userfields/recipes/42');
 });
 
+test('sets object userfield values through Grocy userfields API', async () => {
+  let requestUrl;
+  let requestOptions;
+
+  const client = new GrocyClient({
+    baseUrl: 'http://grocy',
+    apiKey: 'secret-key',
+    fetchImpl: async (url, options) => {
+      requestUrl = url;
+      requestOptions = options;
+
+      return {
+        ok: true,
+        text: async () => '',
+      };
+    },
+  });
+
+  const payload = {
+    difficulty: 'легкий',
+    cook_time: '10 минут',
+  };
+  const data = await client.setObjectUserfields('recipes', 42, payload);
+
+  assert.equal(data, null);
+  assert.equal(requestUrl, 'http://grocy/api/userfields/recipes/42');
+  assert.equal(requestOptions.method, 'PUT');
+  assert.equal(requestOptions.headers['Content-Type'], 'application/json');
+  assert.equal(requestOptions.body, JSON.stringify(payload));
+});
+
 test('creates userfields through Grocy objects API', async () => {
   let requestUrl;
   let requestOptions;

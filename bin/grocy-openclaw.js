@@ -18,6 +18,7 @@ const { runUnitsCommand } = require('../src/commands/units');
 const { runUserfieldsCommand } = require('../src/commands/userfields');
 const { runUserfieldsCreateCommand } = require('../src/commands/userfields-create');
 const { runUserfieldsGetCommand } = require('../src/commands/userfields-get');
+const { runUserfieldsSetCommand } = require('../src/commands/userfields-set');
 
 const HELP = `Usage:
   node bin/grocy-openclaw.js <command> --format <format>
@@ -40,6 +41,7 @@ Commands:
   userfields-create
                    Create a custom field for an entity
   userfields-get   Read custom field values of one object
+  userfields-set   Set custom field values of one object
   stock            Read Grocy stock
 
 Formats:
@@ -60,6 +62,7 @@ Formats:
   userfields-create
                    json
   userfields-get   table, json
+  userfields-set   json
   stock            table, json
 
 Examples:
@@ -77,6 +80,7 @@ Examples:
   node bin/grocy-openclaw.js userfields --entity recipes --format table
   node bin/grocy-openclaw.js userfields-create --entity recipes --caption "Время готовки" --type text-single-line --format json
   node bin/grocy-openclaw.js userfields-get --entity recipes --object-id 10 --format json
+  node bin/grocy-openclaw.js userfields-set --entity recipes --object-name "Pancakes" --values '{"difficulty":"easy","cook_time":"10 minutes"}' --format json
   node bin/grocy-openclaw.js stock --format json
 `;
 
@@ -95,6 +99,7 @@ const COMMAND_FORMATS = new Map([
   ['userfields', new Set(['table', 'json'])],
   ['userfields-create', new Set(['json'])],
   ['userfields-get', new Set(['table', 'json'])],
+  ['userfields-set', new Set(['json'])],
   ['stock', new Set(['table', 'json'])],
 ]);
 
@@ -181,6 +186,14 @@ const COMMAND_OPTIONS = new Map([
   ['userfields-get', new Set([
     'entity',
     'object-id',
+  ])],
+  ['userfields-set', new Set([
+    'entity',
+    'object-id',
+    'object-name',
+    'values',
+    'field',
+    'value',
   ])],
 ]);
 
@@ -295,6 +308,9 @@ async function main(argv, env = process.env) {
       break;
     case 'userfields-get':
       output = await runUserfieldsGetCommand({ client, format, options });
+      break;
+    case 'userfields-set':
+      output = await runUserfieldsSetCommand({ client, format, options });
       break;
     case 'stock':
       output = await runStockCommand({ client, format });

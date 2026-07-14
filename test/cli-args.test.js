@@ -126,4 +126,15 @@ test('allows userfield command options', () => {
     entity: 'recipes',
     'object-id': '42',
   }));
+  assert.doesNotThrow(() => validateOptions('userfields-set', {
+    entity: 'recipes',
+    'object-name': 'Быстрые блины',
+    values: '{"difficulty":"легкий"}',
+  }));
+  assert.doesNotThrow(() => validateOptions('userfields-set', {
+    entity: 'recipes',
+    'object-id': '42',
+    field: 'Время готовки',
+    value: '10 минут',
+  }));
 });

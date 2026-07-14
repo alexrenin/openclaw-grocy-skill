@@ -247,7 +247,21 @@ Show custom field values for one object:
 node bin/grocy-openclaw.js userfields-get --entity recipes --object-id 10 --format json
 ```
 
-Use `userfields` when the user asks what custom fields an entity has. Use `userfields-get` when the user asks what custom field values are set on a specific object. For recipes, use `--entity recipes`; for products, use `--entity products`.
+Set custom field values for one object:
+
+```bash
+node bin/grocy-openclaw.js userfields-set --entity recipes --object-name "Быстрые блины" --values '{"Уровень сложности":"легкий","Время готовки":"10 минут"}' --format json
+```
+
+Use `userfields` when the user asks what custom fields an entity has. Use `userfields-get` when the user asks what custom field values are set on a specific object. Use `userfields-set` when the user explicitly asks to set or update custom field values. For recipes, use `--entity recipes`; for products, use `--entity products`.
+
+For `userfields-set`, use either `--object-id` or `--object-name`. Prefer `--object-name` in chat workflows when the object name is unique. Values can be passed as a JSON object through `--values`; keys can be custom field technical names or captions. For a single field, use `--field` and `--value`.
+
+If the user says "set recipe difficulty to easy" or "время готовки - 10 минут", use `userfields-set`. Do not call Grocy directly with `curl`, inline Python, or `fetch` for this. If a custom field name is unclear, inspect configured fields first with:
+
+```bash
+node bin/grocy-openclaw.js userfields --entity recipes --format table
+```
 
 Supported custom field types: `text-single-line`, `text-multi-line`, `number-integral`, `number-decimal`, `number-currency`, `date`, `datetime`, `checkbox`, `preset-list`, `preset-checklist`, `link`, `link-with-title`, `file`, and `image`.
 

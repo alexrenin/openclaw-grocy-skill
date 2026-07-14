@@ -64,6 +64,10 @@ class GrocyClient {
     return this.request('/api/objects/products');
   }
 
+  getObjects(entity) {
+    return this.request(`/api/objects/${encodeURIComponent(entity)}`);
+  }
+
   getLocations() {
     return this.request('/api/objects/locations');
   }
@@ -82,6 +86,13 @@ class GrocyClient {
 
   getObjectUserfields(entity, objectId) {
     return this.request(`/api/userfields/${encodeURIComponent(entity)}/${encodeURIComponent(objectId)}`);
+  }
+
+  setObjectUserfields(entity, objectId, payload) {
+    return this.request(`/api/userfields/${encodeURIComponent(entity)}/${encodeURIComponent(objectId)}`, {
+      method: 'PUT',
+      body: payload,
+    });
   }
 
   getQuantityUnits() {

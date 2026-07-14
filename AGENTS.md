@@ -14,7 +14,7 @@ The initial read commands remain read-only.
 
 The skill may read Grocy system info, products, product locations, quantity units, shopping list items, recipes, custom fields, and stock.
 
-Write commands include `product-create`, `unit-create`, `recipe-create`, `recipe-ingredient-add`, `recipe-ingredient-update`, and `userfields-create`. Run them only when the user explicitly asks to modify Grocy. Keep write commands separate from read commands, clearly documented, and covered by tests.
+Write commands include `product-create`, `unit-create`, `recipe-create`, `recipe-ingredient-add`, `recipe-ingredient-update`, `userfields-create`, and `userfields-set`. Run them only when the user explicitly asks to modify Grocy. Keep write commands separate from read commands, clearly documented, and covered by tests.
 
 ## Core principles
 
@@ -82,6 +82,7 @@ openclaw-grocy-skill/
 |       |-- userfields.js
 |       |-- userfields-create.js
 |       |-- userfields-get.js
+|       |-- userfields-set.js
 |       `-- stock.js
 |-- test/
 |   `-- format-shopping-list.test.js
@@ -111,6 +112,7 @@ node bin/grocy-openclaw.js recipe-ingredient-update --recipe "Блины" --prod
 node bin/grocy-openclaw.js userfields --entity recipes --format table
 node bin/grocy-openclaw.js userfields-create --entity recipes --caption "Время готовки" --type text-single-line --format json
 node bin/grocy-openclaw.js userfields-get --entity recipes --object-id 10 --format json
+node bin/grocy-openclaw.js userfields-set --entity recipes --object-name "Быстрые блины" --values '{"Уровень сложности":"легкий","Время готовки":"10 минут"}' --format json
 node bin/grocy-openclaw.js shopping-list --format text
 node bin/grocy-openclaw.js shopping-list --format json
 node bin/grocy-openclaw.js products --format table
@@ -152,6 +154,7 @@ GET /api/objects/recipes
 GET /api/objects/recipes_pos
 GET /api/objects/userfields
 GET /api/userfields/{entity}/{objectId}
+PUT /api/userfields/{entity}/{objectId}
 GET /api/objects/quantity_units
 GET /api/objects/shopping_list
 GET /api/stock
@@ -287,7 +290,9 @@ The skill must tell OpenClaw:
 - to ask for missing ingredient amount or unit before `recipe-ingredient-add`
 - to never match tablespoon-like text such as `ст.ложка` to the liter unit `л`
 - to use `userfields` for configured custom fields and `userfields-get` for values on a specific object
+- to use `userfields-set` for setting custom field values on an object
 - to ask for the custom field type before `userfields-create` when the user did not provide it
+- to avoid direct Grocy API calls for custom field updates
 - to return command output clearly to the user
 
 Read commands must remain read-only.
