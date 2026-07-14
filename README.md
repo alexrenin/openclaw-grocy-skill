@@ -1,8 +1,8 @@
 # OpenClaw Grocy Skill
 
-Reusable read-only OpenClaw skill for Grocy home inventory, stock, products, and shopping list data.
+Reusable OpenClaw skill for Grocy home inventory, stock, products, recipes, custom fields, and shopping list data.
 
-The first version reads Grocy through the REST API and prints output that OpenClaw can return directly to the user. Shopping list text output is Russian by default.
+Read commands print output that OpenClaw can return directly to the user. Write commands are explicit CLI commands and should only be run when the user asks to modify Grocy. Shopping list text output is Russian by default.
 
 ## Requirements
 
@@ -74,6 +74,12 @@ Show Grocy quantity units:
 node bin/grocy-openclaw.js units --format table
 ```
 
+Show Grocy product locations:
+
+```bash
+node bin/grocy-openclaw.js locations --format table
+```
+
 Create a new Grocy quantity unit:
 
 ```bash
@@ -107,13 +113,13 @@ node bin/grocy-openclaw.js products --format json
 Create a new Grocy product object:
 
 ```bash
-node bin/grocy-openclaw.js product-create --name "Молоко" --stock-unit "л" --format json
+node bin/grocy-openclaw.js product-create --name "Молоко" --location "Холодильник" --stock-unit "л" --format json
 ```
 
 Create a product that is purchased in one unit but consumed or stored in another:
 
 ```bash
-node bin/grocy-openclaw.js product-create --name "Огурцы маринованные" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --consume-unit "шт" --format json
+node bin/grocy-openclaw.js product-create --name "Огурцы маринованные" --location "Кладовка" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --consume-unit "шт" --format json
 ```
 
 Prefer unit names in chat workflows. The command accepts exact Grocy unit names, plural names, and common aliases such as `кг`, `килограмм`, `кило`, `kg`, `л`, `литр`, `шт`, and `штука`.
@@ -122,15 +128,22 @@ If unit matching is ambiguous, the command prints matching unit choices. If a un
 
 For chat workflows, do not create a new unit immediately when a product unit is unknown. First show suitable existing units to the user. Create a new unit with `unit-create` only when the user confirms none of the existing units fit.
 
+Prefer location names in chat workflows. Users should not be expected to know Grocy location ids. If the product location is unclear, inspect existing locations first:
+
+```bash
+node bin/grocy-openclaw.js locations --format table
+```
+
 You may also specify units by id when an automation already knows the id:
 
 ```bash
-node bin/grocy-openclaw.js product-create --name "Картофель" --stock-unit-id 2 --format json
+node bin/grocy-openclaw.js product-create --name "Картофель" --location-id 1 --stock-unit-id 2 --format json
 ```
 
 Supported `product-create` options:
 
 - `--name`: required product name
+- `--location` or `--location-id`: required product location; prefer `--location` for chat
 - `--stock-unit` or `--stock-unit-id`: required stock unit; prefer `--stock-unit` for chat
 - `--purchase-unit` or `--purchase-unit-id`: optional purchase unit, defaults to stock unit
 - `--purchase-to-stock-factor`: required when purchase unit differs from stock unit; means how many stock units are in 1 purchase unit
@@ -141,12 +154,12 @@ Supported `product-create` options:
 
 Implementation note: Grocy 4.x stores product-specific unit conversion factors in `quantity_unit_conversions`, not as `qu_factor_*` fields on the product. The CLI creates the product first and then creates the needed conversion rows automatically.
 
-For chat agents: if the user asks to create a product with different units but does not give the conversion factor, ask before running `product-create`. For example, if the product is stored as `шт` and purchased as `банка`, ask how many pieces are in one jar.
+For chat agents: if the user asks to create a product but does not specify the product location, inspect locations with `locations --format table` and ask which existing location to use. If the user asks to create a product with different units but does not give the conversion factor, ask before running `product-create`. For example, if the product is stored as `шт` and purchased as `банка`, ask how many pieces are in one jar.
 
 Create a recipe with ingredients:
 
 ```bash
-node bin/grocy-openclaw.js recipe-create --name "Оливье" --base-servings 4 --ingredients '[{"name":"Картофель","amount":3,"unit":"шт"},{"name":"Огурцы маринованные","amount":2,"unit":"шт","note":"нарезать"}]' --format json
+node bin/grocy-openclaw.js recipe-create --name "Оливье" --base-servings 4 --ingredients '[{"name":"Картофель","amount":3,"unit":"шт"},{"name":"Огурцы маринованные","amount":2,"unit":"шт","location":"Кладовка","note":"нарезать"}]' --format json
 ```
 
 `recipe-create` creates the recipe object and its `recipes_pos` ingredient rows. Each ingredient must include:
@@ -155,9 +168,9 @@ node bin/grocy-openclaw.js recipe-create --name "Оливье" --base-servings 4
 - `amount`: positive number
 - `unit`: Grocy quantity unit name or common alias
 
-Optional ingredient fields: `note`, `ingredientGroup`, `variableAmount`, `onlyCheckSingleUnitInStock`, and `roundUp`.
+Optional ingredient fields: `note`, `ingredientGroup`, `variableAmount`, `onlyCheckSingleUnitInStock`, `roundUp`, `location`, `locationId`, and a nested `product` object.
 
-If an ingredient product name does not exist, `recipe-create` creates a new product automatically using the ingredient unit as the stock, purchase, and consume unit. For more control, include a nested `product` object, for example:
+If an ingredient product name does not exist, `recipe-create` creates a new product automatically using the ingredient unit as the stock, purchase, and consume unit. The new product still needs a Grocy location, so include `location` or `locationId` on the ingredient or nested product object. For more control, include a nested `product` object, for example:
 
 ```json
 {
@@ -165,6 +178,7 @@ If an ingredient product name does not exist, `recipe-create` creates a new prod
   "amount": 3,
   "unit": "шт",
   "product": {
+    "location": "Кладовка",
     "stockUnit": "шт",
     "purchaseUnit": "банка",
     "purchaseToStockFactor": 10
@@ -172,7 +186,7 @@ If an ingredient product name does not exist, `recipe-create` creates a new prod
 }
 ```
 
-For chat agents: if a recipe ingredient unit is unknown, inspect existing units first with `units --format table`. Create a new unit only after the user confirms none of the existing units fit.
+For chat agents: if a recipe ingredient unit is unknown, inspect existing units first with `units --format table`. Create a new unit only after the user confirms none of the existing units fit. If a recipe includes new products and the user did not specify where to store them, inspect locations with `locations --format table` and ask which existing location to use.
 
 Show custom fields configured for an entity:
 
@@ -271,6 +285,12 @@ To inspect configured Grocy quantity units:
 
 ```bash
 node bin/grocy-openclaw.js units --format table
+```
+
+To inspect configured Grocy product locations:
+
+```bash
+node bin/grocy-openclaw.js locations --format table
 ```
 
 ## Development

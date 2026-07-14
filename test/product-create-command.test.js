@@ -17,20 +17,26 @@ const units = [
   { id: 2, name: 'кг', name_plural: 'кг' },
   { id: 3, name: 'л', name_plural: 'литры' },
 ];
+const locations = [
+  { id: 1, name: 'Кладовка' },
+  { id: 2, name: 'Холодильник' },
+];
 
 test('builds product payload from unit names', () => {
   const payload = buildProductPayload({
     name: 'Молоко',
     description: '2.5%',
     'stock-unit': 'л',
+    location: 'Холодильник',
     'purchase-unit': 'шт',
     'purchase-to-stock-factor': '1',
     'consume-unit': 'литры',
-  }, units);
+  }, units, locations);
 
   assert.deepEqual(payload, {
     name: 'Молоко',
     description: '2.5%',
+    location_id: 2,
     qu_id_stock: 3,
     qu_id_purchase: 1,
     qu_id_consume: 3,
@@ -41,10 +47,12 @@ test('defaults purchase and consume units to stock unit', () => {
   const payload = buildProductPayload({
     name: 'Картофель',
     'stock-unit-id': '2',
-  }, units);
+    'location-id': '1',
+  }, units, locations);
 
   assert.deepEqual(payload, {
     name: 'Картофель',
+    location_id: 1,
     qu_id_stock: 2,
     qu_id_purchase: 2,
     qu_id_consume: 2,
@@ -55,16 +63,18 @@ test('plans product-specific quantity unit conversions when units differ', () =>
   const plan = buildProductCreatePlan({
     name: 'Огурцы маринованные',
     'stock-unit': 'шт',
+    location: 'Кладовка',
     'purchase-unit': 'банка',
     'purchase-to-stock-factor': '10',
     'consume-unit': 'шт',
   }, [
     { id: 1, name: 'шт' },
     { id: 2, name: 'банка', name_plural: 'банки' },
-  ]);
+  ], locations);
 
   assert.deepEqual(plan.productPayload, {
     name: 'Огурцы маринованные',
+    location_id: 1,
     qu_id_stock: 1,
     qu_id_purchase: 2,
     qu_id_consume: 1,
@@ -83,11 +93,12 @@ test('requires purchase factor when purchase unit differs from stock unit', () =
     () => buildProductPayload({
       name: 'Огурцы маринованные',
       'stock-unit': 'шт',
+      location: 'Кладовка',
       'purchase-unit': 'банка',
     }, [
       { id: 1, name: 'шт' },
       { id: 2, name: 'банка' },
-    ]),
+    ], locations),
     /Ask the user: "How many stock units are in 1 purchase unit\?"/,
   );
 });
@@ -97,11 +108,12 @@ test('requires consume factor when consume unit differs from stock unit', () => 
     () => buildProductPayload({
       name: 'Молоко',
       'stock-unit': 'л',
+      location: 'Холодильник',
       'consume-unit': 'мл',
     }, [
       { id: 1, name: 'л' },
       { id: 2, name: 'мл' },
-    ]),
+    ], locations),
     /Ask the user: "How many stock units are in 1 consume unit\?"/,
   );
 });
@@ -122,12 +134,13 @@ test('rejects invalid conversion factors', () => {
     () => buildProductPayload({
       name: 'Молоко',
       'stock-unit': 'л',
+      location: 'Холодильник',
       'purchase-unit': 'бутылка',
       'purchase-to-stock-factor': '0',
     }, [
       { id: 1, name: 'л' },
       { id: 2, name: 'бутылка' },
-    ]),
+    ], locations),
     /--purchase-to-stock-factor must be a positive number/,
   );
 });
@@ -147,9 +160,16 @@ test('rejects missing product name', () => {
   );
 });
 
+test('rejects missing product location with available location choices', () => {
+  assert.throws(
+    () => buildProductPayload({ name: 'Йогурт', 'stock-unit': 'кг' }, units, locations),
+    /Missing required option: --location or --location-id\. Available locations: 1:Кладовка, 2:Холодильник/,
+  );
+});
+
 test('rejects unknown stock unit with available unit choices', () => {
   assert.throws(
-    () => buildProductPayload({ name: 'Йогурт', 'stock-unit': 'банка' }, units),
+    () => buildProductPayload({ name: 'Йогурт', 'stock-unit': 'банка', location: 'Кладовка' }, units, locations),
     /Unknown stock unit: банка\. Available units: 1:шт, 2:кг, 3:л\/литры/,
   );
 });
@@ -172,10 +192,11 @@ test('throws readable ambiguity errors', () => {
     () => buildProductPayload({
       name: 'Вода',
       'stock-unit': 'бутылка',
+      location: 'Кладовка',
     }, [
       { id: 1, name: 'бутылка' },
       { id: 2, name: 'Бутылка' },
-    ]),
+    ], locations),
     /Ambiguous stock unit: бутылка\. Matches: 1:бутылка, 2:Бутылка/,
   );
 });
@@ -195,11 +216,13 @@ test('runs product-create json command', async () => {
     options: {
       name: 'Молоко',
       'stock-unit': 'л',
+      location: 'Холодильник',
       'purchase-unit': 'шт',
       'purchase-to-stock-factor': '1',
     },
     client: {
       getQuantityUnits: async () => units,
+      getLocations: async () => locations,
       createProduct: async (payload) => {
         createdPayload = payload;
         return { created_object_id: 42 };
@@ -213,6 +236,7 @@ test('runs product-create json command', async () => {
 
   assert.deepEqual(createdPayload, {
     name: 'Молоко',
+    location_id: 2,
     qu_id_stock: 3,
     qu_id_purchase: 1,
     qu_id_consume: 3,

@@ -63,6 +63,28 @@ test('posts JSON object payloads', async () => {
   assert.equal(requestOptions.body, '{"name":"Молоко","qu_id_stock":1}');
 });
 
+test('reads locations through Grocy objects API', async () => {
+  let requestUrl;
+
+  const client = new GrocyClient({
+    baseUrl: 'http://grocy',
+    apiKey: 'secret-key',
+    fetchImpl: async (url) => {
+      requestUrl = url;
+
+      return {
+        ok: true,
+        text: async () => '[{"id":1,"name":"Кладовка"}]',
+      };
+    },
+  });
+
+  const data = await client.getLocations();
+
+  assert.deepEqual(data, [{ id: 1, name: 'Кладовка' }]);
+  assert.equal(requestUrl, 'http://grocy/api/objects/locations');
+});
+
 test('creates quantity units through Grocy objects API', async () => {
   let requestUrl;
   let requestOptions;

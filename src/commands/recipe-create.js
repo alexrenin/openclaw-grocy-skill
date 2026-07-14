@@ -12,11 +12,12 @@ async function runRecipeCreateCommand({ client, format, options }) {
     throw new Error(`Unsupported format for recipe-create: ${format}`);
   }
 
-  const [products, quantityUnits] = await Promise.all([
+  const [products, quantityUnits, locations] = await Promise.all([
     client.getProducts(),
     client.getQuantityUnits(),
+    client.getLocations(),
   ]);
-  const plan = buildRecipeCreatePlan(options, products, quantityUnits);
+  const plan = buildRecipeCreatePlan(options, products, quantityUnits, locations);
   const createdProducts = [];
 
   for (const ingredient of plan.ingredients) {
@@ -78,7 +79,7 @@ async function runRecipeCreateCommand({ client, format, options }) {
   }, null, 2);
 }
 
-function buildRecipeCreatePlan(options, products, quantityUnits) {
+function buildRecipeCreatePlan(options, products, quantityUnits, locations = []) {
   const name = normalizeText(options.name);
 
   if (!name) {
@@ -114,12 +115,12 @@ function buildRecipeCreatePlan(options, products, quantityUnits) {
   return {
     recipePayload,
     ingredients: ingredients.map((ingredient, index) => {
-      return buildIngredientPlan(ingredient, index, products, quantityUnits);
+      return buildIngredientPlan(ingredient, index, products, quantityUnits, locations);
     }),
   };
 }
 
-function buildIngredientPlan(ingredient, index, products, quantityUnits) {
+function buildIngredientPlan(ingredient, index, products, quantityUnits, locations = []) {
   if (!ingredient || typeof ingredient !== 'object' || Array.isArray(ingredient)) {
     throw new Error(`Ingredient #${index + 1} must be an object.`);
   }
@@ -152,7 +153,7 @@ function buildIngredientPlan(ingredient, index, products, quantityUnits) {
   const existingProduct = productId == null ? findProductByName(name, products) : undefined;
   const resolvedProductId = productId == null ? existingProduct?.id : parsePositiveInteger(productId, `ingredient #${index + 1} productId`);
   const productPlan = resolvedProductId == null
-    ? buildMissingProductPlan(ingredient, name, unitName, quantityUnits)
+    ? buildMissingProductPlan(ingredient, name, unitName, quantityUnits, locations)
     : undefined;
 
   return {
@@ -170,13 +171,15 @@ function buildIngredientPlan(ingredient, index, products, quantityUnits) {
   };
 }
 
-function buildMissingProductPlan(ingredient, name, unitName, quantityUnits) {
+function buildMissingProductPlan(ingredient, name, unitName, quantityUnits, locations = []) {
   const product = ingredient.product && typeof ingredient.product === 'object' && !Array.isArray(ingredient.product)
     ? ingredient.product
     : {};
   const productOptions = {
     name,
     description: product.description ?? ingredient.productDescription,
+    location: product.location ?? ingredient.location,
+    'location-id': product.locationId ?? product['location-id'] ?? ingredient.locationId,
     'stock-unit': product.stockUnit ?? product['stock-unit'] ?? ingredient.stockUnit ?? unitName,
     'purchase-unit': product.purchaseUnit ?? product['purchase-unit'] ?? ingredient.purchaseUnit,
     'purchase-to-stock-factor': product.purchaseToStockFactor ?? product['purchase-to-stock-factor'] ?? ingredient.purchaseToStockFactor,
@@ -184,7 +187,7 @@ function buildMissingProductPlan(ingredient, name, unitName, quantityUnits) {
     'consume-to-stock-factor': product.consumeToStockFactor ?? product['consume-to-stock-factor'] ?? ingredient.consumeToStockFactor,
   };
 
-  return buildProductCreatePlan(productOptions, quantityUnits);
+  return buildProductCreatePlan(productOptions, quantityUnits, locations);
 }
 
 function buildRecipePositionPayload(recipeId, ingredient) {

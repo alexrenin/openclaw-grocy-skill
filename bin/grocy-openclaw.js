@@ -4,6 +4,7 @@
 
 const { createGrocyClientFromEnv } = require('../src/grocy-client');
 const { runApiDocsCommand } = require('../src/commands/api-docs');
+const { runLocationsCommand } = require('../src/commands/locations');
 const { runProductCreateCommand } = require('../src/commands/product-create');
 const { runProductsCommand } = require('../src/commands/products');
 const { runRecipeCreateCommand } = require('../src/commands/recipe-create');
@@ -22,6 +23,7 @@ const HELP = `Usage:
 Commands:
   api-docs        Show Grocy OpenAPI documentation links for the installed version
   system-info      Read Grocy system info
+  locations        Read Grocy locations
   units            Read Grocy quantity units
   unit-create      Create a Grocy quantity unit
   shopping-list    Read Grocy shopping list
@@ -37,6 +39,7 @@ Commands:
 Formats:
   api-docs        text, json
   system-info      json
+  locations        table, json
   units            table, json
   unit-create      json
   shopping-list    text, json
@@ -52,12 +55,13 @@ Formats:
 Examples:
   node bin/grocy-openclaw.js api-docs --format text
   node bin/grocy-openclaw.js system-info --format json
+  node bin/grocy-openclaw.js locations --format table
   node bin/grocy-openclaw.js units --format table
   node bin/grocy-openclaw.js unit-create --name "банка" --name-plural "банки" --format json
   node bin/grocy-openclaw.js shopping-list --format text
   node bin/grocy-openclaw.js products --format table
-  node bin/grocy-openclaw.js product-create --name "Pickles" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --format json
-  node bin/grocy-openclaw.js recipe-create --name "Salad" --ingredients '[{"name":"Pickles","amount":3,"unit":"шт"}]' --format json
+  node bin/grocy-openclaw.js product-create --name "Pickles" --location "Pantry" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --format json
+  node bin/grocy-openclaw.js recipe-create --name "Salad" --ingredients '[{"name":"Pickles","amount":3,"unit":"шт","location":"Pantry"}]' --format json
   node bin/grocy-openclaw.js userfields --entity recipes --format table
   node bin/grocy-openclaw.js userfields-create --entity recipes --caption "Время готовки" --type text-single-line --format json
   node bin/grocy-openclaw.js userfields-get --entity recipes --object-id 10 --format json
@@ -67,6 +71,7 @@ Examples:
 const COMMAND_FORMATS = new Map([
   ['api-docs', new Set(['text', 'json'])],
   ['system-info', new Set(['json'])],
+  ['locations', new Set(['table', 'json'])],
   ['units', new Set(['table', 'json'])],
   ['unit-create', new Set(['json'])],
   ['shopping-list', new Set(['text', 'json'])],
@@ -83,6 +88,8 @@ const COMMAND_OPTIONS = new Map([
   ['product-create', new Set([
     'name',
     'description',
+    'location',
+    'location-id',
     'stock-unit',
     'stock-unit-id',
     'purchase-unit',
@@ -199,6 +206,9 @@ async function main(argv, env = process.env) {
       break;
     case 'system-info':
       output = await runSystemInfoCommand({ client, format });
+      break;
+    case 'locations':
+      output = await runLocationsCommand({ client, format });
       break;
     case 'units':
       output = await runUnitsCommand({ client, format });

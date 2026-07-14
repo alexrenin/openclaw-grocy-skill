@@ -64,6 +64,10 @@ class GrocyClient {
     return this.request('/api/objects/products');
   }
 
+  getLocations() {
+    return this.request('/api/objects/locations');
+  }
+
   getRecipes() {
     return this.request('/api/objects/recipes');
   }

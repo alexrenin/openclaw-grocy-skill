@@ -90,6 +90,12 @@ Show configured Grocy quantity units:
 node bin/grocy-openclaw.js units --format table
 ```
 
+Show configured Grocy product locations:
+
+```bash
+node bin/grocy-openclaw.js locations --format table
+```
+
 Create a new Grocy quantity unit:
 
 ```bash
@@ -123,14 +129,24 @@ node bin/grocy-openclaw.js products --format json
 Create a new Grocy product object:
 
 ```bash
-node bin/grocy-openclaw.js product-create --name "Молоко" --stock-unit "л" --format json
+node bin/grocy-openclaw.js product-create --name "Молоко" --location "Холодильник" --stock-unit "л" --format json
 ```
 
 When purchase or consume units differ from stock unit, include conversion factors:
 
 ```bash
-node bin/grocy-openclaw.js product-create --name "Огурцы маринованные" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --consume-unit "шт" --format json
+node bin/grocy-openclaw.js product-create --name "Огурцы маринованные" --location "Кладовка" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --consume-unit "шт" --format json
 ```
+
+Every new product needs a Grocy location. Prefer `--location` with a location name in chat workflows. Users should not be expected to know Grocy location ids.
+
+If the product location is unclear, inspect configured locations first:
+
+```bash
+node bin/grocy-openclaw.js locations --format table
+```
+
+Then ask which existing location to use before running `product-create`.
 
 `--purchase-to-stock-factor` means how many stock units are in 1 purchase unit. `--consume-to-stock-factor` means how many stock units are in 1 consume unit. If the units are equal, the factor is `1` and may be omitted.
 
@@ -162,7 +178,7 @@ Then create the product using the new unit name.
 Use ids only when an automation already knows the id:
 
 ```bash
-node bin/grocy-openclaw.js product-create --name "Картофель" --stock-unit-id 2 --format json
+node bin/grocy-openclaw.js product-create --name "Картофель" --location-id 1 --stock-unit-id 2 --format json
 ```
 
 `--purchase-unit` and `--consume-unit` are optional and default to the stock unit.
@@ -170,14 +186,14 @@ node bin/grocy-openclaw.js product-create --name "Картофель" --stock-un
 Create a recipe with ingredients:
 
 ```bash
-node bin/grocy-openclaw.js recipe-create --name "Оливье" --base-servings 4 --ingredients '[{"name":"Картофель","amount":3,"unit":"шт"},{"name":"Огурцы маринованные","amount":2,"unit":"шт","note":"нарезать"}]' --format json
+node bin/grocy-openclaw.js recipe-create --name "Оливье" --base-servings 4 --ingredients '[{"name":"Картофель","amount":3,"unit":"шт"},{"name":"Огурцы маринованные","amount":2,"unit":"шт","location":"Кладовка","note":"нарезать"}]' --format json
 ```
 
-For `recipe-create`, build `--ingredients` as a JSON array. Each ingredient must include `name` or `productId`, `amount`, and `unit`. Optional fields are `note`, `ingredientGroup`, `variableAmount`, `onlyCheckSingleUnitInStock`, `roundUp`, and a nested `product` object.
+For `recipe-create`, build `--ingredients` as a JSON array. Each ingredient must include `name` or `productId`, `amount`, and `unit`. Optional fields are `note`, `ingredientGroup`, `variableAmount`, `onlyCheckSingleUnitInStock`, `roundUp`, `location`, `locationId`, and a nested `product` object.
 
-If an ingredient product does not exist, `recipe-create` creates it automatically using the ingredient unit as stock, purchase, and consume unit. If the product needs different purchase or consume units, include a nested `product` object with `stockUnit`, `purchaseUnit`, `purchaseToStockFactor`, `consumeUnit`, and `consumeToStockFactor` as needed.
+If an ingredient product does not exist, `recipe-create` creates it automatically using the ingredient unit as stock, purchase, and consume unit. A missing ingredient product still needs a Grocy location, so include `location` or `locationId` on the ingredient or nested product object. If the product needs different purchase or consume units, include a nested `product` object with `location`, `stockUnit`, `purchaseUnit`, `purchaseToStockFactor`, `consumeUnit`, and `consumeToStockFactor` as needed.
 
-If the user asks to create a recipe but omits ingredient amounts or units, ask a clarification question before running `recipe-create`. If a unit is unclear, inspect existing units first with `units --format table`; create a new unit only after the user confirms none fit.
+If the user asks to create a recipe but omits ingredient amounts or units, ask a clarification question before running `recipe-create`. If a unit is unclear, inspect existing units first with `units --format table`; create a new unit only after the user confirms none fit. If the recipe includes new products and the user did not specify where to store them, inspect existing locations first with `locations --format table` and ask which location to use.
 
 Show custom fields configured for an entity:
 

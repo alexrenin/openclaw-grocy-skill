@@ -5,8 +5,11 @@ async function runProductCreateCommand({ client, format, options }) {
     throw new Error(`Unsupported format for product-create: ${format}`);
   }
 
-  const quantityUnits = await client.getQuantityUnits();
-  const plan = buildProductCreatePlan(options, quantityUnits);
+  const [quantityUnits, locations] = await Promise.all([
+    client.getQuantityUnits(),
+    client.getLocations(),
+  ]);
+  const plan = buildProductCreatePlan(options, quantityUnits, locations);
   const result = await client.createProduct(plan.productPayload);
   const productId = result?.created_object_id;
   const conversionResults = [];
@@ -37,11 +40,11 @@ async function runProductCreateCommand({ client, format, options }) {
   }, null, 2);
 }
 
-function buildProductPayload(options, quantityUnits) {
-  return buildProductCreatePlan(options, quantityUnits).productPayload;
+function buildProductPayload(options, quantityUnits, locations = []) {
+  return buildProductCreatePlan(options, quantityUnits, locations).productPayload;
 }
 
-function buildProductCreatePlan(options, quantityUnits) {
+function buildProductCreatePlan(options, quantityUnits, locations = []) {
   const name = normalizeText(options.name);
 
   if (!name) {
@@ -81,9 +84,16 @@ function buildProductCreatePlan(options, quantityUnits) {
     sourceUnitId: quIdConsume,
     stockUnitId: quIdStock,
   });
+  const locationId = resolveLocationOption({
+    idValue: options['location-id'],
+    nameValue: options.location,
+    locations,
+    required: true,
+  });
 
   const payload = {
     name,
+    location_id: locationId,
     qu_id_stock: quIdStock,
     qu_id_purchase: quIdPurchase,
     qu_id_consume: quIdConsume,
@@ -134,6 +144,28 @@ function buildConversionPayloads({
   }
 
   return payloads;
+}
+
+function resolveLocationOption({ idValue, nameValue, locations, required }) {
+  if (idValue && nameValue) {
+    throw new Error('Specify either --location-id or --location, not both.');
+  }
+
+  if (idValue) {
+    return parsePositiveInteger(idValue, '--location-id');
+  }
+
+  if (nameValue) {
+    const location = resolveLocation(nameValue, locations);
+
+    return Number(location.id);
+  }
+
+  if (required) {
+    throw new Error(`Missing required option: --location or --location-id. Available locations: ${formatLocationChoices(locations)}`);
+  }
+
+  return undefined;
 }
 
 function resolveUnitOption({ label, idValue, nameValue, quantityUnits, required }) {
@@ -190,6 +222,57 @@ function formatMissingFactorError(optionName) {
   }
 
   return `${optionName} is required when the unit differs from stock unit.`;
+}
+
+function resolveLocation(value, locations) {
+  const matches = findLocationMatches(value, locations);
+
+  if (matches.length === 1) {
+    return matches[0];
+  }
+
+  if (matches.length > 1) {
+    throw new Error(`Ambiguous location: ${value}. Matches: ${formatLocationChoices(matches)}`);
+  }
+
+  throw new Error(`Unknown location: ${value}. Available locations: ${formatLocationChoices(locations)}`);
+}
+
+function findLocationMatches(value, locations) {
+  const normalized = normalizeUnitTerm(value);
+  const numericId = Number(value);
+
+  if (Number.isInteger(numericId) && numericId > 0) {
+    return locations.filter((location) => Number(location.id) === numericId);
+  }
+
+  const exactMatches = locations.filter((location) => {
+    return [
+      location.name,
+      location.description,
+    ]
+      .map(normalizeUnitTerm)
+      .filter(Boolean)
+      .includes(normalized);
+  });
+
+  if (exactMatches.length > 0) {
+    return exactMatches;
+  }
+
+  if (normalized.length < 3) {
+    return [];
+  }
+
+  return locations.filter((location) => {
+    return [
+      location.name,
+      location.description,
+    ]
+      .map(normalizeUnitTerm)
+      .filter(Boolean)
+      .some((term) => term.includes(normalized) || normalized.includes(term));
+  });
 }
 
 function findQuantityUnit(value, quantityUnits) {
@@ -296,6 +379,20 @@ function formatUnitChoices(units) {
     .join(', ');
 }
 
+function formatLocationChoices(locations) {
+  if (!Array.isArray(locations) || locations.length === 0) {
+    return 'none';
+  }
+
+  return locations
+    .map((location) => {
+      const name = normalizeText(location.name) || 'unnamed';
+
+      return `${location.id}:${name}`;
+    })
+    .join(', ');
+}
+
 function parsePositiveInteger(value, optionName) {
   const numberValue = Number(value);
 
@@ -339,6 +436,8 @@ module.exports = {
   buildProductPayload,
   findQuantityUnit,
   findQuantityUnitMatches,
+  findLocationMatches,
+  formatLocationChoices,
   formatUnitChoices,
   formatMissingFactorError,
   parsePositiveNumber,

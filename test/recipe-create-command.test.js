@@ -18,6 +18,9 @@ const units = [
   { id: 1, name: 'шт', name_plural: 'шт' },
   { id: 2, name: 'кг', name_plural: 'кг' },
 ];
+const locations = [
+  { id: 1, name: 'Кладовка' },
+];
 
 test('parses ingredients JSON option', () => {
   assert.deepEqual(parseIngredientsOption('[{"name":"Картофель","amount":3,"unit":"шт"}]'), [
@@ -47,9 +50,9 @@ test('builds recipe plan with existing and missing products', () => {
     'base-servings': '4',
     ingredients: JSON.stringify([
       { name: 'Картофель', amount: 3, unit: 'шт' },
-      { name: 'Огурцы маринованные', amount: 2, unit: 'шт', note: 'нарезать' },
+      { name: 'Огурцы маринованные', amount: 2, unit: 'шт', location: 'Кладовка', note: 'нарезать' },
     ]),
-  }, products, units);
+  }, products, units, locations);
 
   assert.deepEqual(plan.recipePayload, {
     name: 'Оливье',
@@ -61,6 +64,7 @@ test('builds recipe plan with existing and missing products', () => {
   assert.equal(plan.ingredients[0].productPlan, undefined);
   assert.deepEqual(plan.ingredients[1].productPlan.productPayload, {
     name: 'Огурцы маринованные',
+    location_id: 1,
     qu_id_stock: 1,
     qu_id_purchase: 1,
     qu_id_consume: 1,
@@ -93,7 +97,7 @@ test('rejects unknown ingredient unit', () => {
       ingredients: JSON.stringify([
         { name: 'Картофель', amount: 3, unit: 'ведро' },
       ]),
-    }, products, units),
+    }, products, units, locations),
     /Unknown ingredient unit: ведро/,
   );
 });
@@ -107,12 +111,13 @@ test('runs recipe-create json command and creates missing products', async () =>
       name: 'Оливье',
       ingredients: JSON.stringify([
         { name: 'Картофель', amount: 3, unit: 'шт' },
-        { name: 'Огурцы маринованные', amount: 2, unit: 'шт' },
+        { name: 'Огурцы маринованные', amount: 2, unit: 'шт', location: 'Кладовка' },
       ]),
     },
     client: {
       getProducts: async () => products,
       getQuantityUnits: async () => units,
+      getLocations: async () => locations,
       createProduct: async (payload) => {
         calls.push(['createProduct', payload]);
         return { created_object_id: 20 };
@@ -135,6 +140,7 @@ test('runs recipe-create json command and creates missing products', async () =>
   assert.deepEqual(calls, [
     ['createProduct', {
       name: 'Огурцы маринованные',
+      location_id: 1,
       qu_id_stock: 1,
       qu_id_purchase: 1,
       qu_id_consume: 1,
@@ -170,6 +176,7 @@ test('runs recipe-create json command and creates missing products', async () =>
         name: 'Огурцы маринованные',
         payload: {
           name: 'Огурцы маринованные',
+          location_id: 1,
           qu_id_stock: 1,
           qu_id_purchase: 1,
           qu_id_consume: 1,

@@ -12,7 +12,7 @@ This must be developed as a reusable public skill, not as a one-off private scri
 
 The initial read commands remain read-only.
 
-The skill may read Grocy system info, products, quantity units, shopping list items, and stock.
+The skill may read Grocy system info, products, product locations, quantity units, shopping list items, recipes, custom fields, and stock.
 
 Write commands include `product-create`, `unit-create`, `recipe-create`, and `userfields-create`. Run them only when the user explicitly asks to modify Grocy. Keep write commands separate from read commands, clearly documented, and covered by tests.
 
@@ -70,6 +70,7 @@ openclaw-grocy-skill/
 |   `-- commands/
 |       |-- api-docs.js
 |       |-- system-info.js
+|       |-- locations.js
 |       |-- units.js
 |       |-- unit-create.js
 |       |-- product-create.js
@@ -95,12 +96,14 @@ Implement these commands:
 node bin/grocy-openclaw.js api-docs --format text
 node bin/grocy-openclaw.js api-docs --format json
 node bin/grocy-openclaw.js system-info --format json
+node bin/grocy-openclaw.js locations --format table
+node bin/grocy-openclaw.js locations --format json
 node bin/grocy-openclaw.js units --format table
 node bin/grocy-openclaw.js units --format json
 node bin/grocy-openclaw.js unit-create --name "банка" --name-plural "банки" --format json
-node bin/grocy-openclaw.js product-create --name "Молоко" --stock-unit "л" --format json
-node bin/grocy-openclaw.js product-create --name "Огурцы маринованные" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --consume-unit "шт" --format json
-node bin/grocy-openclaw.js recipe-create --name "Оливье" --base-servings 4 --ingredients '[{"name":"Картофель","amount":3,"unit":"шт"}]' --format json
+node bin/grocy-openclaw.js product-create --name "Молоко" --location "Холодильник" --stock-unit "л" --format json
+node bin/grocy-openclaw.js product-create --name "Огурцы маринованные" --location "Кладовка" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --consume-unit "шт" --format json
+node bin/grocy-openclaw.js recipe-create --name "Оливье" --base-servings 4 --ingredients '[{"name":"Картофель","amount":3,"unit":"шт"},{"name":"Огурцы маринованные","amount":2,"unit":"шт","location":"Кладовка"}]' --format json
 node bin/grocy-openclaw.js userfields --entity recipes --format table
 node bin/grocy-openclaw.js userfields-create --entity recipes --caption "Время готовки" --type text-single-line --format json
 node bin/grocy-openclaw.js userfields-get --entity recipes --object-id 10 --format json
@@ -140,6 +143,7 @@ Required endpoints for the initial read-only version:
 ```text
 GET /api/system/info
 GET /api/objects/products
+GET /api/objects/locations
 GET /api/objects/recipes
 GET /api/objects/recipes_pos
 GET /api/objects/userfields
@@ -161,6 +165,8 @@ POST /api/objects/userfields
 ```
 
 Product-specific unit conversion factors must be stored as `quantity_unit_conversions` rows. Do not send `qu_factor_purchase_to_stock` or `qu_factor_consume_to_stock` fields in the `products` payload for Grocy 4.x.
+
+Products must include `location_id` when created. The CLI should accept `--location` for chat workflows and resolve it against `GET /api/objects/locations`; users should not be expected to know Grocy location ids.
 
 The Grocy client should:
 
@@ -261,9 +267,13 @@ The skill must tell OpenClaw:
 - to keep write commands separate from read commands
 - to prefer quantity unit names and aliases in chat workflows, not raw ids
 - to use `units` when the configured Grocy units need to be inspected
+- to prefer location names in chat workflows, not raw ids
+- to use `locations` when configured Grocy product locations need to be inspected
+- to ask which existing location to use before `product-create` when the product location is missing
 - to require conversion factors when purchase or consume units differ from stock unit
 - to ask a clarification question before `product-create` when a required conversion factor is missing
 - to ask for missing recipe ingredient amounts or units before `recipe-create`
+- to ask for a storage location before `recipe-create` when the recipe includes missing products without locations
 - to let `recipe-create` create missing ingredient products only when the user explicitly asked to create the recipe
 - to use `userfields` for configured custom fields and `userfields-get` for values on a specific object
 - to ask for the custom field type before `userfields-create` when the user did not provide it
@@ -442,6 +452,7 @@ Rules for future write operations:
 - Keep read-only commands separate from write commands.
 - Require explicit user intent before modifying Grocy.
 - When a product unit is missing, offer existing `units` choices first.
+- When a product location is missing, offer existing `locations` choices first.
 - Create a new quantity unit only after the user confirms none of the existing units fit.
 - Document write behavior clearly in `SKILL.md`.
 - Add tests where possible.
