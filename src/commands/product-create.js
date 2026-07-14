@@ -6,18 +6,42 @@ async function runProductCreateCommand({ client, format, options }) {
   }
 
   const quantityUnits = await client.getQuantityUnits();
-  const payload = buildProductPayload(options, quantityUnits);
-  const result = await client.createProduct(payload);
+  const plan = buildProductCreatePlan(options, quantityUnits);
+  const result = await client.createProduct(plan.productPayload);
+  const productId = result?.created_object_id;
+  const conversionResults = [];
+
+  if (plan.conversionPayloads.length > 0 && productId == null) {
+    throw new Error('Grocy did not return created_object_id; cannot create product-specific quantity unit conversions.');
+  }
+
+  for (const conversionPayload of plan.conversionPayloads) {
+    const payload = {
+      ...conversionPayload,
+      product_id: productId,
+    };
+    const conversionResult = await client.createQuantityUnitConversion(payload);
+
+    conversionResults.push({
+      payload,
+      result: conversionResult,
+    });
+  }
 
   return JSON.stringify({
     action: 'created',
     entity: 'products',
-    payload,
+    payload: plan.productPayload,
     result,
+    conversions: conversionResults,
   }, null, 2);
 }
 
 function buildProductPayload(options, quantityUnits) {
+  return buildProductCreatePlan(options, quantityUnits).productPayload;
+}
+
+function buildProductCreatePlan(options, quantityUnits) {
   const name = normalizeText(options.name);
 
   if (!name) {
@@ -63,9 +87,14 @@ function buildProductPayload(options, quantityUnits) {
     qu_id_stock: quIdStock,
     qu_id_purchase: quIdPurchase,
     qu_id_consume: quIdConsume,
-    qu_factor_purchase_to_stock: quFactorPurchaseToStock,
-    qu_factor_consume_to_stock: quFactorConsumeToStock,
   };
+  const conversionPayloads = buildConversionPayloads({
+    quIdStock,
+    quIdPurchase,
+    quIdConsume,
+    quFactorPurchaseToStock,
+    quFactorConsumeToStock,
+  });
 
   const description = normalizeText(options.description);
 
@@ -73,7 +102,38 @@ function buildProductPayload(options, quantityUnits) {
     payload.description = description;
   }
 
-  return payload;
+  return {
+    productPayload: payload,
+    conversionPayloads,
+  };
+}
+
+function buildConversionPayloads({
+  quIdStock,
+  quIdPurchase,
+  quIdConsume,
+  quFactorPurchaseToStock,
+  quFactorConsumeToStock,
+}) {
+  const payloads = [];
+
+  if (Number(quIdPurchase) !== Number(quIdStock)) {
+    payloads.push({
+      from_qu_id: quIdPurchase,
+      to_qu_id: quIdStock,
+      factor: quFactorPurchaseToStock,
+    });
+  }
+
+  if (Number(quIdConsume) !== Number(quIdStock) && Number(quIdConsume) !== Number(quIdPurchase)) {
+    payloads.push({
+      from_qu_id: quIdConsume,
+      to_qu_id: quIdStock,
+      factor: quFactorConsumeToStock,
+    });
+  }
+
+  return payloads;
 }
 
 function resolveUnitOption({ label, idValue, nameValue, quantityUnits, required }) {
@@ -274,6 +334,8 @@ function normalizeUnitTerm(value) {
 }
 
 module.exports = {
+  buildConversionPayloads,
+  buildProductCreatePlan,
   buildProductPayload,
   findQuantityUnit,
   findQuantityUnitMatches,

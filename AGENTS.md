@@ -129,7 +129,10 @@ Required endpoints for explicit write commands:
 ```text
 POST /api/objects/products
 POST /api/objects/quantity_units
+POST /api/objects/quantity_unit_conversions
 ```
+
+Product-specific unit conversion factors must be stored as `quantity_unit_conversions` rows. Do not send `qu_factor_purchase_to_stock` or `qu_factor_consume_to_stock` fields in the `products` payload for Grocy 4.x.
 
 The Grocy client should:
 

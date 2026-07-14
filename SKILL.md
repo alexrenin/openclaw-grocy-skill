@@ -116,6 +116,8 @@ node bin/grocy-openclaw.js product-create --name "Огурцы маринова�
 
 `--purchase-to-stock-factor` means how many stock units are in 1 purchase unit. `--consume-to-stock-factor` means how many stock units are in 1 consume unit. If the units are equal, the factor is `1` and may be omitted.
 
+Do not add `qu_factor_purchase_to_stock` or `qu_factor_consume_to_stock` directly to a Grocy product object. In Grocy 4.x, product-specific unit conversions are separate `quantity_unit_conversions` objects. Use the CLI options above; the CLI creates the product first and then creates the conversion rows.
+
 If the user asks to create a product with different purchase or consume units but does not provide the conversion factor, do not run `product-create` yet. Ask a clarification question first:
 
 - For purchase unit: "How many stock units are in 1 purchase unit?"

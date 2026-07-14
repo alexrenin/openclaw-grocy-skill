@@ -131,6 +131,8 @@ Supported `product-create` options:
 - `--description`: optional product description
 - `--format json`: required output format
 
+Implementation note: Grocy 4.x stores product-specific unit conversion factors in `quantity_unit_conversions`, not as `qu_factor_*` fields on the product. The CLI creates the product first and then creates the needed conversion rows automatically.
+
 For chat agents: if the user asks to create a product with different units but does not give the conversion factor, ask before running `product-create`. For example, if the product is stored as `шт` and purchased as `банка`, ask how many pieces are in one jar.
 
 Show stock as a table:

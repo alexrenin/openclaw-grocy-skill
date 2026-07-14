@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 
 const {
+  buildProductCreatePlan,
   buildProductPayload,
   findQuantityUnit,
   findQuantityUnitMatches,
@@ -33,8 +34,6 @@ test('builds product payload from unit names', () => {
     qu_id_stock: 3,
     qu_id_purchase: 1,
     qu_id_consume: 3,
-    qu_factor_purchase_to_stock: 1,
-    qu_factor_consume_to_stock: 1,
   });
 });
 
@@ -49,13 +48,11 @@ test('defaults purchase and consume units to stock unit', () => {
     qu_id_stock: 2,
     qu_id_purchase: 2,
     qu_id_consume: 2,
-    qu_factor_purchase_to_stock: 1,
-    qu_factor_consume_to_stock: 1,
   });
 });
 
-test('adds conversion factors when units differ', () => {
-  const payload = buildProductPayload({
+test('plans product-specific quantity unit conversions when units differ', () => {
+  const plan = buildProductCreatePlan({
     name: 'Огурцы маринованные',
     'stock-unit': 'шт',
     'purchase-unit': 'банка',
@@ -66,14 +63,19 @@ test('adds conversion factors when units differ', () => {
     { id: 2, name: 'банка', name_plural: 'банки' },
   ]);
 
-  assert.deepEqual(payload, {
+  assert.deepEqual(plan.productPayload, {
     name: 'Огурцы маринованные',
     qu_id_stock: 1,
     qu_id_purchase: 2,
     qu_id_consume: 1,
-    qu_factor_purchase_to_stock: 10,
-    qu_factor_consume_to_stock: 1,
   });
+  assert.deepEqual(plan.conversionPayloads, [
+    {
+      from_qu_id: 2,
+      to_qu_id: 1,
+      factor: 10,
+    },
+  ]);
 });
 
 test('requires purchase factor when purchase unit differs from stock unit', () => {
@@ -186,12 +188,15 @@ test('finds quantity unit by id, name, and plural name', () => {
 
 test('runs product-create json command', async () => {
   let createdPayload;
+  const createdConversions = [];
 
   const output = await runProductCreateCommand({
     format: 'json',
     options: {
       name: 'Молоко',
       'stock-unit': 'л',
+      'purchase-unit': 'шт',
+      'purchase-to-stock-factor': '1',
     },
     client: {
       getQuantityUnits: async () => units,
@@ -199,21 +204,42 @@ test('runs product-create json command', async () => {
         createdPayload = payload;
         return { created_object_id: 42 };
       },
+      createQuantityUnitConversion: async (payload) => {
+        createdConversions.push(payload);
+        return { created_object_id: 99 };
+      },
     },
   });
 
   assert.deepEqual(createdPayload, {
     name: 'Молоко',
     qu_id_stock: 3,
-    qu_id_purchase: 3,
+    qu_id_purchase: 1,
     qu_id_consume: 3,
-    qu_factor_purchase_to_stock: 1,
-    qu_factor_consume_to_stock: 1,
   });
+  assert.deepEqual(createdConversions, [
+    {
+      from_qu_id: 1,
+      to_qu_id: 3,
+      factor: 1,
+      product_id: 42,
+    },
+  ]);
   assert.equal(output, JSON.stringify({
     action: 'created',
     entity: 'products',
     payload: createdPayload,
     result: { created_object_id: 42 },
+    conversions: [
+      {
+        payload: {
+          from_qu_id: 1,
+          to_qu_id: 3,
+          factor: 1,
+          product_id: 42,
+        },
+        result: { created_object_id: 99 },
+      },
+    ],
   }, null, 2));
 });

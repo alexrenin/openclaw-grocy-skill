@@ -90,6 +90,10 @@ class GrocyClient {
   createQuantityUnit(payload) {
     return this.createObject('quantity_units', payload);
   }
+
+  createQuantityUnitConversion(payload) {
+    return this.createObject('quantity_unit_conversions', payload);
+  }
 }
 
 function createGrocyClientFromEnv(env) {
