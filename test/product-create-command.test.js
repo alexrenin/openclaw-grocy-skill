@@ -7,6 +7,7 @@ const {
   buildProductPayload,
   findQuantityUnit,
   findQuantityUnitMatches,
+  formatMissingFactorError,
   runProductCreateCommand,
 } = require('../src/commands/product-create');
 
@@ -85,7 +86,7 @@ test('requires purchase factor when purchase unit differs from stock unit', () =
       { id: 1, name: 'шт' },
       { id: 2, name: 'банка' },
     ]),
-    /--purchase-to-stock-factor is required when the unit differs from stock unit/,
+    /Ask the user: "How many stock units are in 1 purchase unit\?"/,
   );
 });
 
@@ -99,7 +100,18 @@ test('requires consume factor when consume unit differs from stock unit', () => 
       { id: 1, name: 'л' },
       { id: 2, name: 'мл' },
     ]),
-    /--consume-to-stock-factor is required when the unit differs from stock unit/,
+    /Ask the user: "How many stock units are in 1 consume unit\?"/,
+  );
+});
+
+test('formats missing conversion factor errors for chat clarification', () => {
+  assert.match(
+    formatMissingFactorError('--purchase-to-stock-factor'),
+    /if 1 jar contains about 10 pieces/,
+  );
+  assert.match(
+    formatMissingFactorError('--consume-to-stock-factor'),
+    /if 1 ml is 0\.001 liters/,
   );
 });
 

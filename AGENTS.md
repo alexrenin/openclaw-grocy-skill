@@ -231,6 +231,7 @@ The skill must tell OpenClaw:
 - to prefer quantity unit names and aliases in chat workflows, not raw ids
 - to use `units` when the configured Grocy units need to be inspected
 - to require conversion factors when purchase or consume units differ from stock unit
+- to ask a clarification question before `product-create` when a required conversion factor is missing
 - to return command output clearly to the user
 
 Read commands must remain read-only.

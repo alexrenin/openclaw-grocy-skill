@@ -116,6 +116,13 @@ node bin/grocy-openclaw.js product-create --name "Огурцы маринова�
 
 `--purchase-to-stock-factor` means how many stock units are in 1 purchase unit. `--consume-to-stock-factor` means how many stock units are in 1 consume unit. If the units are equal, the factor is `1` and may be omitted.
 
+If the user asks to create a product with different purchase or consume units but does not provide the conversion factor, do not run `product-create` yet. Ask a clarification question first:
+
+- For purchase unit: "How many stock units are in 1 purchase unit?"
+- For consume unit: "How many stock units are in 1 consume unit?"
+
+Example: if the user says pickles are stored and consumed as pieces but bought in jars, ask how many pieces are in one jar before creating the product.
+
 For chat workflows, prefer unit names or common aliases. Users should not be expected to know Grocy unit ids.
 
 If the unit is unclear, inspect configured units first:

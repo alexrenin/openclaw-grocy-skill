@@ -103,13 +103,33 @@ function resolveFactorOption({ optionName, value, sourceUnitId, stockUnitId }) {
 
   if (value == null || value === '') {
     if (unitsDiffer) {
-      throw new Error(`${optionName} is required when the unit differs from stock unit`);
+      throw new Error(formatMissingFactorError(optionName));
     }
 
     return 1;
   }
 
   return parsePositiveNumber(value, optionName);
+}
+
+function formatMissingFactorError(optionName) {
+  if (optionName === '--purchase-to-stock-factor') {
+    return [
+      '--purchase-to-stock-factor is required when purchase unit differs from stock unit.',
+      'Ask the user: "How many stock units are in 1 purchase unit?"',
+      'Example: if 1 jar contains about 10 pieces, use --purchase-to-stock-factor 10.',
+    ].join(' ');
+  }
+
+  if (optionName === '--consume-to-stock-factor') {
+    return [
+      '--consume-to-stock-factor is required when consume unit differs from stock unit.',
+      'Ask the user: "How many stock units are in 1 consume unit?"',
+      'Example: if 1 ml is 0.001 liters, use --consume-to-stock-factor 0.001.',
+    ].join(' ');
+  }
+
+  return `${optionName} is required when the unit differs from stock unit.`;
 }
 
 function findQuantityUnit(value, quantityUnits) {
@@ -258,6 +278,7 @@ module.exports = {
   findQuantityUnit,
   findQuantityUnitMatches,
   formatUnitChoices,
+  formatMissingFactorError,
   parsePositiveNumber,
   runProductCreateCommand,
 };
