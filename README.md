@@ -255,6 +255,39 @@ If an ingredient product name does not exist, `recipe-create` stops before writi
 
 For chat agents: if a recipe ingredient unit is unknown, inspect existing units first with `units --format table`. Create a new unit only after the user confirms none of the existing units fit. If a recipe includes new products, ask for confirmation before creating those products and only then add `--create-missing-products true`. If the user confirmed product creation but did not specify where to store the new products, inspect locations with `locations --format table` and ask which existing location to use.
 
+Update an existing recipe:
+
+```bash
+node bin/grocy-openclaw.js recipe-update --recipe "Оливье" --name "Оливье быстрый" --base-servings 4 --format json
+node bin/grocy-openclaw.js recipe-update --recipe-id 11 --description "" --desired-servings 4 --format json
+```
+
+`recipe-update` modifies Grocy. Use it only after the user confirms the exact recipe and fields to change. It preserves existing recipe fields that are not mentioned.
+
+Supported `recipe-update` options:
+
+- `--recipe` or `--recipe-id`: required recipe selector; prefer `--recipe` for chat when the name is unique
+- `--name`: optional new recipe name
+- `--description`: optional recipe description; pass an empty value to clear it
+- `--base-servings`: optional positive integer
+- `--desired-servings`: optional positive integer
+- `--format json`: required output format
+
+Delete a recipe:
+
+```bash
+node bin/grocy-openclaw.js recipe-delete --recipe-id 11 --confirm-recipe-name "Оливье быстрый" --delete-ingredients true --format json
+```
+
+`recipe-delete` modifies Grocy and is intentionally conservative. It accepts `--recipe` or `--recipe-id`, optionally checks `--confirm-recipe-name`, and refuses to delete a recipe that still has ingredient rows unless `--delete-ingredients true` is provided after explicit confirmation. With `--delete-ingredients true`, it deletes the recipe's `recipes_pos` rows first, then deletes the recipe.
+
+Supported `recipe-delete` options:
+
+- `--recipe` or `--recipe-id`: required recipe selector; prefer `--recipe-id` when deleting a just-created recipe from command output
+- `--confirm-recipe-name`: optional safety check
+- `--delete-ingredients true`: required when the recipe still has ingredient rows
+- `--format json`: required output format
+
 Add one ingredient to an existing recipe:
 
 ```bash
@@ -297,6 +330,15 @@ Supported `recipe-ingredient-update` options:
 If the matching recipe/product pair has multiple ingredient rows, the command stops and prints the matching position ids. Rerun with `--position-id`.
 
 For chat agents: if a unit such as `ст.ложка` is not configured in Grocy, do not let it match `л`. Either ask the user whether to convert to an existing unit such as liters or milliliters, or create the missing unit after confirmation.
+
+Delete one ingredient row from an existing recipe:
+
+```bash
+node bin/grocy-openclaw.js recipe-ingredient-delete --recipe "Блины" --product "Масло подсолнечное" --format json
+node bin/grocy-openclaw.js recipe-ingredient-delete --position-id 12 --format json
+```
+
+`recipe-ingredient-delete` modifies Grocy by deleting one `recipes_pos` row. Use it after confirmation when an ingredient was added by mistake. It can select the row by `--position-id`, or by `--recipe` / `--recipe-id` together with `--product` / `--product-id`. If the matching recipe/product pair has multiple rows, the command stops and prints the matching position ids; rerun with `--position-id`.
 
 Show custom fields configured for an entity:
 
@@ -491,8 +533,11 @@ Automated tests must not depend on or modify the configured Grocy instance.
 - `unit-update` modifies Grocy and must only be run after the user explicitly confirms the exact unit correction.
 - `unit-delete` modifies Grocy and must only be run after especially clear confirmation of the exact unit id; delete only unused units.
 - `recipe-create` modifies Grocy and may create missing products only when `--create-missing-products true` is used after explicit confirmation; run it only after the user confirms creating the recipe.
+- `recipe-update` modifies Grocy and must only be run after the user explicitly confirms the exact recipe correction.
+- `recipe-delete` modifies Grocy and must only be run after especially clear confirmation of the exact recipe; use `--delete-ingredients true` only when the user also confirmed deleting the recipe's ingredient rows.
 - `recipe-ingredient-add` modifies Grocy by adding an ingredient row to an existing recipe; run it only after the user confirms adding that ingredient.
 - `recipe-ingredient-update` modifies Grocy by updating an existing ingredient row; run it only after the user confirms the correction.
+- `recipe-ingredient-delete` modifies Grocy by deleting one ingredient row; run it only after the user confirms removing that exact row.
 - `userfields-create` modifies Grocy and must only be run after the user confirms creating the custom field.
 - `userfields-set` modifies Grocy and must only be run after the user confirms setting or updating custom field values.
 - `stock-add` modifies Grocy by adding a purchased product amount to stock and may record `price`; run it only after the user confirms adding those purchases or stock entries.
@@ -515,4 +560,4 @@ Use the version-specific OpenAPI link first, because `master` can describe a dif
 
 See [ROADMAP.md](ROADMAP.md) for the current implementation status, planned commands, and verification notes.
 
-Current status: read commands, product search, product create/update/delete, unit create/update/delete, recipe/custom-field creation, recipe ingredient add/update, stock add, and stock transaction undo are implemented. Planned work includes broader correction/removal workflows, stock monitoring, shopping list write commands, recipe read commands, and menu planning helpers.
+Current status: read commands, product search, product create/update/delete, unit create/update/delete, recipe create/update/delete, recipe ingredient add/update/delete, custom-field creation and value setting, stock add, and stock transaction undo are implemented. Planned work includes custom field lifecycle, stock monitoring, shopping list write commands, recipe read commands, and menu planning helpers.

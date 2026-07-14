@@ -12,8 +12,11 @@ const { runProductSearchCommand } = require('../src/commands/product-search');
 const { runProductUpdateCommand } = require('../src/commands/product-update');
 const { runProductsCommand } = require('../src/commands/products');
 const { runRecipeCreateCommand } = require('../src/commands/recipe-create');
+const { runRecipeDeleteCommand } = require('../src/commands/recipe-delete');
 const { runRecipeIngredientAddCommand } = require('../src/commands/recipe-ingredient-add');
+const { runRecipeIngredientDeleteCommand } = require('../src/commands/recipe-ingredient-delete');
 const { runRecipeIngredientUpdateCommand } = require('../src/commands/recipe-ingredient-update');
+const { runRecipeUpdateCommand } = require('../src/commands/recipe-update');
 const { runShoppingListCommand } = require('../src/commands/shopping-list');
 const { runStockAddCommand } = require('../src/commands/stock-add');
 const { runStockTransactionUndoCommand } = require('../src/commands/stock-transaction-undo');
@@ -46,10 +49,14 @@ Commands:
   product-update   Update a Grocy product
   product-delete   Safely delete a Grocy product when unused
   recipe-create    Create a Grocy recipe with ingredients
+  recipe-update    Update a Grocy recipe
+  recipe-delete    Delete a Grocy recipe
   recipe-ingredient-add
                    Add an ingredient to an existing Grocy recipe
   recipe-ingredient-update
                    Update an ingredient row in an existing Grocy recipe
+  recipe-ingredient-delete
+                   Delete an ingredient row from an existing Grocy recipe
   userfields       Read configured custom fields for an entity
   userfields-create
                    Create a custom field for an entity
@@ -75,9 +82,13 @@ Formats:
   product-update   json
   product-delete   json
   recipe-create    json
+  recipe-update    json
+  recipe-delete    json
   recipe-ingredient-add
                    json
   recipe-ingredient-update
+                   json
+  recipe-ingredient-delete
                    json
   userfields       table, json
   userfields-create
@@ -104,8 +115,11 @@ Examples:
   node bin/grocy-openclaw.js product-update --product-id 42 --name "Milk 2.5%" --active true --format json
   node bin/grocy-openclaw.js product-delete --product-id 42 --confirm-product-name "Milk 2.5%" --format json
   node bin/grocy-openclaw.js recipe-create --name "Salad" --ingredients '[{"name":"Pickles","amount":3,"unit":"шт"}]' --format json
+  node bin/grocy-openclaw.js recipe-update --recipe "Salad" --name "Potato salad" --base-servings 4 --format json
+  node bin/grocy-openclaw.js recipe-delete --recipe-id 11 --confirm-recipe-name "Potato salad" --delete-ingredients true --format json
   node bin/grocy-openclaw.js recipe-ingredient-add --recipe "Pancakes" --product "Sunflower oil" --amount 2 --unit "tbsp" --format json
   node bin/grocy-openclaw.js recipe-ingredient-update --recipe "Pancakes" --product "Sunflower oil" --amount 0.03 --unit "л" --format json
+  node bin/grocy-openclaw.js recipe-ingredient-delete --position-id 12 --format json
   node bin/grocy-openclaw.js userfields --entity recipes --format table
   node bin/grocy-openclaw.js userfields-create --entity recipes --caption "Время готовки" --type text-single-line --format json
   node bin/grocy-openclaw.js userfields-get --entity recipes --object-id 10 --format json
@@ -130,8 +144,11 @@ const COMMAND_FORMATS = new Map([
   ['product-update', new Set(['json'])],
   ['product-delete', new Set(['json'])],
   ['recipe-create', new Set(['json'])],
+  ['recipe-update', new Set(['json'])],
+  ['recipe-delete', new Set(['json'])],
   ['recipe-ingredient-add', new Set(['json'])],
   ['recipe-ingredient-update', new Set(['json'])],
+  ['recipe-ingredient-delete', new Set(['json'])],
   ['userfields', new Set(['table', 'json'])],
   ['userfields-create', new Set(['json'])],
   ['userfields-get', new Set(['table', 'json'])],
@@ -204,6 +221,20 @@ const COMMAND_OPTIONS = new Map([
     'ingredients',
     'create-missing-products',
   ])],
+  ['recipe-update', new Set([
+    'recipe',
+    'recipe-id',
+    'name',
+    'description',
+    'base-servings',
+    'desired-servings',
+  ])],
+  ['recipe-delete', new Set([
+    'recipe',
+    'recipe-id',
+    'confirm-recipe-name',
+    'delete-ingredients',
+  ])],
   ['recipe-ingredient-add', new Set([
     'recipe',
     'recipe-id',
@@ -241,6 +272,14 @@ const COMMAND_OPTIONS = new Map([
     'variable-amount',
     'only-check-single-unit-in-stock',
     'round-up',
+  ])],
+  ['recipe-ingredient-delete', new Set([
+    'position-id',
+    'recipe',
+    'recipe-id',
+    'product',
+    'product-id',
+    'name',
   ])],
   ['userfields', new Set([
     'entity',
@@ -396,11 +435,20 @@ async function main(argv, env = process.env) {
     case 'recipe-create':
       output = await runRecipeCreateCommand({ client, format, options });
       break;
+    case 'recipe-update':
+      output = await runRecipeUpdateCommand({ client, format, options });
+      break;
+    case 'recipe-delete':
+      output = await runRecipeDeleteCommand({ client, format, options });
+      break;
     case 'recipe-ingredient-add':
       output = await runRecipeIngredientAddCommand({ client, format, options });
       break;
     case 'recipe-ingredient-update':
       output = await runRecipeIngredientUpdateCommand({ client, format, options });
+      break;
+    case 'recipe-ingredient-delete':
+      output = await runRecipeIngredientDeleteCommand({ client, format, options });
       break;
     case 'userfields':
       output = await runUserfieldsCommand({ client, format, options });

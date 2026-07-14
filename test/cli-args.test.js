@@ -129,6 +129,25 @@ test('allows recipe-create options', () => {
   }));
 });
 
+test('allows recipe lifecycle options', () => {
+  assert.doesNotThrow(() => validateOptions('recipe-update', {
+    recipe: 'Оливье',
+    name: 'Оливье быстрый',
+    description: '',
+    'base-servings': '4',
+    'desired-servings': '4',
+  }));
+  assert.doesNotThrow(() => validateOptions('recipe-update', {
+    'recipe-id': '11',
+    name: 'Potato salad',
+  }));
+  assert.doesNotThrow(() => validateOptions('recipe-delete', {
+    'recipe-id': '11',
+    'confirm-recipe-name': 'Potato salad',
+    'delete-ingredients': 'true',
+  }));
+});
+
 test('allows recipe-ingredient-add options', () => {
   assert.doesNotThrow(() => validateOptions('recipe-ingredient-add', {
     recipe: 'Блины',
@@ -152,6 +171,16 @@ test('allows recipe-ingredient-update options', () => {
     note: 'в тесто',
     'ingredient-group': 'Тесто',
     'round-up': 'false',
+  }));
+});
+
+test('allows recipe-ingredient-delete options', () => {
+  assert.doesNotThrow(() => validateOptions('recipe-ingredient-delete', {
+    recipe: 'Блины',
+    product: 'Масло подсолнечное',
+  }));
+  assert.doesNotThrow(() => validateOptions('recipe-ingredient-delete', {
+    'position-id': '12',
   }));
 });
 

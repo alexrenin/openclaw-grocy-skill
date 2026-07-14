@@ -42,9 +42,15 @@ The `unit-delete` command modifies Grocy by deleting an unused quantity unit. Ru
 
 The `recipe-create` command modifies Grocy by creating a recipe and recipe ingredient rows. It may create missing ingredient products only when `--create-missing-products true` is used after explicit user confirmation. Run it only after the user confirms creating that recipe.
 
+The `recipe-update` command modifies Grocy by updating a recipe object. Run it only after the user explicitly confirms the exact recipe and fields to change.
+
+The `recipe-delete` command modifies Grocy by deleting a recipe object. If the recipe still has ingredient rows, use `--delete-ingredients true` only after the user explicitly confirms deleting those ingredient rows too.
+
 The `recipe-ingredient-add` command modifies Grocy by adding one ingredient row to an existing recipe. Run it only after the user confirms adding that ingredient row.
 
 The `recipe-ingredient-update` command modifies Grocy by updating one existing recipe ingredient row. Run it only after the user confirms correcting that ingredient row.
+
+The `recipe-ingredient-delete` command modifies Grocy by deleting one existing recipe ingredient row. Run it only after the user confirms removing that exact ingredient row.
 
 The `stock-add` command modifies Grocy by adding a purchased product amount to stock and may record the latest purchase price. Run it only after the user confirms adding those purchases or stock entries.
 
@@ -272,6 +278,25 @@ If an ingredient product does not exist, `recipe-create` stops before writing an
 
 If the user asks to create a recipe but omits ingredient amounts or units, ask a clarification question before running `recipe-create`. If a unit is unclear, inspect existing units first with `units --format table`; create a new unit only after the user confirms none fit. If the recipe includes products that are not found in Grocy, ask the user whether to create those products before rerunning with `--create-missing-products true`. If product creation was confirmed but the user did not specify where to store the new products, inspect existing locations first with `locations --format table` and ask which location to use.
 
+Update an existing Grocy recipe:
+
+```bash
+node bin/grocy-openclaw.js recipe-update --recipe "Оливье" --name "Оливье быстрый" --base-servings 4 --format json
+node bin/grocy-openclaw.js recipe-update --recipe-id 11 --description "" --desired-servings 4 --format json
+```
+
+Use `recipe-update` when the user asks to correct a recipe name, description, base servings, or desired servings. Do not create a duplicate recipe to fix a wrong recipe. Confirm the exact target recipe and payload before running it.
+
+For `recipe-update`, use `--recipe` or `--recipe-id` to select the recipe. Optional update fields are `--name`, `--description`, `--base-servings`, and `--desired-servings`. At least one update field is required.
+
+Delete a Grocy recipe:
+
+```bash
+node bin/grocy-openclaw.js recipe-delete --recipe-id 11 --confirm-recipe-name "Оливье быстрый" --delete-ingredients true --format json
+```
+
+Use `recipe-delete` only when the user wants the recipe removed and confirms the exact recipe. Prefer `--recipe-id` when deleting a just-created recipe from command output. If the recipe has ingredient rows, the command refuses to delete unless `--delete-ingredients true` is provided. Use that option only after the user confirms that the recipe's ingredient rows should also be deleted.
+
 Add one ingredient to an existing recipe:
 
 ```bash
@@ -299,6 +324,15 @@ For `recipe-ingredient-update`, use `--position-id` when the recipe position id 
 If the matching recipe/product pair has multiple ingredient rows, the command prints the matching position ids. Rerun with `--position-id`.
 
 If the user says a unit such as `ст.ложка`, `ст ложка`, or `столовая ложка`, never treat it as `л`. If that unit is not configured in Grocy, ask whether to convert to an existing unit such as liters or milliliters, or create the missing unit after confirmation.
+
+Delete one ingredient row from an existing recipe:
+
+```bash
+node bin/grocy-openclaw.js recipe-ingredient-delete --recipe "Блины" --product "Масло подсолнечное" --format json
+node bin/grocy-openclaw.js recipe-ingredient-delete --position-id 12 --format json
+```
+
+Use `recipe-ingredient-delete` when the user asks to remove an ingredient that was added by mistake. It deletes only one `recipes_pos` row and does not delete or recreate the recipe. Use `--position-id` when the row id is known. Otherwise select the row with `--recipe` or `--recipe-id` plus `--product` or `--product-id`. If the matching recipe/product pair has multiple ingredient rows, rerun with the exact `--position-id`.
 
 Show custom fields configured for an entity:
 

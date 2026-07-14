@@ -413,6 +413,59 @@ test('creates recipe positions through Grocy objects API', async () => {
   assert.equal(requestOptions.body, JSON.stringify(payload));
 });
 
+test('updates recipes through Grocy objects API', async () => {
+  let requestUrl;
+  let requestOptions;
+
+  const client = new GrocyClient({
+    baseUrl: 'http://grocy',
+    apiKey: 'secret-key',
+    fetchImpl: async (url, options) => {
+      requestUrl = url;
+      requestOptions = options;
+
+      return {
+        ok: true,
+        text: async () => '',
+      };
+    },
+  });
+
+  const payload = { id: 11, name: 'Soup', type: 'normal', base_servings: 4 };
+  const data = await client.updateRecipe(11, payload);
+
+  assert.equal(data, null);
+  assert.equal(requestUrl, 'http://grocy/api/objects/recipes/11');
+  assert.equal(requestOptions.method, 'PUT');
+  assert.equal(requestOptions.headers['Content-Type'], 'application/json');
+  assert.equal(requestOptions.body, JSON.stringify(payload));
+});
+
+test('deletes recipes through Grocy objects API', async () => {
+  let requestUrl;
+  let requestOptions;
+
+  const client = new GrocyClient({
+    baseUrl: 'http://grocy',
+    apiKey: 'secret-key',
+    fetchImpl: async (url, options) => {
+      requestUrl = url;
+      requestOptions = options;
+
+      return {
+        ok: true,
+        text: async () => '',
+      };
+    },
+  });
+
+  const data = await client.deleteRecipe(11);
+
+  assert.equal(data, null);
+  assert.equal(requestUrl, 'http://grocy/api/objects/recipes/11');
+  assert.equal(requestOptions.method, 'DELETE');
+});
+
 test('updates recipe positions through Grocy objects API', async () => {
   let requestUrl;
   let requestOptions;
@@ -442,6 +495,31 @@ test('updates recipe positions through Grocy objects API', async () => {
   assert.equal(requestOptions.method, 'PUT');
   assert.equal(requestOptions.headers['Content-Type'], 'application/json');
   assert.equal(requestOptions.body, JSON.stringify(payload));
+});
+
+test('deletes recipe positions through Grocy objects API', async () => {
+  let requestUrl;
+  let requestOptions;
+
+  const client = new GrocyClient({
+    baseUrl: 'http://grocy',
+    apiKey: 'secret-key',
+    fetchImpl: async (url, options) => {
+      requestUrl = url;
+      requestOptions = options;
+
+      return {
+        ok: true,
+        text: async () => '',
+      };
+    },
+  });
+
+  const data = await client.deleteRecipePosition(12);
+
+  assert.equal(data, null);
+  assert.equal(requestUrl, 'http://grocy/api/objects/recipes_pos/12');
+  assert.equal(requestOptions.method, 'DELETE');
 });
 
 test('reads userfield definitions through Grocy objects API', async () => {

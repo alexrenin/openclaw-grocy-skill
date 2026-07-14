@@ -164,12 +164,24 @@ class GrocyClient {
     return this.createObject('recipes', payload);
   }
 
+  updateRecipe(objectId, payload) {
+    return this.updateObject('recipes', objectId, payload);
+  }
+
+  deleteRecipe(objectId) {
+    return this.deleteObject('recipes', objectId);
+  }
+
   createRecipePosition(payload) {
     return this.createObject('recipes_pos', payload);
   }
 
   updateRecipePosition(objectId, payload) {
     return this.updateObject('recipes_pos', objectId, payload);
+  }
+
+  deleteRecipePosition(objectId) {
+    return this.deleteObject('recipes_pos', objectId);
   }
 
   createQuantityUnit(payload) {

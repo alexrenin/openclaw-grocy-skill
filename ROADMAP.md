@@ -31,8 +31,11 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
 - `[x]` Safely delete unused quantity units with `unit-delete`.
 - `[x]` Create products with `product-create`, including product-specific unit conversions.
 - `[x]` Create recipes with `recipe-create`.
+- `[x]` Update recipes with `recipe-update`.
+- `[x]` Safely delete recipes with `recipe-delete`, including explicit ingredient-row cleanup.
 - `[x]` Add recipe ingredients with `recipe-ingredient-add`.
 - `[x]` Update recipe ingredients with `recipe-ingredient-update`.
+- `[x]` Delete recipe ingredients with `recipe-ingredient-delete`.
 - `[x]` Create custom fields with `userfields-create`.
 - `[x]` Set custom field values with `userfields-set`.
 - `[x]` Add purchased product amounts to stock with `stock-add`, including optional latest purchase price and best-before date.
@@ -40,7 +43,11 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
 
 ## Current Verification Notes
 
-- `npm.cmd test` passed locally with 171 tests.
+- `npm.cmd test` passed locally with 191 tests.
+- `recipe-update`, `recipe-delete`, and `recipe-ingredient-delete` are implemented, documented, covered by mocked unit tests, and live-verified against the configured Grocy 4.6.0 instance after explicit user confirmation.
+- Recipe lifecycle live test first exposed a Grocy 4.6.0 mismatch when `recipe-update` sent returned service fields back to `PUT /api/objects/recipes/{objectId}`. The command was corrected to send only supported recipe fields.
+- Recipe lifecycle live test created `OPENCLAW_TEST_20260714_RECIPE_LIFECYCLE` as recipe id 6 with ingredient row ids 17 and 18, updated it to `OPENCLAW_TEST_20260714_RECIPE_LIFECYCLE_UPDATED`, deleted row 17 with `recipe-ingredient-delete`, then deleted recipe id 6 and remaining row 18 with `recipe-delete --delete-ingredients true`.
+- A second recipe lifecycle live test repeated the same flow after the fix: created recipe id 7 with ingredient row ids 19 and 20, updated it, deleted row 19 with `recipe-ingredient-delete`, then deleted recipe id 7 and remaining row 20 with `recipe-delete --delete-ingredients true`.
 - `api-docs --format text` passed locally using the `.env` fallback and reported installed Grocy version 4.6.0.
 - `product-update` and `product-delete` are implemented locally, covered by mocked unit tests, and live-verified against the configured Grocy 4.6.0 instance after explicit user confirmation.
 - Product lifecycle live test created `OPENCLAW_TEST_20260714_PRODUCT_LIFECYCLE` as product id 15, updated it to `OPENCLAW_TEST_20260714_PRODUCT_LIFECYCLE_UPDATED` with `active: false`, deleted it with `product-delete`, and verified both test names no longer appear in `product-search`.
@@ -67,8 +74,8 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
 2. `[ ]` Add correction and removal workflows for created records.
    - `[x]` Product lifecycle: `product-update` and safe `product-delete`; fallback is `product-update --active false` when deletion is unsafe or rejected.
    - `[x]` Unit lifecycle: `unit-update` and safe `unit-delete`; fallback is to update dependent records first or leave referenced units in Grocy.
-   - Recipe lifecycle: `recipe-update` and a safe `recipe-delete` or documented alternative.
-   - Recipe ingredient lifecycle: `recipe-ingredient-delete` for removing one incorrect ingredient row.
+   - `[x]` Recipe lifecycle: `recipe-update` and safe `recipe-delete`; `recipe-delete` refuses recipes with ingredient rows unless `--delete-ingredients true` is explicitly confirmed.
+   - `[x]` Recipe ingredient lifecycle: `recipe-ingredient-delete` for removing one incorrect ingredient row.
    - Custom field lifecycle: `userfields-update` and a safe `userfields-delete` or documented alternative.
    - Stock lifecycle: `stock-transaction-undo` is implemented and live-verified during the controlled `stock-add` test.
    - Purpose: OpenClaw must be able to fix or undo a record it just created instead of creating duplicates or leaving bad data behind.
