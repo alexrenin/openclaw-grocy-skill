@@ -3,6 +3,7 @@
 'use strict';
 
 const { createGrocyClientFromEnv } = require('../src/grocy-client');
+const { runApiDocsCommand } = require('../src/commands/api-docs');
 const { runProductCreateCommand } = require('../src/commands/product-create');
 const { runProductsCommand } = require('../src/commands/products');
 const { runShoppingListCommand } = require('../src/commands/shopping-list');
@@ -15,6 +16,7 @@ const HELP = `Usage:
   node bin/grocy-openclaw.js <command> --format <format>
 
 Commands:
+  api-docs        Show Grocy OpenAPI documentation links for the installed version
   system-info      Read Grocy system info
   units            Read Grocy quantity units
   unit-create      Create a Grocy quantity unit
@@ -24,6 +26,7 @@ Commands:
   stock            Read Grocy stock
 
 Formats:
+  api-docs        text, json
   system-info      json
   units            table, json
   unit-create      json
@@ -33,6 +36,7 @@ Formats:
   stock            table, json
 
 Examples:
+  node bin/grocy-openclaw.js api-docs --format text
   node bin/grocy-openclaw.js system-info --format json
   node bin/grocy-openclaw.js units --format table
   node bin/grocy-openclaw.js unit-create --name "банка" --name-plural "банки" --format json
@@ -43,6 +47,7 @@ Examples:
 `;
 
 const COMMAND_FORMATS = new Map([
+  ['api-docs', new Set(['text', 'json'])],
   ['system-info', new Set(['json'])],
   ['units', new Set(['table', 'json'])],
   ['unit-create', new Set(['json'])],
@@ -142,6 +147,9 @@ async function main(argv, env = process.env) {
   let output;
 
   switch (command) {
+    case 'api-docs':
+      output = await runApiDocsCommand({ client, format });
+      break;
     case 'system-info':
       output = await runSystemInfoCommand({ client, format });
       break;

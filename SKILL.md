@@ -66,6 +66,12 @@ Check Grocy connectivity and API key validity:
 node bin/grocy-openclaw.js system-info --format json
 ```
 
+Show OpenAPI documentation links for the installed Grocy version:
+
+```bash
+node bin/grocy-openclaw.js api-docs --format text
+```
+
 Show configured Grocy quantity units:
 
 ```bash
@@ -160,6 +166,16 @@ Return Grocy stock as JSON:
 ```bash
 node bin/grocy-openclaw.js stock --format json
 ```
+
+## API documentation workflow
+
+When extending this skill or troubleshooting a Grocy API mismatch, first run:
+
+```bash
+node bin/grocy-openclaw.js api-docs --format text
+```
+
+Use the version-specific OpenAPI link before `master`. Before adding or changing a write command, verify the endpoint, entity name, and request payload fields in that OpenAPI document.
 
 ## Response behavior
 

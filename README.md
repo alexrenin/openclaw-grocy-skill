@@ -60,6 +60,12 @@ Check Grocy connectivity and API key validity:
 node bin/grocy-openclaw.js system-info --format json
 ```
 
+Show OpenAPI documentation links for the installed Grocy version:
+
+```bash
+node bin/grocy-openclaw.js api-docs --format text
+```
+
 Show Grocy quantity units:
 
 ```bash
@@ -233,6 +239,16 @@ Tests use mocked data and do not require a real Grocy instance.
 - `product-create` modifies Grocy and must only be run when the user explicitly asks to create a product.
 - `unit-create` modifies Grocy and must only be run after existing units were considered and the user confirms that a new unit is needed.
 - Future write commands must be separate from read commands and require explicit user intent.
+
+## API Documentation Workflow
+
+Before adding or changing a Grocy write command, run:
+
+```bash
+node bin/grocy-openclaw.js api-docs --format text
+```
+
+Use the version-specific OpenAPI link first, because `master` can describe a different Grocy version than the installed server. Verify the endpoint, entity name, and payload fields against that OpenAPI document before implementing the command.
 
 ## Roadmap
 

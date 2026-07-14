@@ -65,3 +65,7 @@ test('allows product-create conversion factor options', () => {
     'consume-to-stock-factor': '1',
   }));
 });
+
+test('allows api-docs without command options', () => {
+  assert.doesNotThrow(() => validateOptions('api-docs', {}));
+});

@@ -68,6 +68,7 @@ openclaw-grocy-skill/
 |   |-- grocy-client.js
 |   |-- format-shopping-list.js
 |   `-- commands/
+|       |-- api-docs.js
 |       |-- system-info.js
 |       |-- units.js
 |       |-- unit-create.js
@@ -87,6 +88,8 @@ openclaw-grocy-skill/
 Implement these commands:
 
 ```bash
+node bin/grocy-openclaw.js api-docs --format text
+node bin/grocy-openclaw.js api-docs --format json
 node bin/grocy-openclaw.js system-info --format json
 node bin/grocy-openclaw.js units --format table
 node bin/grocy-openclaw.js units --format json
@@ -113,6 +116,14 @@ The CLI should:
 ## Grocy API
 
 Use the Grocy REST API.
+
+Before adding or changing any command that writes to Grocy, run:
+
+```bash
+node bin/grocy-openclaw.js api-docs --format text
+```
+
+Use the version-specific OpenAPI link for the installed Grocy version first. Use `master` only when intentionally checking upcoming Grocy behavior. Verify the endpoint, entity name, and request payload fields in OpenAPI before implementing a write command.
 
 Required endpoints for the initial read-only version:
 
