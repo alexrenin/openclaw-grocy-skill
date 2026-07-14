@@ -60,6 +60,12 @@ Check Grocy connectivity and API key validity:
 node bin/grocy-openclaw.js system-info --format json
 ```
 
+Show Grocy quantity units:
+
+```bash
+node bin/grocy-openclaw.js units --format table
+```
+
 Show the active shopping list as compact Russian text:
 
 ```bash
@@ -90,7 +96,11 @@ Create a new Grocy product object:
 node bin/grocy-openclaw.js product-create --name "Молоко" --stock-unit "л" --format json
 ```
 
-You may specify units by exact unit name or by id:
+Prefer unit names in chat workflows. The command accepts exact Grocy unit names, plural names, and common aliases such as `кг`, `килограмм`, `кило`, `kg`, `л`, `литр`, `шт`, and `штука`.
+
+If unit matching is ambiguous, the command prints matching unit choices. If a unit is unknown, it prints available units. Use `units --format table` when the agent needs to inspect configured Grocy units.
+
+You may also specify units by id when an automation already knows the id:
 
 ```bash
 node bin/grocy-openclaw.js product-create --name "Картофель" --stock-unit-id 2 --format json
@@ -99,7 +109,7 @@ node bin/grocy-openclaw.js product-create --name "Картофель" --stock-un
 Supported `product-create` options:
 
 - `--name`: required product name
-- `--stock-unit` or `--stock-unit-id`: required stock unit
+- `--stock-unit` or `--stock-unit-id`: required stock unit; prefer `--stock-unit` for chat
 - `--purchase-unit` or `--purchase-unit-id`: optional purchase unit, defaults to stock unit
 - `--consume-unit` or `--consume-unit-id`: optional consume unit, defaults to stock unit
 - `--description`: optional product description
@@ -170,6 +180,12 @@ To verify Grocy connectivity from the deployed skill folder:
 
 ```bash
 node bin/grocy-openclaw.js system-info --format json
+```
+
+To inspect configured Grocy quantity units:
+
+```bash
+node bin/grocy-openclaw.js units --format table
 ```
 
 ## Development

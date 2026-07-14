@@ -6,6 +6,7 @@ const test = require('node:test');
 const {
   buildProductPayload,
   findQuantityUnit,
+  findQuantityUnitMatches,
   runProductCreateCommand,
 } = require('../src/commands/product-create');
 
@@ -47,6 +48,14 @@ test('defaults purchase and consume units to stock unit', () => {
   });
 });
 
+test('matches natural unit aliases for chat input', () => {
+  assert.equal(findQuantityUnit('килограмм', units).id, 2);
+  assert.equal(findQuantityUnit('кило', units).id, 2);
+  assert.equal(findQuantityUnit('kg', units).id, 2);
+  assert.equal(findQuantityUnit('литр', units).id, 3);
+  assert.equal(findQuantityUnit('штука', units).id, 1);
+});
+
 test('rejects missing product name', () => {
   assert.throws(
     () => buildProductPayload({ 'stock-unit': 'кг' }, units),
@@ -54,10 +63,36 @@ test('rejects missing product name', () => {
   );
 });
 
-test('rejects unknown stock unit', () => {
+test('rejects unknown stock unit with available unit choices', () => {
   assert.throws(
     () => buildProductPayload({ name: 'Йогурт', 'stock-unit': 'банка' }, units),
-    /Unknown stock unit: банка/,
+    /Unknown stock unit: банка\. Available units: 1:шт, 2:кг, 3:л\/литры/,
+  );
+});
+
+test('returns no single unit when matching is ambiguous', () => {
+  const matches = findQuantityUnitMatches('бутылка', [
+    { id: 1, name: 'бутылка' },
+    { id: 2, name: 'Бутылка' },
+  ]);
+
+  assert.equal(matches.length, 2);
+  assert.equal(findQuantityUnit('бутылка', [
+    { id: 1, name: 'бутылка' },
+    { id: 2, name: 'Бутылка' },
+  ]), undefined);
+});
+
+test('throws readable ambiguity errors', () => {
+  assert.throws(
+    () => buildProductPayload({
+      name: 'Вода',
+      'stock-unit': 'бутылка',
+    }, [
+      { id: 1, name: 'бутылка' },
+      { id: 2, name: 'Бутылка' },
+    ]),
+    /Ambiguous stock unit: бутылка\. Matches: 1:бутылка, 2:Бутылка/,
   );
 });
 

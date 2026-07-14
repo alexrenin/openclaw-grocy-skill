@@ -66,6 +66,12 @@ Check Grocy connectivity and API key validity:
 node bin/grocy-openclaw.js system-info --format json
 ```
 
+Show configured Grocy quantity units:
+
+```bash
+node bin/grocy-openclaw.js units --format table
+```
+
 Show the active shopping list as compact Russian text:
 
 ```bash
@@ -96,7 +102,15 @@ Create a new Grocy product object:
 node bin/grocy-openclaw.js product-create --name "Молоко" --stock-unit "л" --format json
 ```
 
-Use exact Grocy quantity unit names or ids:
+For chat workflows, prefer unit names or common aliases. Users should not be expected to know Grocy unit ids.
+
+If the unit is unclear, inspect configured units first:
+
+```bash
+node bin/grocy-openclaw.js units --format table
+```
+
+Use ids only when an automation already knows the id:
 
 ```bash
 node bin/grocy-openclaw.js product-create --name "Картофель" --stock-unit-id 2 --format json

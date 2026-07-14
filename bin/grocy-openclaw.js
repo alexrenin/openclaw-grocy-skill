@@ -8,12 +8,14 @@ const { runProductsCommand } = require('../src/commands/products');
 const { runShoppingListCommand } = require('../src/commands/shopping-list');
 const { runStockCommand } = require('../src/commands/stock');
 const { runSystemInfoCommand } = require('../src/commands/system-info');
+const { runUnitsCommand } = require('../src/commands/units');
 
 const HELP = `Usage:
   node bin/grocy-openclaw.js <command> --format <format>
 
 Commands:
   system-info      Read Grocy system info
+  units            Read Grocy quantity units
   shopping-list    Read Grocy shopping list
   products         Read Grocy products
   product-create   Create a Grocy product
@@ -21,6 +23,7 @@ Commands:
 
 Formats:
   system-info      json
+  units            table, json
   shopping-list    text, json
   products         table, json
   product-create   json
@@ -28,6 +31,7 @@ Formats:
 
 Examples:
   node bin/grocy-openclaw.js system-info --format json
+  node bin/grocy-openclaw.js units --format table
   node bin/grocy-openclaw.js shopping-list --format text
   node bin/grocy-openclaw.js products --format table
   node bin/grocy-openclaw.js product-create --name "Milk" --stock-unit "l" --format json
@@ -36,6 +40,7 @@ Examples:
 
 const COMMAND_FORMATS = new Map([
   ['system-info', new Set(['json'])],
+  ['units', new Set(['table', 'json'])],
   ['shopping-list', new Set(['text', 'json'])],
   ['products', new Set(['table', 'json'])],
   ['product-create', new Set(['json'])],
@@ -127,6 +132,9 @@ async function main(argv, env = process.env) {
   switch (command) {
     case 'system-info':
       output = await runSystemInfoCommand({ client, format });
+      break;
+    case 'units':
+      output = await runUnitsCommand({ client, format });
       break;
     case 'shopping-list':
       output = await runShoppingListCommand({ client, format });

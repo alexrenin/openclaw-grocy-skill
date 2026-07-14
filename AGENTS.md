@@ -69,6 +69,7 @@ openclaw-grocy-skill/
 |   |-- format-shopping-list.js
 |   `-- commands/
 |       |-- system-info.js
+|       |-- units.js
 |       |-- product-create.js
 |       |-- shopping-list.js
 |       |-- products.js
@@ -86,6 +87,8 @@ Implement these commands:
 
 ```bash
 node bin/grocy-openclaw.js system-info --format json
+node bin/grocy-openclaw.js units --format table
+node bin/grocy-openclaw.js units --format json
 node bin/grocy-openclaw.js product-create --name "Молоко" --stock-unit "л" --format json
 node bin/grocy-openclaw.js shopping-list --format text
 node bin/grocy-openclaw.js shopping-list --format json
@@ -221,6 +224,8 @@ The skill must tell OpenClaw:
 - not to reveal `GROCY_API_KEY`
 - not to modify Grocy unless the user explicitly asks
 - to keep write commands separate from read commands
+- to prefer quantity unit names and aliases in chat workflows, not raw ids
+- to use `units` when the configured Grocy units need to be inspected
 - to return command output clearly to the user
 
 Read commands must remain read-only.

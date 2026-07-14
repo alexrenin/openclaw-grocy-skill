@@ -72,11 +72,7 @@ function resolveUnitOption({ label, idValue, nameValue, quantityUnits, required 
   }
 
   if (nameValue) {
-    const unit = findQuantityUnit(nameValue, quantityUnits);
-
-    if (!unit) {
-      throw new Error(`Unknown ${label}: ${nameValue}`);
-    }
+    const unit = resolveQuantityUnit(nameValue, quantityUnits, label);
 
     return Number(unit.id);
   }
@@ -89,22 +85,107 @@ function resolveUnitOption({ label, idValue, nameValue, quantityUnits, required 
 }
 
 function findQuantityUnit(value, quantityUnits) {
-  const normalized = normalizeText(value).toLowerCase();
+  const matches = findQuantityUnitMatches(value, quantityUnits);
+
+  return matches.length === 1 ? matches[0] : undefined;
+}
+
+function resolveQuantityUnit(value, quantityUnits, label) {
+  const matches = findQuantityUnitMatches(value, quantityUnits);
+
+  if (matches.length === 1) {
+    return matches[0];
+  }
+
+  if (matches.length > 1) {
+    throw new Error(`Ambiguous ${label}: ${value}. Matches: ${formatUnitChoices(matches)}`);
+  }
+
+  throw new Error(`Unknown ${label}: ${value}. Available units: ${formatUnitChoices(quantityUnits)}`);
+}
+
+function findQuantityUnitMatches(value, quantityUnits) {
+  const normalized = normalizeUnitTerm(value);
   const numericId = Number(value);
 
   if (Number.isInteger(numericId) && numericId > 0) {
-    return quantityUnits.find((unit) => Number(unit.id) === numericId);
+    return quantityUnits.filter((unit) => Number(unit.id) === numericId);
   }
 
-  return quantityUnits.find((unit) => {
-    const names = [
-      unit.name,
-      unit.name_plural,
-      unit.name_plural2,
-    ].map((name) => normalizeText(name).toLowerCase());
+  const wantedTerms = expandUnitAliases(normalized);
+  const exactMatches = quantityUnits.filter((unit) => {
+    const terms = getQuantityUnitTerms(unit);
 
-    return names.includes(normalized);
+    return terms.some((term) => wantedTerms.includes(term));
   });
+
+  if (exactMatches.length > 0) {
+    return exactMatches;
+  }
+
+  if (normalized.length < 3) {
+    return [];
+  }
+
+  return quantityUnits.filter((unit) => {
+    const terms = getQuantityUnitTerms(unit);
+
+    return terms.some((term) => term.includes(normalized) || normalized.includes(term));
+  });
+}
+
+function getQuantityUnitTerms(unit) {
+  return [
+    unit.name,
+    unit.name_plural,
+    unit.name_plural2,
+    unit.description,
+  ]
+    .map(normalizeUnitTerm)
+    .filter(Boolean);
+}
+
+function expandUnitAliases(normalized) {
+  const aliases = new Map([
+    ['кг', ['кг', 'килограмм', 'килограмма', 'килограммов', 'кило', 'kg', 'kgs', 'kilogram', 'kilograms']],
+    ['килограмм', ['кг', 'килограмм', 'килограмма', 'килограммов', 'кило', 'kg', 'kgs', 'kilogram', 'kilograms']],
+    ['кило', ['кг', 'килограмм', 'килограмма', 'килограммов', 'кило', 'kg', 'kgs', 'kilogram', 'kilograms']],
+    ['г', ['г', 'гр', 'грамм', 'грамма', 'граммов', 'g', 'gram', 'grams']],
+    ['грамм', ['г', 'гр', 'грамм', 'грамма', 'граммов', 'g', 'gram', 'grams']],
+    ['л', ['л', 'литр', 'литра', 'литров', 'l', 'liter', 'liters', 'litre', 'litres']],
+    ['литр', ['л', 'литр', 'литра', 'литров', 'l', 'liter', 'liters', 'litre', 'litres']],
+    ['мл', ['мл', 'миллилитр', 'миллилитра', 'миллилитров', 'ml', 'milliliter', 'milliliters', 'millilitre', 'millilitres']],
+    ['шт', ['шт', 'штука', 'штуки', 'штук', 'pc', 'pcs', 'piece', 'pieces']],
+    ['штука', ['шт', 'штука', 'штуки', 'штук', 'pc', 'pcs', 'piece', 'pieces']],
+    ['упаковка', ['упаковка', 'упаковки', 'упаковок', 'пачка', 'пачки', 'пачек', 'pack', 'packs', 'package', 'packages']],
+    ['пачка', ['упаковка', 'упаковки', 'упаковок', 'пачка', 'пачки', 'пачек', 'pack', 'packs', 'package', 'packages']],
+  ]);
+
+  for (const terms of aliases.values()) {
+    const normalizedTerms = terms.map(normalizeUnitTerm);
+
+    if (normalizedTerms.includes(normalized)) {
+      return normalizedTerms;
+    }
+  }
+
+  return [normalized];
+}
+
+function formatUnitChoices(units) {
+  if (!Array.isArray(units) || units.length === 0) {
+    return 'none';
+  }
+
+  return units
+    .map((unit) => {
+      const name = normalizeText(unit.name) || 'unnamed';
+      const plural = normalizeText(unit.name_plural);
+      const suffix = plural && plural !== name ? `/${plural}` : '';
+
+      return `${unit.id}:${name}${suffix}`;
+    })
+    .join(', ');
 }
 
 function parsePositiveInteger(value, optionName) {
@@ -125,8 +206,19 @@ function normalizeText(value) {
   return String(value).trim();
 }
 
+function normalizeUnitTerm(value) {
+  return normalizeText(value)
+    .toLowerCase()
+    .replaceAll('ё', 'е')
+    .replace(/[.,]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 module.exports = {
   buildProductPayload,
   findQuantityUnit,
+  findQuantityUnitMatches,
+  formatUnitChoices,
   runProductCreateCommand,
 };
