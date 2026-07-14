@@ -108,6 +108,14 @@ Create a new Grocy product object:
 node bin/grocy-openclaw.js product-create --name "Молоко" --stock-unit "л" --format json
 ```
 
+When purchase or consume units differ from stock unit, include conversion factors:
+
+```bash
+node bin/grocy-openclaw.js product-create --name "Огурцы маринованные" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --consume-unit "шт" --format json
+```
+
+`--purchase-to-stock-factor` means how many stock units are in 1 purchase unit. `--consume-to-stock-factor` means how many stock units are in 1 consume unit. If the units are equal, the factor is `1` and may be omitted.
+
 For chat workflows, prefer unit names or common aliases. Users should not be expected to know Grocy unit ids.
 
 If the unit is unclear, inspect configured units first:

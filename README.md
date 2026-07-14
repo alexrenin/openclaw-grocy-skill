@@ -102,6 +102,12 @@ Create a new Grocy product object:
 node bin/grocy-openclaw.js product-create --name "Молоко" --stock-unit "л" --format json
 ```
 
+Create a product that is purchased in one unit but consumed or stored in another:
+
+```bash
+node bin/grocy-openclaw.js product-create --name "Огурцы маринованные" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --consume-unit "шт" --format json
+```
+
 Prefer unit names in chat workflows. The command accepts exact Grocy unit names, plural names, and common aliases such as `кг`, `килограмм`, `кило`, `kg`, `л`, `литр`, `шт`, and `штука`.
 
 If unit matching is ambiguous, the command prints matching unit choices. If a unit is unknown, it prints available units. Use `units --format table` when the agent needs to inspect configured Grocy units.
@@ -119,7 +125,9 @@ Supported `product-create` options:
 - `--name`: required product name
 - `--stock-unit` or `--stock-unit-id`: required stock unit; prefer `--stock-unit` for chat
 - `--purchase-unit` or `--purchase-unit-id`: optional purchase unit, defaults to stock unit
+- `--purchase-to-stock-factor`: required when purchase unit differs from stock unit; means how many stock units are in 1 purchase unit
 - `--consume-unit` or `--consume-unit-id`: optional consume unit, defaults to stock unit
+- `--consume-to-stock-factor`: required when consume unit differs from stock unit; means how many stock units are in 1 consume unit
 - `--description`: optional product description
 - `--format json`: required output format
 

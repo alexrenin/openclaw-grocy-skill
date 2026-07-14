@@ -38,7 +38,7 @@ Examples:
   node bin/grocy-openclaw.js unit-create --name "банка" --name-plural "банки" --format json
   node bin/grocy-openclaw.js shopping-list --format text
   node bin/grocy-openclaw.js products --format table
-  node bin/grocy-openclaw.js product-create --name "Milk" --stock-unit "l" --format json
+  node bin/grocy-openclaw.js product-create --name "Pickles" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --format json
   node bin/grocy-openclaw.js stock --format json
 `;
 
@@ -60,8 +60,10 @@ const COMMAND_OPTIONS = new Map([
     'stock-unit-id',
     'purchase-unit',
     'purchase-unit-id',
+    'purchase-to-stock-factor',
     'consume-unit',
     'consume-unit-id',
+    'consume-to-stock-factor',
   ])],
   ['unit-create', new Set([
     'name',

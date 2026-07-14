@@ -54,3 +54,14 @@ test('allows unit-create options', () => {
     description: 'Стеклянная банка',
   }));
 });
+
+test('allows product-create conversion factor options', () => {
+  assert.doesNotThrow(() => validateOptions('product-create', {
+    name: 'Огурцы маринованные',
+    'stock-unit': 'шт',
+    'purchase-unit': 'банка',
+    'purchase-to-stock-factor': '10',
+    'consume-unit': 'шт',
+    'consume-to-stock-factor': '1',
+  }));
+});

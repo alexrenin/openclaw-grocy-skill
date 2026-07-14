@@ -22,6 +22,7 @@ test('builds product payload from unit names', () => {
     description: '2.5%',
     'stock-unit': 'л',
     'purchase-unit': 'шт',
+    'purchase-to-stock-factor': '1',
     'consume-unit': 'литры',
   }, units);
 
@@ -31,6 +32,8 @@ test('builds product payload from unit names', () => {
     qu_id_stock: 3,
     qu_id_purchase: 1,
     qu_id_consume: 3,
+    qu_factor_purchase_to_stock: 1,
+    qu_factor_consume_to_stock: 1,
   });
 });
 
@@ -45,7 +48,74 @@ test('defaults purchase and consume units to stock unit', () => {
     qu_id_stock: 2,
     qu_id_purchase: 2,
     qu_id_consume: 2,
+    qu_factor_purchase_to_stock: 1,
+    qu_factor_consume_to_stock: 1,
   });
+});
+
+test('adds conversion factors when units differ', () => {
+  const payload = buildProductPayload({
+    name: 'Огурцы маринованные',
+    'stock-unit': 'шт',
+    'purchase-unit': 'банка',
+    'purchase-to-stock-factor': '10',
+    'consume-unit': 'шт',
+  }, [
+    { id: 1, name: 'шт' },
+    { id: 2, name: 'банка', name_plural: 'банки' },
+  ]);
+
+  assert.deepEqual(payload, {
+    name: 'Огурцы маринованные',
+    qu_id_stock: 1,
+    qu_id_purchase: 2,
+    qu_id_consume: 1,
+    qu_factor_purchase_to_stock: 10,
+    qu_factor_consume_to_stock: 1,
+  });
+});
+
+test('requires purchase factor when purchase unit differs from stock unit', () => {
+  assert.throws(
+    () => buildProductPayload({
+      name: 'Огурцы маринованные',
+      'stock-unit': 'шт',
+      'purchase-unit': 'банка',
+    }, [
+      { id: 1, name: 'шт' },
+      { id: 2, name: 'банка' },
+    ]),
+    /--purchase-to-stock-factor is required when the unit differs from stock unit/,
+  );
+});
+
+test('requires consume factor when consume unit differs from stock unit', () => {
+  assert.throws(
+    () => buildProductPayload({
+      name: 'Молоко',
+      'stock-unit': 'л',
+      'consume-unit': 'мл',
+    }, [
+      { id: 1, name: 'л' },
+      { id: 2, name: 'мл' },
+    ]),
+    /--consume-to-stock-factor is required when the unit differs from stock unit/,
+  );
+});
+
+test('rejects invalid conversion factors', () => {
+  assert.throws(
+    () => buildProductPayload({
+      name: 'Молоко',
+      'stock-unit': 'л',
+      'purchase-unit': 'бутылка',
+      'purchase-to-stock-factor': '0',
+    }, [
+      { id: 1, name: 'л' },
+      { id: 2, name: 'бутылка' },
+    ]),
+    /--purchase-to-stock-factor must be a positive number/,
+  );
 });
 
 test('matches natural unit aliases for chat input', () => {
@@ -125,6 +195,8 @@ test('runs product-create json command', async () => {
     qu_id_stock: 3,
     qu_id_purchase: 3,
     qu_id_consume: 3,
+    qu_factor_purchase_to_stock: 1,
+    qu_factor_consume_to_stock: 1,
   });
   assert.equal(output, JSON.stringify({
     action: 'created',

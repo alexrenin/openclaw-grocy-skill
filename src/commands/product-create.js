@@ -45,12 +45,26 @@ function buildProductPayload(options, quantityUnits) {
     quantityUnits,
     required: false,
   }) ?? quIdStock;
+  const quFactorPurchaseToStock = resolveFactorOption({
+    optionName: '--purchase-to-stock-factor',
+    value: options['purchase-to-stock-factor'],
+    sourceUnitId: quIdPurchase,
+    stockUnitId: quIdStock,
+  });
+  const quFactorConsumeToStock = resolveFactorOption({
+    optionName: '--consume-to-stock-factor',
+    value: options['consume-to-stock-factor'],
+    sourceUnitId: quIdConsume,
+    stockUnitId: quIdStock,
+  });
 
   const payload = {
     name,
     qu_id_stock: quIdStock,
     qu_id_purchase: quIdPurchase,
     qu_id_consume: quIdConsume,
+    qu_factor_purchase_to_stock: quFactorPurchaseToStock,
+    qu_factor_consume_to_stock: quFactorConsumeToStock,
   };
 
   const description = normalizeText(options.description);
@@ -82,6 +96,20 @@ function resolveUnitOption({ label, idValue, nameValue, quantityUnits, required 
   }
 
   return undefined;
+}
+
+function resolveFactorOption({ optionName, value, sourceUnitId, stockUnitId }) {
+  const unitsDiffer = Number(sourceUnitId) !== Number(stockUnitId);
+
+  if (value == null || value === '') {
+    if (unitsDiffer) {
+      throw new Error(`${optionName} is required when the unit differs from stock unit`);
+    }
+
+    return 1;
+  }
+
+  return parsePositiveNumber(value, optionName);
 }
 
 function findQuantityUnit(value, quantityUnits) {
@@ -198,6 +226,16 @@ function parsePositiveInteger(value, optionName) {
   return numberValue;
 }
 
+function parsePositiveNumber(value, optionName) {
+  const numberValue = Number(value);
+
+  if (!Number.isFinite(numberValue) || numberValue <= 0) {
+    throw new Error(`${optionName} must be a positive number`);
+  }
+
+  return numberValue;
+}
+
 function normalizeText(value) {
   if (value == null) {
     return '';
@@ -220,5 +258,6 @@ module.exports = {
   findQuantityUnit,
   findQuantityUnitMatches,
   formatUnitChoices,
+  parsePositiveNumber,
   runProductCreateCommand,
 };

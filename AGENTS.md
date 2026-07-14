@@ -92,6 +92,7 @@ node bin/grocy-openclaw.js units --format table
 node bin/grocy-openclaw.js units --format json
 node bin/grocy-openclaw.js unit-create --name "банка" --name-plural "банки" --format json
 node bin/grocy-openclaw.js product-create --name "Молоко" --stock-unit "л" --format json
+node bin/grocy-openclaw.js product-create --name "Огурцы маринованные" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --consume-unit "шт" --format json
 node bin/grocy-openclaw.js shopping-list --format text
 node bin/grocy-openclaw.js shopping-list --format json
 node bin/grocy-openclaw.js products --format table
@@ -229,6 +230,7 @@ The skill must tell OpenClaw:
 - to keep write commands separate from read commands
 - to prefer quantity unit names and aliases in chat workflows, not raw ids
 - to use `units` when the configured Grocy units need to be inspected
+- to require conversion factors when purchase or consume units differ from stock unit
 - to return command output clearly to the user
 
 Read commands must remain read-only.
