@@ -242,13 +242,13 @@ Tests use mocked data and do not require a real Grocy instance.
 
 ## API Documentation Workflow
 
-Before adding or changing a Grocy write command, run:
+Before adding or changing any Grocy API command, run:
 
 ```bash
 node bin/grocy-openclaw.js api-docs --format text
 ```
 
-Use the version-specific OpenAPI link first, because `master` can describe a different Grocy version than the installed server. Verify the endpoint, entity name, and payload fields against that OpenAPI document before implementing the command.
+Use the version-specific OpenAPI link first, because `master` can describe a different Grocy version than the installed server. Verify the endpoint, entity name, query parameters, response shape, and request payload fields against that OpenAPI document before implementing the command.
 
 ## Roadmap
 

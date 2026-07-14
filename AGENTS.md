@@ -117,13 +117,13 @@ The CLI should:
 
 Use the Grocy REST API.
 
-Before adding or changing any command that writes to Grocy, run:
+Before adding or changing any command that calls the Grocy API, run:
 
 ```bash
 node bin/grocy-openclaw.js api-docs --format text
 ```
 
-Use the version-specific OpenAPI link for the installed Grocy version first. Use `master` only when intentionally checking upcoming Grocy behavior. Verify the endpoint, entity name, and request payload fields in OpenAPI before implementing a write command.
+Use the version-specific OpenAPI link for the installed Grocy version first. Use `master` only when intentionally checking upcoming Grocy behavior. Verify the endpoint, entity name, query parameters, response shape, and request payload fields in OpenAPI before implementing the command.
 
 Required endpoints for the initial read-only version:
 

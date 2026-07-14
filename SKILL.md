@@ -175,7 +175,7 @@ When extending this skill or troubleshooting a Grocy API mismatch, first run:
 node bin/grocy-openclaw.js api-docs --format text
 ```
 
-Use the version-specific OpenAPI link before `master`. Before adding or changing a write command, verify the endpoint, entity name, and request payload fields in that OpenAPI document.
+Use the version-specific OpenAPI link before `master`. Before adding or changing any Grocy API command, verify the endpoint, entity name, query parameters, response shape, and request payload fields in that OpenAPI document.
 
 ## Response behavior
 
