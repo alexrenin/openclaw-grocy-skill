@@ -188,6 +188,27 @@ If an ingredient product name does not exist, `recipe-create` creates a new prod
 
 For chat agents: if a recipe ingredient unit is unknown, inspect existing units first with `units --format table`. Create a new unit only after the user confirms none of the existing units fit. If a recipe includes new products and the user did not specify where to store them, inspect locations with `locations --format table` and ask which existing location to use.
 
+Add one ingredient to an existing recipe:
+
+```bash
+node bin/grocy-openclaw.js recipe-ingredient-add --recipe "Блины" --product "Масло подсолнечное" --amount 30 --unit "мл" --note "в тесто" --format json
+```
+
+`recipe-ingredient-add` creates only a new `recipes_pos` ingredient row. It does not delete or recreate the recipe. Use `--recipe` or `--recipe-id` to select the recipe, and `--product` or `--product-id` to select the product.
+
+Supported `recipe-ingredient-add` options:
+
+- `--recipe` or `--recipe-id`: required recipe selector; prefer `--recipe` for chat
+- `--product` or `--product-id`: required product selector; prefer `--product` for chat
+- `--amount`: required positive amount
+- `--unit`: required Grocy quantity unit name or common alias
+- `--note`: optional ingredient note
+- `--ingredient-group`, `--variable-amount`, `--only-check-single-unit-in-stock`, `--round-up`: optional recipe position fields
+
+If `--product` does not match an existing product, the command can create the missing product before adding the ingredient. In that case, include `--location` or `--location-id`; include purchase or consume unit conversion factors when needed, the same as for `product-create`.
+
+For chat agents: if the user says a recipe is missing an ingredient, use `recipe-ingredient-add`. Do not suggest deleting or manually recreating the recipe just to add one ingredient.
+
 Show custom fields configured for an entity:
 
 ```bash
@@ -318,6 +339,7 @@ Tests use mocked data and do not require a real Grocy instance.
 - `product-create` modifies Grocy and must only be run when the user explicitly asks to create a product.
 - `unit-create` modifies Grocy and must only be run after existing units were considered and the user confirms that a new unit is needed.
 - `recipe-create` modifies Grocy and may create missing products; run it only when the user explicitly asks to create a recipe.
+- `recipe-ingredient-add` modifies Grocy by adding an ingredient row to an existing recipe; run it only when the user explicitly asks to update a recipe.
 - `userfields-create` modifies Grocy and must only be run when the user explicitly asks to create a custom field.
 - Future write commands must be separate from read commands and require explicit user intent.
 
