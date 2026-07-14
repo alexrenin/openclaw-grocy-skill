@@ -4,7 +4,7 @@
 
 This repository contains a reusable OpenClaw skill for Grocy.
 
-The goal is to let OpenClaw agents read and, later, modify a user's Grocy home inventory and shopping list through the Grocy REST API.
+The goal is to let OpenClaw agents read and modify a user's Grocy home inventory and shopping list through the Grocy REST API.
 
 This must be developed as a reusable public skill, not as a one-off private script.
 
@@ -14,7 +14,27 @@ The initial read commands remain read-only.
 
 The skill may read Grocy system info, products, product locations, quantity units, shopping list items, recipes, custom fields, and stock.
 
-Write commands include `product-create`, `unit-create`, `recipe-create`, `recipe-ingredient-add`, `recipe-ingredient-update`, `userfields-create`, and `userfields-set`. Run them only when the user explicitly asks to modify Grocy. Keep write commands separate from read commands, clearly documented, and covered by tests.
+Write commands include `product-create`, `unit-create`, `recipe-create`, `recipe-ingredient-add`, `recipe-ingredient-update`, `userfields-create`, `userfields-set`, and `stock-add`. Run them only after explicit user confirmation for that specific data manipulation. Keep write commands separate from read commands, clearly documented, and covered by tests.
+
+## Project tracking
+
+Use `ROADMAP.md` as the source of truth for current implementation status, completed work, planned work, and verification notes.
+
+Current stage:
+
+- `stock-add` is implemented locally and covered by mocked tests.
+- `stock-add` still needs verification against the user's real Grocy instance and installed Grocy OpenAPI before it should be marked fully done.
+- The next planned capability after `stock-add` verification is `product-search`.
+
+Agent workflow:
+
+- Before planning or implementing roadmap work, read `ROADMAP.md` to understand the current stage.
+- When a roadmap item is completed, update `ROADMAP.md` in the same change.
+- Use `[x]` in `ROADMAP.md` only after code, tests, and user-facing documentation are updated.
+- Use `[~]` for functionality implemented locally but still waiting on real Grocy verification.
+- Keep `AGENTS.md` focused on durable instructions; keep changing task status in `ROADMAP.md`.
+- When adding a create/add write command, also add the corresponding edit/update and delete/remove/cancel needs to `ROADMAP.md`, unless they already exist.
+- Preserve the confirmation rule in roadmap and docs: reads do not need confirmation, every data manipulation does.
 
 ## Core principles
 
@@ -23,12 +43,15 @@ Write commands include `product-create`, `unit-create`, `recipe-create`, `recipe
 - Prefer plain Node.js 18+ and built-in APIs.
 - Avoid external dependencies unless there is a strong reason.
 - Keep code readable, modular, and testable.
+- Treat entity lifecycle support as part of write-command design: agents must be able to correct or remove records they just created, not only add new ones.
 - Support Russian output because the initial user workflow is Russian-speaking.
 - Configuration must come from environment variables.
 - Do not hardcode personal paths, IPs, Telegram IDs, VPS hostnames, or API keys.
 - Never commit `.env` or real secrets.
 - Never print `.env` contents in logs or command output.
 - Never reveal `GROCY_API_KEY`.
+- Treat a configured local `.env` as potentially pointing to the user's real Grocy instance, not a disposable test system.
+- Do not create, update, delete, consume, add stock, or otherwise mutate real Grocy data just to test functionality unless the user explicitly approves a controlled test and cleanup plan.
 
 ## Required environment variables
 
@@ -49,6 +72,8 @@ Rules:
 - `GROCY_URL` may include or omit a trailing slash.
 - `GROCY_API_KEY` must only be used in the `GROCY-API-KEY` request header.
 - Error messages must never include the API key.
+- A present `.env` may contain real production-like Grocy credentials. Do not inspect, print, summarize, or copy its contents.
+- Commands using `.env` should be read-only unless the user explicitly confirms a concrete data change against the real Grocy instance.
 
 ## Expected repository structure
 
@@ -58,6 +83,7 @@ Create and maintain this structure:
 openclaw-grocy-skill/
 |-- AGENTS.md
 |-- README.md
+|-- ROADMAP.md
 |-- SKILL.md
 |-- package.json
 |-- .env.example
@@ -83,6 +109,7 @@ openclaw-grocy-skill/
 |       |-- userfields-create.js
 |       |-- userfields-get.js
 |       |-- userfields-set.js
+|       |-- stock-add.js
 |       `-- stock.js
 |-- test/
 |   `-- format-shopping-list.test.js
@@ -119,6 +146,7 @@ node bin/grocy-openclaw.js products --format table
 node bin/grocy-openclaw.js products --format json
 node bin/grocy-openclaw.js stock --format table
 node bin/grocy-openclaw.js stock --format json
+node bin/grocy-openclaw.js stock-add --product "Молоко" --amount 1 --unit "л" --price 2.49 --format json
 ```
 
 The CLI should:
@@ -131,6 +159,14 @@ The CLI should:
 - Keep output suitable for OpenClaw to return to the user.
 
 OpenClaw agents should always use the CLI for Grocy work. Do not call Grocy directly with inline Python, `fetch`, `curl`, or ad hoc scripts; the CLI owns API key handling, safe errors, and chat-friendly output.
+
+For every user-facing create/add command, plan matching edit/update and delete/remove/cancel workflows. This prevents the agent from being able to add an incorrect record but unable to fix or undo it through the skill.
+
+Confirmation rule: read commands may run without confirmation. Any command that creates, updates, deletes, removes, cancels, reverses, marks done, consumes stock, adds stock, or otherwise changes Grocy data must be confirmed by the user immediately before execution.
+
+Real Grocy rule: once `.env` is configured, assume it targets the user's real Grocy data. Use mocked tests for automated verification. For live checks, prefer read-only commands such as `system-info`, `api-docs`, `products`, `units`, `locations`, `shopping-list`, and `stock`. Write tests are allowed only when the user confirms the exact command, target object, amount, unit, price, expected effect, and cleanup plan.
+
+Test record rule: if a live write test creates test data, use an obvious unique marker such as `OPENCLAW_TEST_<date>_<purpose>`, record the created ids from command output, and remove or reverse the test data immediately after verification. Do not create test data unless the corresponding cleanup command or manual cleanup path is already known.
 
 ## Grocy API
 
@@ -169,6 +205,7 @@ POST /api/objects/quantity_unit_conversions
 POST /api/objects/recipes
 POST /api/objects/recipes_pos
 POST /api/objects/userfields
+POST /api/stock/products/{productId}/add
 ```
 
 Product-specific unit conversion factors must be stored as `quantity_unit_conversions` rows. Do not send `qu_factor_purchase_to_stock` or `qu_factor_consume_to_stock` fields in the `products` payload for Grocy 4.x.
@@ -270,8 +307,15 @@ The skill must tell OpenClaw:
 - how to run the CLI
 - not to reveal `.env`
 - not to reveal `GROCY_API_KEY`
-- not to modify Grocy unless the user explicitly asks
+- not to modify Grocy unless the user explicitly confirms the specific manipulation
 - to keep write commands separate from read commands
+- to run read-only commands without confirmation when needed
+- to ask for confirmation before every non-read command, including create, update, delete, remove, cancel, done, consume, stock add, and stock correction commands
+- to treat configured `.env` credentials as a real Grocy instance and avoid leaving test data behind
+- to avoid write-based smoke tests against real Grocy unless the user explicitly confirms the exact write operation and cleanup plan
+- to delete or reverse live test records immediately after the test, using the ids returned by the create/add command when possible
+- to prefer correcting an existing record with update/delete commands over creating duplicates
+- to ask for a new confirmation if the planned command, target object, amount, unit, price, or payload changes
 - to prefer quantity unit names and aliases in chat workflows, not raw ids
 - to use `units` when the configured Grocy units need to be inspected
 - to prefer location names in chat workflows, not raw ids
@@ -293,6 +337,10 @@ The skill must tell OpenClaw:
 - to use `userfields-set` for setting custom field values on an object
 - to ask for the custom field type before `userfields-create` when the user did not provide it
 - to avoid direct Grocy API calls for custom field updates
+- to use `stock-add` when the user explicitly asks to add purchased products or stock
+- to avoid parsing receipts inside this skill; OpenClaw may parse receipts, then use the CLI for confirmed stock writes
+- to ask which existing product to use before `stock-add` when product matching is ambiguous or missing
+- to require stock amounts in the product stock unit for `stock-add`
 - to return command output clearly to the user
 
 Read commands must remain read-only.
@@ -341,8 +389,9 @@ Deploy script requirements:
 
 - run from a deployed OpenClaw gateway environment
 - load `.env` from the deployed skill folder
-- run the shopping-list command
+- run a read-only command such as the shopping-list command
 - never print secrets
+- never create, update, delete, consume, add stock, or otherwise mutate Grocy data
 
 Example expected command inside OpenClaw gateway:
 
@@ -374,6 +423,8 @@ Keep tests fast and independent from a real Grocy instance.
 
 Use mocked data for formatting tests.
 
+Automated tests must not require or mutate the user's real Grocy instance. Use mocks by default. Any live Grocy verification must be an explicit, manual, user-confirmed step.
+
 ## README requirements
 
 `README.md` should include:
@@ -390,11 +441,11 @@ Use mocked data for formatting tests.
 
 Roadmap should include:
 
-- add item to shopping list
-- search products by name
-- mark shopping item done
-- stock summaries
-- expiring products
+- a link to `ROADMAP.md`
+- current implementation status
+- planned product search
+- planned shopping list write commands
+- planned stock summaries and expiring products
 
 ## Security requirements
 
@@ -458,6 +509,8 @@ Implemented write operation:
 - create recipe object with ingredient rows
 - add one ingredient row to an existing recipe
 - update one ingredient row in an existing recipe
+- set custom field values
+- add stock entry with optional latest purchase price
 
 Examples:
 
@@ -469,7 +522,11 @@ Examples:
 Rules for future write operations:
 
 - Keep read-only commands separate from write commands.
-- Require explicit user intent before modifying Grocy.
+- Require explicit user confirmation before every command that modifies Grocy.
+- User intent to modify is not enough by itself; confirm the concrete command or action before execution.
+- For every create/add write operation, design the matching update/edit and delete/remove/cancel operations.
+- If delete is too risky or unsupported for a Grocy entity, document the limitation and provide the safest available correction path.
+- Do not leave OpenClaw in a state where it can create a wrong record but cannot correct or remove it through the CLI.
 - When a product unit is missing, offer existing `units` choices first.
 - When a product location is missing, offer existing `locations` choices first.
 - Create a new quantity unit only after the user confirms none of the existing units fit.

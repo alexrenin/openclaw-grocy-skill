@@ -107,6 +107,13 @@ class GrocyClient {
     return this.request('/api/stock');
   }
 
+  addStockProduct(productId, payload) {
+    return this.request(`/api/stock/products/${encodeURIComponent(productId)}/add`, {
+      method: 'POST',
+      body: payload,
+    });
+  }
+
   createObject(entity, payload) {
     return this.request(`/api/objects/${entity}`, {
       method: 'POST',

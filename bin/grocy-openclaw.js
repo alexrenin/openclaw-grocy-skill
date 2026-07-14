@@ -11,6 +11,7 @@ const { runRecipeCreateCommand } = require('../src/commands/recipe-create');
 const { runRecipeIngredientAddCommand } = require('../src/commands/recipe-ingredient-add');
 const { runRecipeIngredientUpdateCommand } = require('../src/commands/recipe-ingredient-update');
 const { runShoppingListCommand } = require('../src/commands/shopping-list');
+const { runStockAddCommand } = require('../src/commands/stock-add');
 const { runStockCommand } = require('../src/commands/stock');
 const { runSystemInfoCommand } = require('../src/commands/system-info');
 const { runUnitCreateCommand } = require('../src/commands/unit-create');
@@ -43,6 +44,7 @@ Commands:
   userfields-get   Read custom field values of one object
   userfields-set   Set custom field values of one object
   stock            Read Grocy stock
+  stock-add        Add a purchased product amount to Grocy stock
 
 Formats:
   api-docs        text, json
@@ -64,6 +66,7 @@ Formats:
   userfields-get   table, json
   userfields-set   json
   stock            table, json
+  stock-add        json
 
 Examples:
   node bin/grocy-openclaw.js api-docs --format text
@@ -82,6 +85,7 @@ Examples:
   node bin/grocy-openclaw.js userfields-get --entity recipes --object-id 10 --format json
   node bin/grocy-openclaw.js userfields-set --entity recipes --object-name "Pancakes" --values '{"difficulty":"easy","cook_time":"10 minutes"}' --format json
   node bin/grocy-openclaw.js stock --format json
+  node bin/grocy-openclaw.js stock-add --product "Milk" --amount 1 --unit "l" --price 2.49 --format json
 `;
 
 const COMMAND_FORMATS = new Map([
@@ -101,6 +105,7 @@ const COMMAND_FORMATS = new Map([
   ['userfields-get', new Set(['table', 'json'])],
   ['userfields-set', new Set(['json'])],
   ['stock', new Set(['table', 'json'])],
+  ['stock-add', new Set(['json'])],
 ]);
 
 const COMMAND_OPTIONS = new Map([
@@ -194,6 +199,17 @@ const COMMAND_OPTIONS = new Map([
     'values',
     'field',
     'value',
+  ])],
+  ['stock-add', new Set([
+    'product',
+    'product-id',
+    'name',
+    'amount',
+    'unit',
+    'unit-id',
+    'price',
+    'best-before-date',
+    'transaction-type',
   ])],
 ]);
 
@@ -314,6 +330,9 @@ async function main(argv, env = process.env) {
       break;
     case 'stock':
       output = await runStockCommand({ client, format });
+      break;
+    case 'stock-add':
+      output = await runStockAddCommand({ client, format, options });
       break;
     default:
       throw new Error(`${command} command is not implemented yet.`);

@@ -112,6 +112,38 @@ test('creates quantity units through Grocy objects API', async () => {
   assert.equal(requestOptions.body, '{"name":"банка","name_plural":"банки"}');
 });
 
+test('adds product amount through Grocy stock API', async () => {
+  let requestUrl;
+  let requestOptions;
+
+  const client = new GrocyClient({
+    baseUrl: 'http://grocy',
+    apiKey: 'secret-key',
+    fetchImpl: async (url, options) => {
+      requestUrl = url;
+      requestOptions = options;
+
+      return {
+        ok: true,
+        text: async () => '{"ok":true}',
+      };
+    },
+  });
+
+  const payload = {
+    amount: 1,
+    transaction_type: 'purchase',
+    price: 2.49,
+  };
+  const data = await client.addStockProduct(42, payload);
+
+  assert.deepEqual(data, { ok: true });
+  assert.equal(requestUrl, 'http://grocy/api/stock/products/42/add');
+  assert.equal(requestOptions.method, 'POST');
+  assert.equal(requestOptions.headers['Content-Type'], 'application/json');
+  assert.equal(requestOptions.body, JSON.stringify(payload));
+});
+
 test('creates quantity unit conversions through Grocy objects API', async () => {
   let requestUrl;
   let requestOptions;

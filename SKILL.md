@@ -28,13 +28,15 @@ Read commands are read-only.
 
 You may read Grocy products, stock, and shopping list data.
 
-The `product-create` command modifies Grocy by creating a product object. Run it only when the user explicitly asks to create a new product.
+The `product-create` command modifies Grocy by creating a product object. Run it only after the user explicitly confirms creating that product.
 
-The `recipe-create` command modifies Grocy by creating a recipe and recipe ingredient rows. It may create missing ingredient products only when `--create-missing-products true` is used after explicit user confirmation. Run it only when the user explicitly asks to create a recipe.
+The `recipe-create` command modifies Grocy by creating a recipe and recipe ingredient rows. It may create missing ingredient products only when `--create-missing-products true` is used after explicit user confirmation. Run it only after the user confirms creating that recipe.
 
-The `recipe-ingredient-add` command modifies Grocy by adding one ingredient row to an existing recipe. Run it only when the user explicitly asks to update or fix a recipe ingredient list.
+The `recipe-ingredient-add` command modifies Grocy by adding one ingredient row to an existing recipe. Run it only after the user confirms adding that ingredient row.
 
-The `recipe-ingredient-update` command modifies Grocy by updating one existing recipe ingredient row. Run it only when the user explicitly asks to correct an ingredient amount, unit, note, group, or flags.
+The `recipe-ingredient-update` command modifies Grocy by updating one existing recipe ingredient row. Run it only after the user confirms correcting that ingredient row.
+
+The `stock-add` command modifies Grocy by adding a purchased product amount to stock and may record the latest purchase price. Run it only after the user confirms adding those purchases or stock entries.
 
 ## Safety
 
@@ -43,7 +45,14 @@ The `recipe-ingredient-update` command modifies Grocy by updating one existing r
 - Never reveal `GROCY_API_KEY`.
 - Do not include `GROCY_API_KEY` in command output, errors, summaries, or logs.
 - Use `GROCY_API_KEY` only through the `GROCY-API-KEY` request header.
-- Do not run write commands unless the user's intent to modify Grocy is explicit.
+- Treat configured `.env` credentials as the user's real Grocy instance unless told otherwise.
+- Use mocked tests by default. Live write tests against the real Grocy instance require explicit confirmation of the exact test data and cleanup plan.
+- Delete or reverse temporary live test records immediately after verification.
+- Read-only commands do not require confirmation.
+- Do not run any command that changes Grocy data unless the user explicitly confirms that specific action immediately before execution.
+- Treat create, add, update, delete, remove, cancel, mark done, consume stock, stock add, and correction commands as data manipulation commands requiring confirmation.
+- Prefer update/delete correction workflows over creating duplicates when the user asks to fix a wrong record.
+- Ask again if the command, target object, amount, unit, price, or payload changes before execution.
 
 ## Environment
 
@@ -64,6 +73,8 @@ GROCY_API_KEY=replace_me
 
 `GROCY_URL` may include or omit a trailing slash.
 
+The configured `.env` can point to real Grocy data. Do not print it or inspect it for display. Temporary test records are allowed only after explicit confirmation and must be cleaned up afterward.
+
 ## Execution rule
 
 Always use the provided Node.js CLI for Grocy work:
@@ -73,6 +84,8 @@ node bin/grocy-openclaw.js <command> --format <format>
 ```
 
 Do not call Grocy directly with inline Python, `fetch`, `curl`, or ad hoc scripts. The CLI is responsible for loading the API key safely, setting the `GROCY-API-KEY` header, formatting output, and keeping errors safe for chat.
+
+For live connectivity checks, prefer read-only commands. Run write commands against the configured Grocy instance only when the user confirms the exact test action and cleanup plan.
 
 ## Commands
 
@@ -278,6 +291,24 @@ Return Grocy stock as JSON:
 ```bash
 node bin/grocy-openclaw.js stock --format json
 ```
+
+Add a purchased product amount to Grocy stock and record the latest purchase price:
+
+```bash
+node bin/grocy-openclaw.js stock-add --product "Молоко" --amount 1 --unit "л" --price 2.49 --format json
+```
+
+Use `stock-add` when OpenClaw has already understood the purchase item. Do not parse receipts inside this skill. Do not call Grocy directly with `curl`, inline Python, or `fetch` for stock additions.
+
+For `stock-add`, use `--product` or `--product-id` to select an existing product. Required fields are product selector and `--amount`. Optional fields are `--unit` or `--unit-id`, `--price`, `--best-before-date`, and `--transaction-type`. The amount must be in the product stock unit; if the user gives a purchase unit that differs from the stock unit, ask the user or convert only when the conversion is known.
+
+If the product is not found, inspect products first with:
+
+```bash
+node bin/grocy-openclaw.js products --format table
+```
+
+Ask which existing product to use. Do not create a missing product unless the user explicitly asks for product creation.
 
 ## API documentation workflow
 

@@ -138,3 +138,19 @@ test('allows userfield command options', () => {
     value: '10 минут',
   }));
 });
+
+test('allows stock-add options', () => {
+  assert.doesNotThrow(() => validateOptions('stock-add', {
+    product: 'Молоко',
+    amount: '1',
+    unit: 'л',
+    price: '2.49',
+    'best-before-date': '2026-07-20',
+  }));
+  assert.doesNotThrow(() => validateOptions('stock-add', {
+    'product-id': '42',
+    amount: '0.5',
+    'unit-id': '2',
+    'transaction-type': 'purchase',
+  }));
+});
