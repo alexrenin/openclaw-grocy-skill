@@ -72,6 +72,14 @@ class GrocyClient {
     return this.request('/api/objects/recipes_pos');
   }
 
+  getUserfields() {
+    return this.request('/api/objects/userfields');
+  }
+
+  getObjectUserfields(entity, objectId) {
+    return this.request(`/api/userfields/${encodeURIComponent(entity)}/${encodeURIComponent(objectId)}`);
+  }
+
   getQuantityUnits() {
     return this.request('/api/objects/quantity_units');
   }

@@ -183,6 +183,50 @@ test('creates recipe positions through Grocy objects API', async () => {
   assert.equal(requestOptions.body, JSON.stringify(payload));
 });
 
+test('reads userfield definitions through Grocy objects API', async () => {
+  let requestUrl;
+
+  const client = new GrocyClient({
+    baseUrl: 'http://grocy',
+    apiKey: 'secret-key',
+    fetchImpl: async (url) => {
+      requestUrl = url;
+
+      return {
+        ok: true,
+        text: async () => '[{"id":1,"entity":"recipes"}]',
+      };
+    },
+  });
+
+  const data = await client.getUserfields();
+
+  assert.deepEqual(data, [{ id: 1, entity: 'recipes' }]);
+  assert.equal(requestUrl, 'http://grocy/api/objects/userfields');
+});
+
+test('reads object userfield values through Grocy userfields API', async () => {
+  let requestUrl;
+
+  const client = new GrocyClient({
+    baseUrl: 'http://grocy',
+    apiKey: 'secret-key',
+    fetchImpl: async (url) => {
+      requestUrl = url;
+
+      return {
+        ok: true,
+        text: async () => '{"source":"chat"}',
+      };
+    },
+  });
+
+  const data = await client.getObjectUserfields('recipes', 42);
+
+  assert.deepEqual(data, { source: 'chat' });
+  assert.equal(requestUrl, 'http://grocy/api/userfields/recipes/42');
+});
+
 test('redacts API key from Grocy API error body', async () => {
   const client = new GrocyClient({
     baseUrl: 'http://grocy',

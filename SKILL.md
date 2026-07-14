@@ -169,6 +169,20 @@ If an ingredient product does not exist, `recipe-create` creates it automaticall
 
 If the user asks to create a recipe but omits ingredient amounts or units, ask a clarification question before running `recipe-create`. If a unit is unclear, inspect existing units first with `units --format table`; create a new unit only after the user confirms none fit.
 
+Show custom fields configured for recipes:
+
+```bash
+node bin/grocy-openclaw.js recipe-userfields --format table
+```
+
+Show custom field values for one recipe:
+
+```bash
+node bin/grocy-openclaw.js recipe-userfields-get --recipe-id 10 --format json
+```
+
+Use `recipe-userfields` when the user asks what custom fields recipes have. Use `recipe-userfields-get` when the user asks what custom field values are set on a specific recipe.
+
 Show Grocy stock as a table:
 
 ```bash

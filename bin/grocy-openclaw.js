@@ -7,6 +7,8 @@ const { runApiDocsCommand } = require('../src/commands/api-docs');
 const { runProductCreateCommand } = require('../src/commands/product-create');
 const { runProductsCommand } = require('../src/commands/products');
 const { runRecipeCreateCommand } = require('../src/commands/recipe-create');
+const { runRecipeUserfieldsCommand } = require('../src/commands/recipe-userfields');
+const { runRecipeUserfieldsGetCommand } = require('../src/commands/recipe-userfields-get');
 const { runShoppingListCommand } = require('../src/commands/shopping-list');
 const { runStockCommand } = require('../src/commands/stock');
 const { runSystemInfoCommand } = require('../src/commands/system-info');
@@ -25,6 +27,10 @@ Commands:
   products         Read Grocy products
   product-create   Create a Grocy product
   recipe-create    Create a Grocy recipe with ingredients
+  recipe-userfields
+                   Read configured custom fields for recipes
+  recipe-userfields-get
+                   Read custom field values of one recipe
   stock            Read Grocy stock
 
 Formats:
@@ -36,6 +42,10 @@ Formats:
   products         table, json
   product-create   json
   recipe-create    json
+  recipe-userfields
+                   table, json
+  recipe-userfields-get
+                   table, json
   stock            table, json
 
 Examples:
@@ -47,6 +57,8 @@ Examples:
   node bin/grocy-openclaw.js products --format table
   node bin/grocy-openclaw.js product-create --name "Pickles" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --format json
   node bin/grocy-openclaw.js recipe-create --name "Salad" --ingredients '[{"name":"Pickles","amount":3,"unit":"шт"}]' --format json
+  node bin/grocy-openclaw.js recipe-userfields --format table
+  node bin/grocy-openclaw.js recipe-userfields-get --recipe-id 10 --format json
   node bin/grocy-openclaw.js stock --format json
 `;
 
@@ -59,6 +71,8 @@ const COMMAND_FORMATS = new Map([
   ['products', new Set(['table', 'json'])],
   ['product-create', new Set(['json'])],
   ['recipe-create', new Set(['json'])],
+  ['recipe-userfields', new Set(['table', 'json'])],
+  ['recipe-userfields-get', new Set(['table', 'json'])],
   ['stock', new Set(['table', 'json'])],
 ]);
 
@@ -86,6 +100,9 @@ const COMMAND_OPTIONS = new Map([
     'base-servings',
     'desired-servings',
     'ingredients',
+  ])],
+  ['recipe-userfields-get', new Set([
+    'recipe-id',
   ])],
 ]);
 
@@ -182,6 +199,12 @@ async function main(argv, env = process.env) {
       break;
     case 'recipe-create':
       output = await runRecipeCreateCommand({ client, format, options });
+      break;
+    case 'recipe-userfields':
+      output = await runRecipeUserfieldsCommand({ client, format });
+      break;
+    case 'recipe-userfields-get':
+      output = await runRecipeUserfieldsGetCommand({ client, format, options });
       break;
     case 'stock':
       output = await runStockCommand({ client, format });

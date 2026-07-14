@@ -79,3 +79,10 @@ test('allows recipe-create options', () => {
     ingredients: '[{"name":"Картофель","amount":3,"unit":"шт"}]',
   }));
 });
+
+test('allows recipe userfield commands options', () => {
+  assert.doesNotThrow(() => validateOptions('recipe-userfields', {}));
+  assert.doesNotThrow(() => validateOptions('recipe-userfields-get', {
+    'recipe-id': '42',
+  }));
+});
