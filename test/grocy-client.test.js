@@ -63,6 +63,33 @@ test('posts JSON object payloads', async () => {
   assert.equal(requestOptions.body, '{"name":"Молоко","qu_id_stock":1}');
 });
 
+test('creates quantity units through Grocy objects API', async () => {
+  let requestUrl;
+  let requestOptions;
+
+  const client = new GrocyClient({
+    baseUrl: 'http://grocy',
+    apiKey: 'secret-key',
+    fetchImpl: async (url, options) => {
+      requestUrl = url;
+      requestOptions = options;
+
+      return {
+        ok: true,
+        text: async () => '{"created_object_id":7}',
+      };
+    },
+  });
+
+  const data = await client.createQuantityUnit({ name: 'банка', name_plural: 'банки' });
+
+  assert.deepEqual(data, { created_object_id: 7 });
+  assert.equal(requestUrl, 'http://grocy/api/objects/quantity_units');
+  assert.equal(requestOptions.method, 'POST');
+  assert.equal(requestOptions.headers['Content-Type'], 'application/json');
+  assert.equal(requestOptions.body, '{"name":"банка","name_plural":"банки"}');
+});
+
 test('redacts API key from Grocy API error body', async () => {
   const client = new GrocyClient({
     baseUrl: 'http://grocy',

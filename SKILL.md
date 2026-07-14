@@ -72,6 +72,12 @@ Show configured Grocy quantity units:
 node bin/grocy-openclaw.js units --format table
 ```
 
+Create a new Grocy quantity unit:
+
+```bash
+node bin/grocy-openclaw.js unit-create --name "банка" --name-plural "банки" --format json
+```
+
 Show the active shopping list as compact Russian text:
 
 ```bash
@@ -109,6 +115,14 @@ If the unit is unclear, inspect configured units first:
 ```bash
 node bin/grocy-openclaw.js units --format table
 ```
+
+If no existing unit fits, ask the user before creating a new unit. Only after the user confirms, run:
+
+```bash
+node bin/grocy-openclaw.js unit-create --name "банка" --name-plural "банки" --format json
+```
+
+Then create the product using the new unit name.
 
 Use ids only when an automation already knows the id:
 

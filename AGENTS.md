@@ -70,6 +70,7 @@ openclaw-grocy-skill/
 |   `-- commands/
 |       |-- system-info.js
 |       |-- units.js
+|       |-- unit-create.js
 |       |-- product-create.js
 |       |-- shopping-list.js
 |       |-- products.js
@@ -89,6 +90,7 @@ Implement these commands:
 node bin/grocy-openclaw.js system-info --format json
 node bin/grocy-openclaw.js units --format table
 node bin/grocy-openclaw.js units --format json
+node bin/grocy-openclaw.js unit-create --name "банка" --name-plural "банки" --format json
 node bin/grocy-openclaw.js product-create --name "Молоко" --stock-unit "л" --format json
 node bin/grocy-openclaw.js shopping-list --format text
 node bin/grocy-openclaw.js shopping-list --format json
@@ -125,6 +127,7 @@ Required endpoints for explicit write commands:
 
 ```text
 POST /api/objects/products
+POST /api/objects/quantity_units
 ```
 
 The Grocy client should:
@@ -386,6 +389,7 @@ Write operations must be added carefully.
 
 Implemented write operation:
 
+- create quantity unit object
 - create product object
 
 Examples:
@@ -399,6 +403,8 @@ Rules for future write operations:
 
 - Keep read-only commands separate from write commands.
 - Require explicit user intent before modifying Grocy.
+- When a product unit is missing, offer existing `units` choices first.
+- Create a new quantity unit only after the user confirms none of the existing units fit.
 - Document write behavior clearly in `SKILL.md`.
 - Add tests where possible.
 - Prefer confirmation-oriented wording in the skill instructions.

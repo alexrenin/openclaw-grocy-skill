@@ -86,6 +86,10 @@ class GrocyClient {
   createProduct(payload) {
     return this.createObject('products', payload);
   }
+
+  createQuantityUnit(payload) {
+    return this.createObject('quantity_units', payload);
+  }
 }
 
 function createGrocyClientFromEnv(env) {

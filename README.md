@@ -66,6 +66,12 @@ Show Grocy quantity units:
 node bin/grocy-openclaw.js units --format table
 ```
 
+Create a new Grocy quantity unit:
+
+```bash
+node bin/grocy-openclaw.js unit-create --name "банка" --name-plural "банки" --format json
+```
+
 Show the active shopping list as compact Russian text:
 
 ```bash
@@ -99,6 +105,8 @@ node bin/grocy-openclaw.js product-create --name "Молоко" --stock-unit "л
 Prefer unit names in chat workflows. The command accepts exact Grocy unit names, plural names, and common aliases such as `кг`, `килограмм`, `кило`, `kg`, `л`, `литр`, `шт`, and `штука`.
 
 If unit matching is ambiguous, the command prints matching unit choices. If a unit is unknown, it prints available units. Use `units --format table` when the agent needs to inspect configured Grocy units.
+
+For chat workflows, do not create a new unit immediately when a product unit is unknown. First show suitable existing units to the user. Create a new unit with `unit-create` only when the user confirms none of the existing units fit.
 
 You may also specify units by id when an automation already knows the id:
 
@@ -211,6 +219,7 @@ Tests use mocked data and do not require a real Grocy instance.
 - Error output must not include `GROCY_API_KEY`.
 - Read commands are read-only.
 - `product-create` modifies Grocy and must only be run when the user explicitly asks to create a product.
+- `unit-create` modifies Grocy and must only be run after existing units were considered and the user confirms that a new unit is needed.
 - Future write commands must be separate from read commands and require explicit user intent.
 
 ## Roadmap

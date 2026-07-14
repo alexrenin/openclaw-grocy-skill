@@ -46,3 +46,11 @@ test('rejects unsupported options for a command', () => {
     /Unsupported option for products: --name/,
   );
 });
+
+test('allows unit-create options', () => {
+  assert.doesNotThrow(() => validateOptions('unit-create', {
+    name: 'банка',
+    'name-plural': 'банки',
+    description: 'Стеклянная банка',
+  }));
+});
