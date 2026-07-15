@@ -49,6 +49,7 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
 - `[x]` Read-only menu planning helpers with `menu-check` and `menu-shopping-list`.
 - `[x]` Read-only menu recommendations with `menu-plan`.
 - `[x]` Grocy meal plan lifecycle with `meal-plan`, `meal-plan-add`, `meal-plan-update`, and `meal-plan-delete`.
+- `[x]` Documentation refactor: concise `SKILL.md`, detailed `docs/COMMANDS.md`, and machine-readable `docs/commands.json` command index.
 
 ## Current Verification Notes
 
@@ -57,7 +58,10 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
 - `menu-plan` is implemented, documented, covered by mocked tests, and live-verified read-only against the configured Grocy 4.6.0 instance. The live check evaluated 4 normal recipes, selected 3 recipes with the fewest missing products, returned a combined missing-product list, and did not create Grocy meal plan or shopping list rows. `menu-plan --only-ready true` correctly returned an empty plan because no recipe was fully cookable from current stock. No Grocy data was changed.
 - Live menu helper verification exposed that tiny non-zero amounts such as `0.000001 кг` were rounded to `0 кг` in text output. The formatter now preserves tiny non-zero values and has a regression test.
 - `recipes` and `recipe-get` are implemented, documented, covered by mocked tests, and live-verified read-only against the configured Grocy 4.6.0 instance. `recipes` returned 4 normal recipes with correct ingredient counts and excluded 3 internal `mealplan-*` pseudo-recipes exposed by the objects endpoint. Its table output converted and truncated HTML descriptions for chat. `recipe-get` resolved recipe 3 by both id and name and returned 2 ingredient rows with correct position ids, product names, amounts, and quantity units. No Grocy data was changed.
-- `npm.cmd test` passed locally with 272 tests.
+- `SKILL.md` has been reduced to a concise runtime guide for agents. Detailed CLI examples and workflow notes now live in `docs/COMMANDS.md`, while `docs/commands.json` is explicitly marked as a strict policy index and records command type, formats, confirmation requirement, selectors, mode-specific behavior, confirmation details, and correction/removal paths for all 45 CLI commands. `test/command-index.test.js` verifies that the JSON index stays aligned with the CLI dispatcher, keeps a strict record shape, and includes write/create/add command safety metadata.
+- Safety-sensitive command options are explicitly represented as modes in `docs/commands.json`: `shopping-list-clean --dry-run true`, `recipe-create --create-missing-products true`, `recipe-ingredient-add --create-missing-products true`, `recipe-delete --delete-ingredients true`, and `userfields-delete --delete-values true`.
+- OpenClaw-facing runtime files (`SKILL.md` and `docs/COMMANDS.md`) were checked so development-only instructions, such as command implementation and OpenAPI extension workflow, stay in development documentation instead of runtime skill guidance.
+- `npm.cmd test` passed locally with 281 tests after strengthening the command-index checks.
 - Shopping list write commands are implemented, documented, covered by mocked tests, and live-verified against the configured Grocy 4.6.0 instance after explicit confirmation before each write. The lifecycle test created note-only row `OPENCLAW_TEST_20260715_SHOPPING_LIST_LIFECYCLE` as id 5, updated its amount and note, marked it done, restored it to undone, and deleted it. The cleanup test created `OPENCLAW_TEST_20260715_SHOPPING_LIST_CLEAN` as id 6, marked it done, previewed exactly that one affected row with `shopping-list-clean --dry-run true`, then removed it with `shopping-list-clean`. Final read-only verification found both markers absent, the four original pending rows unchanged, and zero completed rows.
 - Live shopping list verification exposed that note-only rows were labeled `Unknown product null`; the formatter now leaves their product name empty and has a regression test. The test also added the read-only `shopping-list-clean --dry-run true` preview so completed rows can be inspected before confirming cleanup.
 - Grocy 4.6.0 OpenAPI and frontend source were checked: item create/update/delete use generic `shopping_list` object endpoints, done toggles the `done` field with generic `PUT`, and completed-only cleanup uses `POST /stock/shoppinglist/clear` with `done_only: true`.
@@ -142,6 +146,17 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
    - `[x]` Command: `meal-plan-delete` to remove one planned menu row after explicit confirmation; implemented, tested, documented, and live-verified.
    - Purpose: let OpenClaw actually set the user's Grocy menu after `menu-plan` suggests recipes, while preserving the ability to correct or remove mistakes through the skill.
    - Verification status: mocked tests, documentation, read-only live check, and explicit confirmed live write/cleanup verification are complete.
+
+9. `[x]` Reduce `SKILL.md` to a concise agent runtime guide.
+   - `[x]` Keep `SKILL.md` focused on when to use the skill, safety rules, environment handling, the CLI-only execution rule, read/write confirmation policy, and compact command routing.
+   - `[x]` Move detailed command examples, option explanations, and longer workflows into a separate reference document such as `docs/COMMANDS.md`.
+   - `[x]` Replace repeated per-command confirmation prose with a compact write-command table that lists command, effect, required confirmation, and correction/removal path.
+   - `[x]` Keep user-facing installation and usage details in `README.md`; avoid duplicating the full CLI manual in `SKILL.md`.
+   - `[x]` Add a machine-readable command index at `docs/commands.json` with command type, confirmation requirement, purpose, required selectors, required confirmation details, and correction/removal command when applicable.
+   - `[x]` Keep `SKILL.md`, README command sections, the command reference, and `docs/commands.json` aligned whenever commands are added or changed.
+   - `[x]` Verify that every CLI command appears in `docs/commands.json`, every write command has `requiresConfirmation: true`, and every create/add command documents its correction or removal path.
+   - `[x]` Verify after the refactor that all existing safety rules still appear in either `SKILL.md`, README, the command reference, or `docs/commands.json`, and that OpenClaw still has clear instructions for every write command.
+   - Purpose: make the skill easier for agents to load and follow while preserving the explicit safety model for real Grocy data.
 
 ## Write Lifecycle Principle
 

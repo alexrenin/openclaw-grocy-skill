@@ -63,6 +63,11 @@ Read-only commands may run without confirmation. Before any command that changes
 
 If `.env` points to a real Grocy instance, use read-only commands for connectivity checks. Temporary test products, test units, test recipes, test custom fields, shopping list entries, stock entries, or price records are allowed only when the user explicitly confirms the exact test action and cleanup plan. Delete or reverse test records immediately after verification.
 
+Command reference files:
+
+- [docs/COMMANDS.md](docs/COMMANDS.md): detailed CLI examples and workflow notes.
+- [docs/commands.json](docs/commands.json): machine-readable command type, formats, confirmation requirement, selectors, mode-specific behavior, confirmation details, and correction/removal paths.
+
 Check Grocy connectivity and API key validity:
 
 ```bash
@@ -663,10 +668,11 @@ Automated tests must not depend on or modify the configured Grocy instance.
 - `userfields-set` modifies Grocy and must only be run after the user confirms setting or updating custom field values.
 - `stock-add` modifies Grocy by adding a purchased product amount to stock and may record `price`; run it only after the user confirms adding those purchases or stock entries.
 - `stock-transaction-undo` modifies Grocy by undoing a stock transaction; run it only after the user confirms the exact transaction id to undo.
-- `shopping-list-add`, `shopping-list-update`, `shopping-list-delete`, `shopping-list-done`, and `shopping-list-clean` modify Grocy; run each only after confirmation of the exact row or list change. `shopping-list-clean` deletes completed rows only.
+- `shopping-list-add`, `shopping-list-update`, `shopping-list-delete`, and `shopping-list-done` modify Grocy; run each only after confirmation of the exact row or list change. `shopping-list-clean --dry-run true` is read-only and may run without confirmation; `shopping-list-clean` without dry-run deletes completed rows only and requires confirmation.
 - Future write commands must be separate from read commands and require explicit user confirmation.
 - Future write commands must document their confirmation requirement.
 - Write command design must cover the full lifecycle where possible: create/add, update/edit, and delete/remove/cancel. This lets OpenClaw correct or undo records it just created instead of creating duplicates or requiring direct API calls.
+- Keep `SKILL.md`, this README, [docs/COMMANDS.md](docs/COMMANDS.md), and [docs/commands.json](docs/commands.json) aligned whenever CLI commands are added or changed.
 
 ## API Documentation Workflow
 

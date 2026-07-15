@@ -1,0 +1,584 @@
+{
+  "schemaVersion": 1,
+  "indexType": "policy",
+  "policyScope": [
+    "command routing",
+    "read/write classification",
+    "confirmation requirements",
+    "mode-specific safety behavior",
+    "correction and removal paths",
+    "supported output formats"
+  ],
+  "nonGoals": [
+    "complete CLI option schema",
+    "request payload validation",
+    "replacement for CLI argument validation"
+  ],
+  "commandCount": 45,
+  "commands": [
+    {
+      "name": "api-docs",
+      "type": "read",
+      "formats": ["text", "json"],
+      "requiresConfirmation": false,
+      "purpose": "Show Grocy OpenAPI documentation links for the installed version.",
+      "selectors": [],
+      "confirmationDetails": [],
+      "correctionCommand": null
+    },
+    {
+      "name": "system-info",
+      "type": "read",
+      "formats": ["json"],
+      "requiresConfirmation": false,
+      "purpose": "Read Grocy system information and verify connectivity.",
+      "selectors": [],
+      "confirmationDetails": [],
+      "correctionCommand": null
+    },
+    {
+      "name": "locations",
+      "type": "read",
+      "formats": ["table", "json"],
+      "requiresConfirmation": false,
+      "purpose": "Read configured Grocy product locations.",
+      "selectors": [],
+      "confirmationDetails": [],
+      "correctionCommand": null
+    },
+    {
+      "name": "menu-check",
+      "type": "read",
+      "formats": ["text", "json"],
+      "requiresConfirmation": false,
+      "purpose": "Check selected recipes against current stock without writing Grocy data.",
+      "selectors": ["recipe|recipe-id|recipes"],
+      "confirmationDetails": [],
+      "correctionCommand": null
+    },
+    {
+      "name": "menu-plan",
+      "type": "read",
+      "formats": ["text", "json"],
+      "requiresConfirmation": false,
+      "purpose": "Recommend recipes for a read-only menu plan based on current stock.",
+      "selectors": [],
+      "confirmationDetails": [],
+      "correctionCommand": null
+    },
+    {
+      "name": "menu-shopping-list",
+      "type": "read",
+      "formats": ["text", "json"],
+      "requiresConfirmation": false,
+      "purpose": "Calculate missing products for selected recipes without writing shopping list rows.",
+      "selectors": ["recipe|recipe-id|recipes"],
+      "confirmationDetails": [],
+      "correctionCommand": null
+    },
+    {
+      "name": "meal-plan",
+      "type": "read",
+      "formats": ["table", "json"],
+      "requiresConfirmation": false,
+      "purpose": "Read Grocy meal plan rows.",
+      "selectors": ["from", "to"],
+      "confirmationDetails": [],
+      "correctionCommand": null
+    },
+    {
+      "name": "meal-plan-add",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Add a recipe to the Grocy meal plan.",
+      "selectors": ["date", "recipe|recipe-id", "section|section-id"],
+      "confirmationDetails": ["date", "recipe", "section", "note"],
+      "correctionCommand": "meal-plan-update",
+      "removalCommand": "meal-plan-delete"
+    },
+    {
+      "name": "meal-plan-update",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Update one Grocy meal plan row.",
+      "selectors": ["entry-id"],
+      "confirmationDetails": ["entry id", "date", "recipe", "section", "note"],
+      "correctionCommand": "meal-plan-update",
+      "removalCommand": "meal-plan-delete"
+    },
+    {
+      "name": "meal-plan-delete",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Delete one Grocy meal plan row.",
+      "selectors": ["entry-id"],
+      "confirmationDetails": ["entry id", "recipe name when known"],
+      "correctionCommand": null
+    },
+    {
+      "name": "units",
+      "type": "read",
+      "formats": ["table", "json"],
+      "requiresConfirmation": false,
+      "purpose": "Read Grocy quantity units.",
+      "selectors": [],
+      "confirmationDetails": [],
+      "correctionCommand": null
+    },
+    {
+      "name": "unit-create",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Create a Grocy quantity unit.",
+      "selectors": ["name", "name-plural"],
+      "confirmationDetails": ["unit name", "plural name", "description"],
+      "correctionCommand": "unit-update",
+      "removalCommand": "unit-delete"
+    },
+    {
+      "name": "unit-update",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Update a Grocy quantity unit.",
+      "selectors": ["unit|unit-id"],
+      "confirmationDetails": ["unit", "changed fields"],
+      "correctionCommand": "unit-update",
+      "removalCommand": "unit-delete"
+    },
+    {
+      "name": "unit-delete",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Safely delete an unused Grocy quantity unit.",
+      "selectors": ["unit-id"],
+      "confirmationDetails": ["unit id", "unit name when known"],
+      "correctionCommand": null
+    },
+    {
+      "name": "shopping-list",
+      "type": "read",
+      "formats": ["text", "json"],
+      "requiresConfirmation": false,
+      "purpose": "Read active Grocy shopping list rows.",
+      "selectors": [],
+      "confirmationDetails": [],
+      "correctionCommand": null
+    },
+    {
+      "name": "shopping-list-add",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Add or increment a Grocy shopping list row.",
+      "selectors": ["product|product-id|note", "list-id"],
+      "confirmationDetails": ["product or note", "amount", "unit", "note", "list id"],
+      "correctionCommand": "shopping-list-update",
+      "removalCommand": "shopping-list-delete"
+    },
+    {
+      "name": "shopping-list-update",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Update one Grocy shopping list row.",
+      "selectors": ["item-id"],
+      "confirmationDetails": ["item id", "product", "amount", "unit", "note", "list id"],
+      "correctionCommand": "shopping-list-update",
+      "removalCommand": "shopping-list-delete"
+    },
+    {
+      "name": "shopping-list-delete",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Delete one Grocy shopping list row.",
+      "selectors": ["item-id"],
+      "confirmationDetails": ["item id"],
+      "correctionCommand": null
+    },
+    {
+      "name": "shopping-list-done",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Mark one Grocy shopping list row done or undone.",
+      "selectors": ["item-id"],
+      "confirmationDetails": ["item id", "done state"],
+      "correctionCommand": "shopping-list-done"
+    },
+    {
+      "name": "shopping-list-clean",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Preview or delete completed rows from one Grocy shopping list; use dry-run first.",
+      "selectors": ["list-id"],
+      "confirmationDetails": ["list id", "completed-row cleanup"],
+      "correctionCommand": null,
+      "modes": [
+        {
+          "name": "dry-run-preview",
+          "when": {
+            "dry-run": "true"
+          },
+          "type": "read",
+          "requiresConfirmation": false,
+          "purpose": "Preview completed shopping list rows without deleting them."
+        },
+        {
+          "name": "confirmed-clean",
+          "default": true,
+          "type": "write",
+          "requiresConfirmation": true,
+          "purpose": "Delete completed shopping list rows after explicit confirmation.",
+          "confirmationDetails": ["list id", "completed-row cleanup"]
+        }
+      ]
+    },
+    {
+      "name": "products",
+      "type": "read",
+      "formats": ["table", "json"],
+      "requiresConfirmation": false,
+      "purpose": "Read Grocy products.",
+      "selectors": [],
+      "confirmationDetails": [],
+      "correctionCommand": null
+    },
+    {
+      "name": "product-search",
+      "type": "read",
+      "formats": ["table", "json"],
+      "requiresConfirmation": false,
+      "purpose": "Search Grocy products by name.",
+      "selectors": ["name"],
+      "confirmationDetails": [],
+      "correctionCommand": null
+    },
+    {
+      "name": "product-create",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Create a Grocy product and optional product-specific unit conversions.",
+      "selectors": ["name", "location|location-id", "stock-unit|stock-unit-id"],
+      "confirmationDetails": ["product name", "location", "stock unit", "purchase unit", "consume unit", "conversion factors"],
+      "correctionCommand": "product-update",
+      "removalCommand": "product-delete",
+      "fallbackCorrection": "product-update --active false"
+    },
+    {
+      "name": "product-update",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Update a Grocy product or product-specific unit conversion.",
+      "selectors": ["product|product-id"],
+      "confirmationDetails": ["product", "changed fields", "conversion factors"],
+      "correctionCommand": "product-update",
+      "removalCommand": "product-delete"
+    },
+    {
+      "name": "product-delete",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Safely delete an unused Grocy product.",
+      "selectors": ["product-id"],
+      "confirmationDetails": ["product id", "product name when known"],
+      "correctionCommand": "product-update --active false"
+    },
+    {
+      "name": "recipes",
+      "type": "read",
+      "formats": ["table", "json"],
+      "requiresConfirmation": false,
+      "purpose": "Read Grocy recipes with serving information and ingredient counts.",
+      "selectors": [],
+      "confirmationDetails": [],
+      "correctionCommand": null
+    },
+    {
+      "name": "recipe-get",
+      "type": "read",
+      "formats": ["table", "json"],
+      "requiresConfirmation": false,
+      "purpose": "Read one Grocy recipe with resolved ingredient rows.",
+      "selectors": ["recipe|recipe-id"],
+      "confirmationDetails": [],
+      "correctionCommand": null
+    },
+    {
+      "name": "recipe-create",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Create a Grocy recipe and recipe ingredient rows.",
+      "selectors": ["name", "ingredients"],
+      "confirmationDetails": ["recipe name", "servings", "ingredients", "missing-product creation"],
+      "correctionCommand": "recipe-update",
+      "removalCommand": "recipe-delete",
+      "modes": [
+        {
+          "name": "confirmed-recipe-create",
+          "default": true,
+          "type": "write",
+          "requiresConfirmation": true,
+          "purpose": "Create a recipe and ingredient rows without creating missing products.",
+          "confirmationDetails": ["recipe name", "servings", "ingredients"]
+        },
+        {
+          "name": "confirmed-recipe-create-with-products",
+          "when": {
+            "create-missing-products": "true"
+          },
+          "type": "write",
+          "requiresConfirmation": true,
+          "purpose": "Create a recipe and any explicitly confirmed missing ingredient products.",
+          "confirmationDetails": ["recipe name", "servings", "ingredients", "missing products", "new product locations", "unit conversion factors"]
+        }
+      ]
+    },
+    {
+      "name": "recipe-update",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Update a Grocy recipe.",
+      "selectors": ["recipe|recipe-id"],
+      "confirmationDetails": ["recipe", "changed fields"],
+      "correctionCommand": "recipe-update",
+      "removalCommand": "recipe-delete"
+    },
+    {
+      "name": "recipe-delete",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Delete a Grocy recipe, optionally deleting its ingredient rows first.",
+      "selectors": ["recipe|recipe-id"],
+      "confirmationDetails": ["recipe", "delete ingredient rows"],
+      "correctionCommand": null,
+      "modes": [
+        {
+          "name": "confirmed-recipe-delete",
+          "default": true,
+          "type": "write",
+          "requiresConfirmation": true,
+          "purpose": "Delete a recipe that has no ingredient rows.",
+          "confirmationDetails": ["recipe"]
+        },
+        {
+          "name": "confirmed-recipe-delete-with-ingredients",
+          "when": {
+            "delete-ingredients": "true"
+          },
+          "type": "write",
+          "requiresConfirmation": true,
+          "purpose": "Delete a recipe and its ingredient rows after explicit confirmation.",
+          "confirmationDetails": ["recipe", "ingredient rows to delete"]
+        }
+      ]
+    },
+    {
+      "name": "recipe-ingredient-add",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Add one ingredient row to an existing Grocy recipe.",
+      "selectors": ["recipe|recipe-id", "product|product-id", "amount", "unit"],
+      "confirmationDetails": ["recipe", "product", "amount", "unit", "note", "missing-product creation"],
+      "correctionCommand": "recipe-ingredient-update",
+      "removalCommand": "recipe-ingredient-delete",
+      "modes": [
+        {
+          "name": "confirmed-ingredient-add",
+          "default": true,
+          "type": "write",
+          "requiresConfirmation": true,
+          "purpose": "Add one ingredient row using an existing product.",
+          "confirmationDetails": ["recipe", "product", "amount", "unit", "note"]
+        },
+        {
+          "name": "confirmed-ingredient-add-with-product",
+          "when": {
+            "create-missing-products": "true"
+          },
+          "type": "write",
+          "requiresConfirmation": true,
+          "purpose": "Add one ingredient row and create the missing product after explicit confirmation.",
+          "confirmationDetails": ["recipe", "product", "amount", "unit", "note", "missing product", "new product location", "unit conversion factors"]
+        }
+      ]
+    },
+    {
+      "name": "recipe-ingredient-update",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Update one existing Grocy recipe ingredient row.",
+      "selectors": ["position-id|recipe+product"],
+      "confirmationDetails": ["ingredient row", "changed fields"],
+      "correctionCommand": "recipe-ingredient-update",
+      "removalCommand": "recipe-ingredient-delete"
+    },
+    {
+      "name": "recipe-ingredient-delete",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Delete one Grocy recipe ingredient row.",
+      "selectors": ["position-id|recipe+product"],
+      "confirmationDetails": ["ingredient row"],
+      "correctionCommand": null
+    },
+    {
+      "name": "userfields",
+      "type": "read",
+      "formats": ["table", "json"],
+      "requiresConfirmation": false,
+      "purpose": "Read configured custom fields for one Grocy entity.",
+      "selectors": ["entity"],
+      "confirmationDetails": [],
+      "correctionCommand": null
+    },
+    {
+      "name": "userfields-create",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Create a custom field definition for one Grocy entity.",
+      "selectors": ["entity", "caption", "type"],
+      "confirmationDetails": ["entity", "technical name", "caption", "type", "config", "default value"],
+      "correctionCommand": "userfields-update",
+      "removalCommand": "userfields-delete"
+    },
+    {
+      "name": "userfields-update",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Update a Grocy custom field definition.",
+      "selectors": ["userfield-id|entity+field"],
+      "confirmationDetails": ["custom field", "changed fields"],
+      "correctionCommand": "userfields-update",
+      "removalCommand": "userfields-delete"
+    },
+    {
+      "name": "userfields-delete",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Safely delete a Grocy custom field definition.",
+      "selectors": ["userfield-id|entity+field"],
+      "confirmationDetails": ["custom field", "technical name", "delete populated values"],
+      "correctionCommand": null,
+      "modes": [
+        {
+          "name": "confirmed-unused-field-delete",
+          "default": true,
+          "type": "write",
+          "requiresConfirmation": true,
+          "purpose": "Delete a custom field definition when no object values would be lost.",
+          "confirmationDetails": ["custom field", "technical name"]
+        },
+        {
+          "name": "confirmed-field-delete-with-values",
+          "when": {
+            "delete-values": "true"
+          },
+          "type": "write",
+          "requiresConfirmation": true,
+          "purpose": "Delete a custom field definition and populated object values after separate confirmation.",
+          "confirmationDetails": ["custom field", "technical name", "populated values to delete"]
+        }
+      ]
+    },
+    {
+      "name": "userfields-get",
+      "type": "read",
+      "formats": ["table", "json"],
+      "requiresConfirmation": false,
+      "purpose": "Read custom field values for one Grocy object.",
+      "selectors": ["entity", "object-id"],
+      "confirmationDetails": [],
+      "correctionCommand": null
+    },
+    {
+      "name": "userfields-set",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Set custom field values on one Grocy object.",
+      "selectors": ["entity", "object-id|object-name", "values|field+value"],
+      "confirmationDetails": ["entity", "object", "field values"],
+      "correctionCommand": "userfields-set"
+    },
+    {
+      "name": "stock",
+      "type": "read",
+      "formats": ["table", "json"],
+      "requiresConfirmation": false,
+      "purpose": "Read Grocy stock.",
+      "selectors": [],
+      "confirmationDetails": [],
+      "correctionCommand": null
+    },
+    {
+      "name": "stock-expiring",
+      "type": "read",
+      "formats": ["text", "table", "json"],
+      "requiresConfirmation": false,
+      "purpose": "Read due-soon, overdue, and expired Grocy stock.",
+      "selectors": ["days"],
+      "confirmationDetails": [],
+      "correctionCommand": null
+    },
+    {
+      "name": "stock-low",
+      "type": "read",
+      "formats": ["text", "table", "json"],
+      "requiresConfirmation": false,
+      "purpose": "Read products below their configured minimum stock.",
+      "selectors": [],
+      "confirmationDetails": [],
+      "correctionCommand": null
+    },
+    {
+      "name": "stock-summary",
+      "type": "read",
+      "formats": ["text", "json"],
+      "requiresConfirmation": false,
+      "purpose": "Read a compact Grocy stock monitoring summary.",
+      "selectors": [],
+      "confirmationDetails": [],
+      "correctionCommand": null
+    },
+    {
+      "name": "stock-add",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Add a purchased product amount to Grocy stock.",
+      "selectors": ["product|product-id", "amount"],
+      "confirmationDetails": ["product", "amount", "unit", "price", "best-before date", "transaction type"],
+      "correctionCommand": "stock-transaction-undo"
+    },
+    {
+      "name": "stock-transaction-undo",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Undo one Grocy stock transaction.",
+      "selectors": ["transaction-id"],
+      "confirmationDetails": ["transaction id"],
+      "correctionCommand": null
+    }
+  ]
+}

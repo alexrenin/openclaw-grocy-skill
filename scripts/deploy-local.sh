@@ -8,7 +8,7 @@ TARGET_DIR="$OPENCLAW_WORKSPACE/skills/grocy"
 echo "Deploying Grocy skill to: $TARGET_DIR"
 
 mkdir -p "$TARGET_DIR"
-mkdir -p "$TARGET_DIR/bin" "$TARGET_DIR/src" "$TARGET_DIR/scripts"
+mkdir -p "$TARGET_DIR/bin" "$TARGET_DIR/src" "$TARGET_DIR/scripts" "$TARGET_DIR/docs"
 
 copy_path() {
   local source="$1"
@@ -29,6 +29,7 @@ copy_path "$SOURCE_DIR/.env.example" "$TARGET_DIR/.env.example"
 copy_path "$SOURCE_DIR/bin" "$TARGET_DIR/bin"
 copy_path "$SOURCE_DIR/src" "$TARGET_DIR/src"
 copy_path "$SOURCE_DIR/scripts" "$TARGET_DIR/scripts"
+copy_path "$SOURCE_DIR/docs" "$TARGET_DIR/docs"
 
 chmod +x "$TARGET_DIR/bin/grocy-openclaw.js"
 chmod +x "$TARGET_DIR/scripts/deploy-local.sh"
