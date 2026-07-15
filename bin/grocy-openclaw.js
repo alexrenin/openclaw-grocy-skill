@@ -11,12 +11,14 @@ const { runProductDeleteCommand } = require('../src/commands/product-delete');
 const { runProductSearchCommand } = require('../src/commands/product-search');
 const { runProductUpdateCommand } = require('../src/commands/product-update');
 const { runProductsCommand } = require('../src/commands/products');
+const { runRecipeGetCommand } = require('../src/commands/recipe-get');
 const { runRecipeCreateCommand } = require('../src/commands/recipe-create');
 const { runRecipeDeleteCommand } = require('../src/commands/recipe-delete');
 const { runRecipeIngredientAddCommand } = require('../src/commands/recipe-ingredient-add');
 const { runRecipeIngredientDeleteCommand } = require('../src/commands/recipe-ingredient-delete');
 const { runRecipeIngredientUpdateCommand } = require('../src/commands/recipe-ingredient-update');
 const { runRecipeUpdateCommand } = require('../src/commands/recipe-update');
+const { runRecipesCommand } = require('../src/commands/recipes');
 const { runShoppingListCommand } = require('../src/commands/shopping-list');
 const { runShoppingListAddCommand } = require('../src/commands/shopping-list-add');
 const { runShoppingListCleanCommand } = require('../src/commands/shopping-list-clean');
@@ -68,6 +70,8 @@ Commands:
   product-create   Create a Grocy product
   product-update   Update a Grocy product
   product-delete   Safely delete a Grocy product when unused
+  recipes          Read Grocy recipes
+  recipe-get       Read one Grocy recipe with its ingredients
   recipe-create    Create a Grocy recipe with ingredients
   recipe-update    Update a Grocy recipe
   recipe-delete    Delete a Grocy recipe
@@ -118,6 +122,8 @@ Formats:
   product-create   json
   product-update   json
   product-delete   json
+  recipes          table, json
+  recipe-get       table, json
   recipe-create    json
   recipe-update    json
   recipe-delete    json
@@ -163,6 +169,8 @@ Examples:
   node bin/grocy-openclaw.js product-create --name "Pickles" --location "Pantry" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --format json
   node bin/grocy-openclaw.js product-update --product-id 42 --name "Milk 2.5%" --active true --format json
   node bin/grocy-openclaw.js product-delete --product-id 42 --confirm-product-name "Milk 2.5%" --format json
+  node bin/grocy-openclaw.js recipes --format table
+  node bin/grocy-openclaw.js recipe-get --recipe "Pancakes" --format table
   node bin/grocy-openclaw.js recipe-create --name "Salad" --ingredients '[{"name":"Pickles","amount":3,"unit":"шт"}]' --format json
   node bin/grocy-openclaw.js recipe-update --recipe "Salad" --name "Potato salad" --base-servings 4 --format json
   node bin/grocy-openclaw.js recipe-delete --recipe-id 11 --confirm-recipe-name "Potato salad" --delete-ingredients true --format json
@@ -202,6 +210,8 @@ const COMMAND_FORMATS = new Map([
   ['product-create', new Set(['json'])],
   ['product-update', new Set(['json'])],
   ['product-delete', new Set(['json'])],
+  ['recipes', new Set(['table', 'json'])],
+  ['recipe-get', new Set(['table', 'json'])],
   ['recipe-create', new Set(['json'])],
   ['recipe-update', new Set(['json'])],
   ['recipe-delete', new Set(['json'])],
@@ -292,6 +302,10 @@ const COMMAND_OPTIONS = new Map([
   ['product-delete', new Set([
     'product-id',
     'confirm-product-name',
+  ])],
+  ['recipe-get', new Set([
+    'recipe',
+    'recipe-id',
   ])],
   ['unit-create', new Set([
     'name',
@@ -565,6 +579,12 @@ async function main(argv, env = process.env) {
       break;
     case 'product-delete':
       output = await runProductDeleteCommand({ client, format, options });
+      break;
+    case 'recipes':
+      output = await runRecipesCommand({ client, format });
+      break;
+    case 'recipe-get':
+      output = await runRecipeGetCommand({ client, format, options });
       break;
     case 'recipe-create':
       output = await runRecipeCreateCommand({ client, format, options });

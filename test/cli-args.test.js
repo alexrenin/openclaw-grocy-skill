@@ -141,6 +141,16 @@ test('allows recipe-create options', () => {
   }));
 });
 
+test('allows recipe read command options', () => {
+  assert.doesNotThrow(() => validateOptions('recipes', {}));
+  assert.doesNotThrow(() => validateOptions('recipe-get', {
+    recipe: 'Блины',
+  }));
+  assert.doesNotThrow(() => validateOptions('recipe-get', {
+    'recipe-id': '7',
+  }));
+});
+
 test('allows recipe lifecycle options', () => {
   assert.doesNotThrow(() => validateOptions('recipe-update', {
     recipe: 'Оливье',

@@ -23,6 +23,8 @@ The `unit-update` command modifies Grocy by updating a quantity unit. Run it onl
 
 The `unit-delete` command modifies Grocy by deleting an unused quantity unit. Run it only after especially clear confirmation of the exact unit id. Do not delete units that are still referenced by products, recipe ingredients, shopping list rows, or conversion rows.
 
+The `recipes` and `recipe-get` commands are read-only. Run them without confirmation when the user asks what recipes exist or wants recipe ingredients and amounts.
+
 The `recipe-create` command modifies Grocy by creating a recipe and recipe ingredient rows. It may create missing ingredient products only when `--create-missing-products true` is used after explicit user confirmation. Run it only after the user confirms creating that recipe.
 
 The `recipe-update` command modifies Grocy by updating a recipe object. Run it only after the user explicitly confirms the exact recipe and fields to change.
@@ -250,6 +252,22 @@ Use `product-delete` only for a product that should be removed and only after es
 ```bash
 node bin/grocy-openclaw.js product-update --product-id 42 --active false --format json
 ```
+
+List configured recipes with serving information and ingredient counts:
+
+```bash
+node bin/grocy-openclaw.js recipes --format table
+node bin/grocy-openclaw.js recipes --format json
+```
+
+Read one recipe with resolved ingredient product names, amounts, units, groups, and notes:
+
+```bash
+node bin/grocy-openclaw.js recipe-get --recipe "Блины" --format table
+node bin/grocy-openclaw.js recipe-get --recipe-id 7 --format json
+```
+
+Use `recipes` when the user asks which recipes exist or when a recipe name is unclear. It hides Grocy's internal `mealplan-*` pseudo-recipes and converts HTML descriptions to compact plain text in table output; JSON preserves the original description. Use `recipe-get` when the user asks what a recipe contains or before recipe correction and menu-planning work. Both commands are read-only and do not need confirmation. Prefer `--recipe` when the exact name is known and unique; use the id returned by `recipes` with `--recipe-id` when needed. The JSON output includes recipe-position ids for precise ingredient updates or deletions.
 
 Create a recipe with ingredients:
 

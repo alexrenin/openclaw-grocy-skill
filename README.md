@@ -245,6 +245,22 @@ node bin/grocy-openclaw.js product-delete --product-id 42 --confirm-product-name
 node bin/grocy-openclaw.js product-update --product-id 42 --active false --format json
 ```
 
+Show recipes with serving information and ingredient counts:
+
+```bash
+node bin/grocy-openclaw.js recipes --format table
+node bin/grocy-openclaw.js recipes --format json
+```
+
+Show one recipe with resolved product names, amounts, units, groups, and notes:
+
+```bash
+node bin/grocy-openclaw.js recipe-get --recipe "Блины" --format table
+node bin/grocy-openclaw.js recipe-get --recipe-id 7 --format json
+```
+
+`recipes` and `recipe-get` are read-only and do not require confirmation. Use `recipes` to discover recipe ids and names before selecting one. It excludes Grocy's internal `mealplan-*` pseudo-recipes; table output converts HTML descriptions to compact plain text, while JSON preserves the original description. `recipe-get` requires exactly one selector: `--recipe` for an exact case-insensitive name or `--recipe-id` for a known id. Its JSON output also includes recipe-position ids and ingredient flags so later correction or menu-planning workflows can use the returned data safely.
+
 Create a recipe with ingredients:
 
 ```bash
@@ -603,6 +619,7 @@ Automated tests must not depend on or modify the configured Grocy instance.
 - `unit-create` modifies Grocy and must only be run after existing units were considered and the user confirms that a new unit should be created.
 - `unit-update` modifies Grocy and must only be run after the user explicitly confirms the exact unit correction.
 - `unit-delete` modifies Grocy and must only be run after especially clear confirmation of the exact unit id; delete only unused units.
+- `recipes` and `recipe-get` are read-only and may run without confirmation.
 - `recipe-create` modifies Grocy and may create missing products only when `--create-missing-products true` is used after explicit confirmation; run it only after the user confirms creating the recipe.
 - `recipe-update` modifies Grocy and must only be run after the user explicitly confirms the exact recipe correction.
 - `recipe-delete` modifies Grocy and must only be run after especially clear confirmation of the exact recipe; use `--delete-ingredients true` only when the user also confirmed deleting the recipe's ingredient rows.
@@ -634,4 +651,4 @@ Use the version-specific OpenAPI link first, because `master` can describe a dif
 
 See [ROADMAP.md](ROADMAP.md) for the current implementation status, planned commands, and verification notes.
 
-Current status: read commands, stock monitoring, product search and lifecycle, unit lifecycle, recipe and ingredient lifecycle, custom-field lifecycle, stock add/undo, and shopping list add/update/delete/done/clean are implemented. Shopping list writes are live-verified against Grocy 4.6.0. Planned work includes recipe read commands and menu planning helpers.
+Current status: read commands, stock monitoring, product search and lifecycle, unit lifecycle, recipe reads and lifecycle, ingredient lifecycle, custom-field lifecycle, stock add/undo, and shopping list add/update/delete/done/clean are implemented. Shopping list writes and recipe reads are live-verified against Grocy 4.6.0. Planned work includes menu planning helpers.

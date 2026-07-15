@@ -33,6 +33,7 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
 - `[x]` Update quantity units with `unit-update`.
 - `[x]` Safely delete unused quantity units with `unit-delete`.
 - `[x]` Create products with `product-create`, including product-specific unit conversions.
+- `[x]` Read recipes with `recipes` and `recipe-get`, including resolved ingredient product and quantity-unit names.
 - `[x]` Create recipes with `recipe-create`.
 - `[x]` Update recipes with `recipe-update`.
 - `[x]` Safely delete recipes with `recipe-delete`, including explicit ingredient-row cleanup.
@@ -48,7 +49,8 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
 
 ## Current Verification Notes
 
-- `npm.cmd test` passed locally with 236 tests.
+- `recipes` and `recipe-get` are implemented, documented, covered by mocked tests, and live-verified read-only against the configured Grocy 4.6.0 instance. `recipes` returned 4 normal recipes with correct ingredient counts and excluded 3 internal `mealplan-*` pseudo-recipes exposed by the objects endpoint. Its table output converted and truncated HTML descriptions for chat. `recipe-get` resolved recipe 3 by both id and name and returned 2 ingredient rows with correct position ids, product names, amounts, and quantity units. No Grocy data was changed.
+- `npm.cmd test` passed locally with 244 tests.
 - Shopping list write commands are implemented, documented, covered by mocked tests, and live-verified against the configured Grocy 4.6.0 instance after explicit confirmation before each write. The lifecycle test created note-only row `OPENCLAW_TEST_20260715_SHOPPING_LIST_LIFECYCLE` as id 5, updated its amount and note, marked it done, restored it to undone, and deleted it. The cleanup test created `OPENCLAW_TEST_20260715_SHOPPING_LIST_CLEAN` as id 6, marked it done, previewed exactly that one affected row with `shopping-list-clean --dry-run true`, then removed it with `shopping-list-clean`. Final read-only verification found both markers absent, the four original pending rows unchanged, and zero completed rows.
 - Live shopping list verification exposed that note-only rows were labeled `Unknown product null`; the formatter now leaves their product name empty and has a regression test. The test also added the read-only `shopping-list-clean --dry-run true` preview so completed rows can be inspected before confirming cleanup.
 - Grocy 4.6.0 OpenAPI and frontend source were checked: item create/update/delete use generic `shopping_list` object endpoints, done toggles the `done` field with generic `PUT`, and completed-only cleanup uses `POST /stock/shoppinglist/clear` with `done_only: true`.
@@ -115,9 +117,9 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
    - `[x]` Command: `shopping-list-clean` (completed rows only)
    - Purpose: let OpenClaw manage the buying workflow after menu planning or stock checks.
 
-6. `[ ]` Add recipe read commands.
-   - Command: `recipes`
-   - Command: `recipe-get`
+6. `[x]` Add recipe read commands.
+   - `[x]` Command: `recipes`
+   - `[x]` Command: `recipe-get`
    - Purpose: expose recipes and ingredients in a chat-friendly format before planning menus.
 
 7. `[ ]` Add menu planning helpers.
