@@ -157,6 +157,11 @@ test('allows menu planning command options', () => {
     recipe: 'Pancakes',
     servings: '4',
   }));
+  assert.doesNotThrow(() => validateOptions('menu-plan', {
+    count: '3',
+    servings: '4',
+    'only-ready': 'false',
+  }));
   assert.doesNotThrow(() => validateOptions('menu-shopping-list', {
     recipes: '[{"name":"Pancakes","servings":4}]',
   }));

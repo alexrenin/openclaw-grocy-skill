@@ -25,6 +25,81 @@ async function buildMenuPlan({ client, options }) {
   });
 }
 
+async function buildMenuPlanRecommendations({ client, options }) {
+  const [recipes, positions, products, quantityUnits, quantityUnitConversions, stock] = await Promise.all([
+    client.getRecipes(),
+    client.getRecipePositions(),
+    client.getProducts(),
+    client.getQuantityUnits(),
+    client.getQuantityUnitConversions(),
+    client.getStock(),
+  ]);
+  const menuPlanOptions = parseMenuPlanOptions(options);
+  const readableRecipes = (recipes || []).filter(isReadableRecipe);
+  const dataset = {
+    recipes: readableRecipes,
+    positions,
+    products,
+    quantityUnits,
+    quantityUnitConversions,
+    stock,
+  };
+  const candidates = readableRecipes
+    .map((recipe) => buildRecipeCandidate({
+      recipe,
+      servings: menuPlanOptions.servings,
+      dataset,
+    }))
+    .filter((candidate) => !menuPlanOptions.onlyReady || candidate.can_cook)
+    .sort(compareRecipeCandidates);
+  const selected = candidates
+    .slice(0, menuPlanOptions.count)
+    .map((candidate, index) => ({
+      ...candidate,
+      rank: index + 1,
+    }));
+  const aggregatePlan = selected.length === 0
+    ? buildEmptyMenuPlan()
+    : calculateMenuPlan({
+      selections: selected.map((candidate) => ({
+        id: candidate.recipe_id,
+        servings: candidate.servings,
+      })),
+      ...dataset,
+    });
+
+  return {
+    count_requested: menuPlanOptions.count,
+    servings: menuPlanOptions.servings ?? '',
+    only_ready: menuPlanOptions.onlyReady,
+    candidate_count: readableRecipes.length,
+    selected_count: selected.length,
+    selected,
+    aggregate_plan: {
+      status: aggregatePlan.status,
+      can_cook: aggregatePlan.can_cook,
+      recipes: aggregatePlan.recipes,
+      missing: aggregatePlan.missing,
+      unresolved: aggregatePlan.unresolved,
+    },
+    shopping_list: buildMenuShoppingList(aggregatePlan),
+  };
+}
+
+function parseMenuPlanOptions(options = {}) {
+  return {
+    count: Object.hasOwn(options, 'count')
+      ? parsePositiveInteger(options.count, '--count')
+      : 3,
+    servings: Object.hasOwn(options, 'servings')
+      ? parsePositiveNumber(options.servings, '--servings')
+      : undefined,
+    onlyReady: Object.hasOwn(options, 'only-ready')
+      ? parseBooleanOption(options['only-ready'], '--only-ready')
+      : false,
+  };
+}
+
 function parseMenuSelections(options = {}) {
   const hasBulk = Object.hasOwn(options, 'recipes');
   const hasSingle = Object.hasOwn(options, 'recipe') || Object.hasOwn(options, 'recipe-id');
@@ -87,6 +162,37 @@ function normalizeSelection(value) {
     servings: servingsValue == null || servingsValue === ''
       ? undefined
       : parsePositiveNumber(servingsValue, 'servings'),
+  };
+}
+
+function buildRecipeCandidate({ recipe, servings, dataset }) {
+  const plan = calculateMenuPlan({
+    selections: [{ id: Number(recipe.id), servings }],
+    ...dataset,
+  });
+  const resolvedRequirementCount = plan.requirements.length;
+  const readyRequirementCount = plan.requirements
+    .filter((requirement) => requirement.missing_amount <= 0)
+    .length;
+  const denominator = resolvedRequirementCount + plan.unresolved.length;
+  const readinessScore = denominator === 0
+    ? 1
+    : readyRequirementCount / denominator;
+  const plannedRecipe = plan.recipes[0] || {};
+
+  return {
+    recipe_id: Number(recipe.id),
+    recipe_name: recipe.name || '',
+    servings: plannedRecipe.servings ?? servings ?? '',
+    status: plan.status,
+    can_cook: plan.can_cook,
+    ingredient_count: plannedRecipe.ingredient_count || 0,
+    ready_ingredient_count: readyRequirementCount,
+    missing_count: plan.missing.length,
+    unresolved_count: plan.unresolved.length,
+    readiness_score: roundAmount(readinessScore),
+    missing: plan.missing,
+    unresolved: plan.unresolved,
   };
 }
 
@@ -198,6 +304,18 @@ function calculateMenuPlan({
     requirements,
     missing,
     unresolved,
+  };
+}
+
+function buildEmptyMenuPlan() {
+  return {
+    status: 'ready',
+    can_cook: true,
+    recipes: [],
+    ingredients: [],
+    requirements: [],
+    missing: [],
+    unresolved: [],
   };
 }
 
@@ -423,6 +541,52 @@ function buildMenuShoppingList(plan) {
   };
 }
 
+function formatMenuPlanText(recommendations) {
+  if (recommendations.selected.length === 0) {
+    return recommendations.only_ready
+      ? '\u0413\u043e\u0442\u043e\u0432\u044b\u0445 \u0440\u0435\u0446\u0435\u043f\u0442\u043e\u0432 \u0434\u043b\u044f \u043f\u043b\u0430\u043d\u0430 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e.'
+      : '\u041f\u043e\u0434\u0445\u043e\u0434\u044f\u0449\u0438\u0445 \u0440\u0435\u0446\u0435\u043f\u0442\u043e\u0432 \u0434\u043b\u044f \u043f\u043b\u0430\u043d\u0430 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e.';
+  }
+
+  const lines = ['\u041f\u043b\u0430\u043d \u043c\u0435\u043d\u044e:'];
+
+  for (const item of recommendations.selected) {
+    const status = formatCandidateStatus(item);
+    lines.push(`${item.rank}. ${item.recipe_name} \u2014 ${formatAmount(item.servings)} \u043f\u043e\u0440\u0446.; ${status}`);
+  }
+
+  if (recommendations.aggregate_plan.missing.length > 0) {
+    lines.push('', '\u041e\u0431\u0449\u0438\u0439 \u0441\u043f\u0438\u0441\u043e\u043a \u043d\u0435\u0434\u043e\u0441\u0442\u0430\u044e\u0449\u0438\u0445 \u043f\u0440\u043e\u0434\u0443\u043a\u0442\u043e\u0432:');
+    for (const item of recommendations.aggregate_plan.missing) {
+      lines.push(`\u2022 ${item.product_name} \u2014 ${formatAmount(item.amount)} ${item.unit}`);
+    }
+  } else {
+    lines.push('', '\u0414\u043b\u044f \u044d\u0442\u043e\u0433\u043e \u043f\u043b\u0430\u043d\u0430 \u043f\u043e\u043a\u0443\u043f\u043a\u0438 \u043d\u0435 \u043d\u0443\u0436\u043d\u044b.');
+  }
+
+  appendUnresolvedText(lines, recommendations.aggregate_plan.unresolved);
+
+  return lines.join('\n');
+}
+
+function formatCandidateStatus(candidate) {
+  if (candidate.can_cook) {
+    return '\u043c\u043e\u0436\u043d\u043e \u043f\u0440\u0438\u0433\u043e\u0442\u043e\u0432\u0438\u0442\u044c';
+  }
+
+  const parts = [];
+
+  if (candidate.missing_count > 0) {
+    parts.push(`\u043d\u0435 \u0445\u0432\u0430\u0442\u0430\u0435\u0442 ${candidate.missing_count}`);
+  }
+
+  if (candidate.unresolved_count > 0) {
+    parts.push(`\u0443\u0442\u043e\u0447\u043d\u0438\u0442\u044c ${candidate.unresolved_count}`);
+  }
+
+  return parts.join(', ');
+}
+
 function appendUnresolvedText(lines, unresolved) {
   if (unresolved.length === 0) {
     return;
@@ -459,6 +623,38 @@ function roundAmount(value) {
   return Math.round((numberValue + Number.EPSILON) * 1e9) / 1e9;
 }
 
+function compareRecipeCandidates(left, right) {
+  return statusRank(left.status) - statusRank(right.status)
+    || left.missing_count - right.missing_count
+    || left.unresolved_count - right.unresolved_count
+    || right.readiness_score - left.readiness_score
+    || right.ready_ingredient_count - left.ready_ingredient_count
+    || left.recipe_name.localeCompare(right.recipe_name);
+}
+
+function statusRank(status) {
+  const ranks = {
+    ready: 0,
+    missing: 1,
+    unresolved: 2,
+    'missing-and-unresolved': 3,
+  };
+
+  return ranks[status] ?? 99;
+}
+
+function parseBooleanOption(value, optionName) {
+  if (value === true || value === 'true' || value === '1' || value === 1) {
+    return true;
+  }
+
+  if (value === false || value === 'false' || value === '0' || value === 0) {
+    return false;
+  }
+
+  throw new Error(`${optionName} must be true or false`);
+}
+
 function formatAmount(value) {
   if (value === '' || value == null) {
     return '';
@@ -484,13 +680,16 @@ function mapById(items) {
 module.exports = {
   aggregateStockByProductId,
   buildMenuPlan,
+  buildMenuPlanRecommendations,
   buildMenuShoppingList,
   buildServingPlan,
   calculateMenuPlan,
   findConversionFactor,
   formatAmount,
   formatMenuCheckText,
+  formatMenuPlanText,
   formatMenuShoppingListText,
+  parseMenuPlanOptions,
   parseMenuSelections,
   roundAmount,
 };

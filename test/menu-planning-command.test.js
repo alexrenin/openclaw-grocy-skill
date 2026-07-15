@@ -4,11 +4,15 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 
 const {
+  buildMenuPlanRecommendations,
   calculateMenuPlan,
   findConversionFactor,
+  formatMenuPlanText,
+  parseMenuPlanOptions,
   parseMenuSelections,
 } = require('../src/commands/menu-planning');
 const { runMenuCheckCommand } = require('../src/commands/menu-check');
+const { runMenuPlanCommand } = require('../src/commands/menu-plan');
 const { runMenuShoppingListCommand } = require('../src/commands/menu-shopping-list');
 
 const recipes = [
@@ -84,6 +88,20 @@ test('parses one recipe selector and bulk recipe selectors', () => {
   );
 });
 
+test('parses menu-plan options', () => {
+  assert.deepEqual(parseMenuPlanOptions({ count: '2', servings: '4', 'only-ready': 'true' }), {
+    count: 2,
+    servings: 4,
+    onlyReady: true,
+  });
+  assert.deepEqual(parseMenuPlanOptions({}), {
+    count: 3,
+    servings: undefined,
+    onlyReady: false,
+  });
+  assert.throws(() => parseMenuPlanOptions({ 'only-ready': 'maybe' }), /--only-ready must be true or false/);
+});
+
 test('scales servings, aggregates same products, converts units, and calculates missing stock', () => {
   const plan = calculateMenuPlan({
     selections: [
@@ -122,6 +140,56 @@ test('scales servings, aggregates same products, converts units, and calculates 
       missing_amount: 0.3,
     },
   ]);
+});
+
+test('recommends recipes by readiness and aggregates missing items for selected recipes', async () => {
+  const recommendations = await buildMenuPlanRecommendations({
+    client: buildClient(),
+    options: { count: '2' },
+  });
+
+  assert.equal(recommendations.selected_count, 2);
+  assert.deepEqual(recommendations.selected.map((candidate) => [
+    candidate.rank,
+    candidate.recipe_name,
+    candidate.status,
+    candidate.missing_count,
+  ]), [
+    [1, 'Sauce', 'ready', 0],
+    [2, 'Pancakes', 'missing', 1],
+  ]);
+  assert.deepEqual(recommendations.shopping_list.items, [
+    {
+      product_id: 101,
+      product_name: 'Milk',
+      amount: 0.1,
+      unit: 'l',
+    },
+  ]);
+});
+
+test('menu-plan can return only recipes that are ready from current stock', async () => {
+  const recommendations = await buildMenuPlanRecommendations({
+    client: buildClient(),
+    options: { count: '3', 'only-ready': 'true' },
+  });
+
+  assert.deepEqual(recommendations.selected.map((candidate) => candidate.recipe_name), ['Sauce']);
+  assert.equal(recommendations.aggregate_plan.can_cook, true);
+});
+
+test('formats menu-plan text output', async () => {
+  const recommendations = await buildMenuPlanRecommendations({
+    client: buildClient(),
+    options: { count: '2' },
+  });
+  const output = formatMenuPlanText(recommendations);
+
+  assert.match(output, /План меню:/);
+  assert.match(output, /1\. Sauce/);
+  assert.match(output, /можно приготовить/);
+  assert.match(output, /Общий список недостающих продуктов:/);
+  assert.match(output, /Milk/);
 });
 
 test('supports direct, reverse, and product-specific conversion priority', () => {
@@ -216,6 +284,27 @@ test('runs menu-shopping-list json command and returns only missing items', asyn
     },
   ]);
   assert.equal(result.unresolved.length, 0);
+});
+
+test('runs menu-plan json command using read-only Grocy methods', async () => {
+  const client = buildClient();
+  const output = await runMenuPlanCommand({
+    client,
+    format: 'json',
+    options: { count: '1' },
+  });
+  const result = JSON.parse(output);
+
+  assert.equal(result.selected_count, 1);
+  assert.equal(result.selected[0].recipe_name, 'Sauce');
+  assert.deepEqual(client.calls.sort(), [
+    'getProducts',
+    'getQuantityUnitConversions',
+    'getQuantityUnits',
+    'getRecipePositions',
+    'getRecipes',
+    'getStock',
+  ].sort());
 });
 
 test('rejects explicit servings when a recipe cannot be scaled', () => {

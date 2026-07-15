@@ -7,6 +7,7 @@ const { loadEnvWithDotEnvFallback } = require('../src/env');
 const { runApiDocsCommand } = require('../src/commands/api-docs');
 const { runLocationsCommand } = require('../src/commands/locations');
 const { runMenuCheckCommand } = require('../src/commands/menu-check');
+const { runMenuPlanCommand } = require('../src/commands/menu-plan');
 const { runMenuShoppingListCommand } = require('../src/commands/menu-shopping-list');
 const { runProductCreateCommand } = require('../src/commands/product-create');
 const { runProductDeleteCommand } = require('../src/commands/product-delete');
@@ -53,6 +54,7 @@ Commands:
   system-info      Read Grocy system info
   locations        Read Grocy locations
   menu-check       Check selected recipes against current stock
+  menu-plan        Recommend recipes for a read-only menu plan
   menu-shopping-list
                    Calculate missing products for selected recipes
   units            Read Grocy quantity units
@@ -108,6 +110,7 @@ Formats:
   system-info      json
   locations        table, json
   menu-check       text, json
+  menu-plan        text, json
   menu-shopping-list
                    text, json
   units            table, json
@@ -163,6 +166,7 @@ Examples:
   node bin/grocy-openclaw.js system-info --format json
   node bin/grocy-openclaw.js locations --format table
   node bin/grocy-openclaw.js menu-check --recipe "Pancakes" --servings 4 --format text
+  node bin/grocy-openclaw.js menu-plan --count 3 --servings 4 --format text
   node bin/grocy-openclaw.js menu-shopping-list --recipes '[{"name":"Pancakes","servings":4}]' --format text
   node bin/grocy-openclaw.js units --format table
   node bin/grocy-openclaw.js unit-create --name "банка" --name-plural "банки" --format json
@@ -206,6 +210,7 @@ const COMMAND_FORMATS = new Map([
   ['system-info', new Set(['json'])],
   ['locations', new Set(['table', 'json'])],
   ['menu-check', new Set(['text', 'json'])],
+  ['menu-plan', new Set(['text', 'json'])],
   ['menu-shopping-list', new Set(['text', 'json'])],
   ['units', new Set(['table', 'json'])],
   ['unit-create', new Set(['json'])],
@@ -251,8 +256,15 @@ const MENU_PLANNING_OPTIONS = new Set([
   'servings',
 ]);
 
+const MENU_PLAN_OPTIONS = new Set([
+  'count',
+  'servings',
+  'only-ready',
+]);
+
 const COMMAND_OPTIONS = new Map([
   ['menu-check', MENU_PLANNING_OPTIONS],
+  ['menu-plan', MENU_PLAN_OPTIONS],
   ['menu-shopping-list', MENU_PLANNING_OPTIONS],
   ['shopping-list-add', new Set([
     'product',
@@ -558,6 +570,9 @@ async function main(argv, env = process.env) {
       break;
     case 'menu-check':
       output = await runMenuCheckCommand({ client, format, options });
+      break;
+    case 'menu-plan':
+      output = await runMenuPlanCommand({ client, format, options });
       break;
     case 'menu-shopping-list':
       output = await runMenuShoppingListCommand({ client, format, options });

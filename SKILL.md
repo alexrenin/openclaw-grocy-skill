@@ -23,7 +23,7 @@ The `unit-update` command modifies Grocy by updating a quantity unit. Run it onl
 
 The `unit-delete` command modifies Grocy by deleting an unused quantity unit. Run it only after especially clear confirmation of the exact unit id. Do not delete units that are still referenced by products, recipe ingredients, shopping list rows, or conversion rows.
 
-The `recipes`, `recipe-get`, `menu-check`, and `menu-shopping-list` commands are read-only. Run them without confirmation when the user asks what recipes exist, wants recipe ingredients and amounts, asks whether selected recipes can be cooked from stock, or asks what to buy for selected recipes.
+The `recipes`, `recipe-get`, `menu-check`, `menu-plan`, and `menu-shopping-list` commands are read-only. Run them without confirmation when the user asks what recipes exist, wants recipe ingredients and amounts, asks whether selected recipes can be cooked from stock, asks for menu recommendations, or asks what to buy for selected recipes.
 
 The `recipe-create` command modifies Grocy by creating a recipe and recipe ingredient rows. It may create missing ingredient products only when `--create-missing-products true` is used after explicit user confirmation. Run it only after the user confirms creating that recipe.
 
@@ -276,6 +276,13 @@ node bin/grocy-openclaw.js menu-check --recipe "Pancakes" --servings 4 --format 
 node bin/grocy-openclaw.js menu-check --recipes '[{"name":"Pancakes","servings":4},{"id":8,"servings":2}]' --format json
 ```
 
+Recommend recipes for a read-only menu plan:
+
+```bash
+node bin/grocy-openclaw.js menu-plan --count 3 --servings 4 --format text
+node bin/grocy-openclaw.js menu-plan --count 3 --only-ready true --format json
+```
+
 Calculate missing products for selected recipes without writing to Grocy:
 
 ```bash
@@ -283,11 +290,14 @@ node bin/grocy-openclaw.js menu-shopping-list --recipe "Pancakes" --servings 4 -
 node bin/grocy-openclaw.js menu-shopping-list --recipes '[{"name":"Pancakes","servings":4},{"id":8,"servings":2}]' --format json
 ```
 
-Use `menu-check` when the user asks whether a recipe or menu can be cooked from current stock. Use `menu-shopping-list` when the user asks what to buy for selected recipes. Both commands are read-only and do not need confirmation.
+Use `menu-check` when the user asks whether a recipe or menu can be cooked from current stock. Use `menu-plan` when the user asks what to cook, asks for a menu plan, or wants recipe recommendations based on stock. Use `menu-shopping-list` when the user asks what to buy for selected recipes. All three commands are read-only and do not need confirmation.
 
 For one recipe, use `--recipe` or `--recipe-id`; for multiple recipes, use `--recipes` as a JSON array of names, ids, or objects with `name`/`id` and optional `servings`. When explicit servings are provided, the recipe must have positive `base_servings` so the command can scale ingredient amounts.
 
-If output contains `unresolved`, do not guess the missing conversion or silently add products. Inspect `units`, `products`, or `recipe-get` as needed, then ask the user how to correct the product, ingredient, or unit conversion through the supported commands. `menu-shopping-list` only calculates missing items; before adding those items to Grocy, show the exact proposed `shopping-list-add` writes and ask for explicit confirmation.
+For `menu-plan`, use `--count` to choose how many recipes to recommend, `--servings` to apply the same target servings to every candidate, and `--only-ready true` when the user wants only recipes cookable from current stock. The command ranks ready recipes first, then recipes with fewer missing products and fewer unresolved ingredients. It does not create Grocy meal plan rows.
+
+If output contains `unresolved`, do not guess the missing conversion or silently add products. Inspect `units`, `products`, or `recipe-get` as needed, then ask the user how to correct the product, ingredient, or unit conversion through the supported commands. `menu-plan` and `menu-shopping-list` only calculate missing items; before adding those items to Grocy, show the exact proposed `shopping-list-add` writes and ask for explicit confirmation.
+
 Create a recipe with ingredients:
 
 ```bash

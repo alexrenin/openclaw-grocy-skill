@@ -266,15 +266,20 @@ Menu planning helpers are read-only:
 ```bash
 node bin/grocy-openclaw.js menu-check --recipe "Pancakes" --servings 4 --format text
 node bin/grocy-openclaw.js menu-check --recipe-id 7 --servings 4 --format json
+node bin/grocy-openclaw.js menu-plan --count 3 --servings 4 --format text
+node bin/grocy-openclaw.js menu-plan --count 3 --only-ready true --format json
 node bin/grocy-openclaw.js menu-shopping-list --recipes '[{"name":"Pancakes","servings":4},{"id":8,"servings":2}]' --format text
 node bin/grocy-openclaw.js menu-shopping-list --recipes '[{"name":"Pancakes","servings":4},{"id":8,"servings":2}]' --format json
 ```
 
-`menu-check` checks selected recipes against current stock. `menu-shopping-list` calculates only the missing products for selected recipes; it does not create or update Grocy shopping list rows. To actually add calculated items to Grocy, show the proposed items to the user and then use the separate `shopping-list-add` command only after explicit confirmation.
+`menu-check` checks selected recipes against current stock. `menu-plan` recommends up to `--count` recipes from Grocy by current stock readiness, then calculates the combined missing products for that suggested plan. `menu-shopping-list` calculates only the missing products for selected recipes. These commands do not create Grocy meal plan rows and do not create or update Grocy shopping list rows. To actually add calculated items to Grocy, show the proposed items to the user and then use the separate `shopping-list-add` command only after explicit confirmation.
 
 Recipe selection accepts either one recipe with `--recipe` or `--recipe-id`, or multiple recipes with `--recipes` as a JSON array. Each selection may include `servings`. When explicit servings are provided, the recipe must have positive `base_servings` so the command can scale ingredient amounts. Ingredient amounts are aggregated by product before stock comparison, so the same product used by multiple recipes is counted once.
 
+For `menu-plan`, `--count` defaults to `3`, `--servings` applies the same target servings to every candidate recipe, and `--only-ready true` returns only recipes that can be cooked from current stock. The ranking is intentionally simple and deterministic: ready recipes first, then fewer missing products, fewer unresolved ingredients, and higher ingredient readiness.
+
 The helpers use configured Grocy quantity-unit conversions, including product-specific conversions when present. They do not guess conversions. If a conversion, product, unit, or amount is missing, the command reports it under `unresolved` and the result is not considered cookable until the underlying product, recipe ingredient, or unit conversion is corrected.
+
 Create a recipe with ingredients:
 
 ```bash
@@ -633,7 +638,7 @@ Automated tests must not depend on or modify the configured Grocy instance.
 - `unit-create` modifies Grocy and must only be run after existing units were considered and the user confirms that a new unit should be created.
 - `unit-update` modifies Grocy and must only be run after the user explicitly confirms the exact unit correction.
 - `unit-delete` modifies Grocy and must only be run after especially clear confirmation of the exact unit id; delete only unused units.
-- `recipes`, `recipe-get`, `menu-check`, and `menu-shopping-list` are read-only and may run without confirmation.
+- `recipes`, `recipe-get`, `menu-check`, `menu-plan`, and `menu-shopping-list` are read-only and may run without confirmation.
 - `recipe-create` modifies Grocy and may create missing products only when `--create-missing-products true` is used after explicit confirmation; run it only after the user confirms creating the recipe.
 - `recipe-update` modifies Grocy and must only be run after the user explicitly confirms the exact recipe correction.
 - `recipe-delete` modifies Grocy and must only be run after especially clear confirmation of the exact recipe; use `--delete-ingredients true` only when the user also confirmed deleting the recipe's ingredient rows.
