@@ -20,11 +20,7 @@ Write commands include `product-create`, `product-update`, `product-delete`, `un
 
 Use `ROADMAP.md` as the source of truth for current implementation status, completed work, planned work, and verification notes.
 
-Current stage:
-
-- `stock-add` is implemented locally and covered by mocked tests.
-- `stock-add` still needs verification against the user's real Grocy instance and installed Grocy OpenAPI before it should be marked fully done.
-- The next planned capability after `stock-add` verification is `product-search`.
+The current implementation stage is tracked only in `ROADMAP.md` so changing status does not become duplicated or stale here.
 
 Agent workflow:
 

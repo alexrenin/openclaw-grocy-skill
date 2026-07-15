@@ -74,13 +74,13 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
    - `[x]` Confirm that the installed Grocy accepts the `price` payload for the latest purchase price workflow.
    - `[x]` Adjust the payload to match the installed Grocy version.
 
-2. `[ ]` Add correction and removal workflows for created records.
+2. `[x]` Add correction and removal workflows for created records.
    - `[x]` Product lifecycle: `product-update` and safe `product-delete`; fallback is `product-update --active false` when deletion is unsafe or rejected.
    - `[x]` Unit lifecycle: `unit-update` and safe `unit-delete`; fallback is to update dependent records first or leave referenced units in Grocy.
    - `[x]` Recipe lifecycle: `recipe-update` and safe `recipe-delete`; `recipe-delete` refuses recipes with ingredient rows unless `--delete-ingredients true` is explicitly confirmed.
    - `[x]` Recipe ingredient lifecycle: `recipe-ingredient-delete` for removing one incorrect ingredient row.
    - `[x]` Custom field lifecycle: `userfields-update` and `userfields-delete`; deletion inspects existing values and requires `--delete-values true` when values would be lost.
-   - Stock lifecycle: `stock-transaction-undo` is implemented and live-verified during the controlled `stock-add` test.
+   - `[x]` Stock lifecycle: `stock-transaction-undo` is implemented and live-verified during the controlled `stock-add` test.
    - Purpose: OpenClaw must be able to fix or undo a record it just created instead of creating duplicates or leaving bad data behind.
 
 3. `[x]` Add product search.
