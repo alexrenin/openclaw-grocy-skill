@@ -158,6 +158,30 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
    - `[x]` Verify after the refactor that all existing safety rules still appear in either `SKILL.md`, README, the command reference, or `docs/commands.json`, and that OpenClaw still has clear instructions for every write command.
    - Purpose: make the skill easier for agents to load and follow while preserving the explicit safety model for real Grocy data.
 
+10. `[ ]` Add parent product support to product lifecycle commands.
+   - `[ ]` Verify Grocy 4.x product parent fields and constraints against the installed OpenAPI before implementation.
+   - `[ ]` Extend `product-create` so a product can be created with a selected parent product.
+   - `[ ]` Extend `product-update` so a product's parent product can be set, changed, or cleared.
+   - `[ ]` Prefer product names or search-driven selection in chat workflows; avoid requiring raw parent product ids unless the user already has them.
+   - `[ ]` Add validation to prevent ambiguous parent matches, self-parenting, and unsupported parent relationships.
+   - `[ ]` Document confirmation details for parent changes, including target product and parent product or explicit parent removal.
+   - `[ ]` Update tests, `README.md`, `SKILL.md`, `docs/COMMANDS.md`, and `docs/commands.json` when implemented.
+   - Purpose: let OpenClaw correctly create and edit Grocy product variants or child products without direct API calls, while preserving the existing confirmation and correction model.
+
+11. `[ ]` Add stock inventory and adjacent stock transaction commands, excluding barcode workflows.
+   - `[ ]` Verify Grocy 4.x stock endpoints and payloads against the installed OpenAPI before implementation.
+   - `[ ]` Add an inventory command for `POST /stock/products/{productId}/inventory` that sets a product to a confirmed actual `new_amount`; do not implement `/stock/products/by-barcode/{barcode}/inventory`.
+   - `[ ]` Add a consume command for `POST /stock/products/{productId}/consume` so OpenClaw can remove stock explicitly after confirmation; do not implement barcode consume.
+   - `[ ]` Extend or add transfer support for `POST /stock/products/{productId}/transfer` after confirming source product, amount, unit, source/target locations when applicable, and whether Grocy supports the needed payload fields for the installed version; do not implement barcode transfer.
+   - `[ ]` Support reading stock transaction details with `GET /stock/transactions/{transactionId}` so write results can be inspected before undoing them.
+   - `[ ]` Keep `stock-transaction-undo` as the correction path for inventory, consume, add, and transfer writes when Grocy returns transaction ids.
+   - `[ ]` Require explicit confirmation immediately before every inventory, consume, transfer, or undo write; confirmation must include product, amount or new actual amount, unit, locations when applicable, note/date/price when applicable, and expected effect.
+   - `[ ]` For inventory, calculate and show the delta from current read-only stock before asking for confirmation when current stock can be read safely.
+   - `[ ]` Prefer product names or prior command ids in chat workflows; do not require raw product ids unless they are already known.
+   - `[ ]` Add mocked tests for add/remove/no-op inventory deltas, consume validation, transaction detail reads, undo routing, and CLI option validation.
+   - `[ ]` Update `README.md`, `SKILL.md`, `docs/COMMANDS.md`, and `docs/commands.json` with the new stock write commands, confirmation details, supported formats, safety modes, and correction paths.
+   - Purpose: support real Grocy stocktaking/revision workflows and adjacent stock transactions through the safe CLI without direct API calls or barcode-specific behavior.
+
 ## Write Lifecycle Principle
 
 Adding records is not enough. For each entity that the skill can create or add, the roadmap should include a way to edit/update it and a way to delete/remove/cancel it, or a documented reason why Grocy does not support that safely.
