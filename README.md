@@ -411,6 +411,37 @@ Show stock as JSON:
 node bin/grocy-openclaw.js stock --format json
 ```
 
+Show a compact stock monitoring summary:
+
+```bash
+node bin/grocy-openclaw.js stock-summary --format text
+node bin/grocy-openclaw.js stock-summary --format json
+```
+
+`stock-summary` is read-only. It reports the number of active, own-stock products configured in Grocy, how many are currently in or out of stock, and Grocy-native counts for products below minimum stock, due soon, overdue, and expired. It also returns the nearest meaningful due date when one exists. Grocy's default due-soon window is 5 days, and the never-expiring sentinel date is excluded from the nearest-date result.
+
+Use `stock` for the exact product-by-product inventory and `stock-summary` for a compact monitoring overview.
+
+Show products below their configured minimum stock:
+
+```bash
+node bin/grocy-openclaw.js stock-low --format text
+node bin/grocy-openclaw.js stock-low --format table
+node bin/grocy-openclaw.js stock-low --format json
+```
+
+`stock-low` is read-only and uses Grocy's native `missing_products` classification. Text output is compact Russian text for chat; table and JSON output include product id, name, missing amount, stock unit, configured minimum stock amount, and whether some stock is still available.
+
+Show stock with approaching or passed due dates:
+
+```bash
+node bin/grocy-openclaw.js stock-expiring --days 7 --format text
+node bin/grocy-openclaw.js stock-expiring --days 7 --format table
+node bin/grocy-openclaw.js stock-expiring --days 7 --format json
+```
+
+`stock-expiring` is read-only. `--days` controls Grocy's due-soon window, accepts a non-negative integer, and defaults to 5. Output keeps Grocy's `due_soon`, `overdue`, and `expired` categories distinct and includes product id, name, current amount, stock unit, and due date. JSON also includes the selected window and category counts.
+
 Add a purchased product amount to stock and record the latest purchase price:
 
 ```bash
@@ -578,4 +609,4 @@ Use the version-specific OpenAPI link first, because `master` can describe a dif
 
 See [ROADMAP.md](ROADMAP.md) for the current implementation status, planned commands, and verification notes.
 
-Current status: read commands, product search, product create/update/delete, unit create/update/delete, recipe create/update/delete, recipe ingredient add/update/delete, custom-field create/update/delete and value setting, stock add, and stock transaction undo are implemented. Planned work includes stock monitoring, shopping list write commands, recipe read commands, and menu planning helpers.
+Current status: read commands, stock summary, low-stock, and expiring-stock monitoring, product search, product create/update/delete, unit create/update/delete, recipe create/update/delete, recipe ingredient add/update/delete, custom-field create/update/delete and value setting, stock add, and stock transaction undo are implemented. Planned work includes shopping list write commands, recipe read commands, and menu planning helpers.

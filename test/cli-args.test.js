@@ -238,6 +238,12 @@ test('allows stock-add options', () => {
   }));
 });
 
+test('allows stock-expiring options', () => {
+  assert.doesNotThrow(() => validateOptions('stock-expiring', {
+    days: '7',
+  }));
+});
+
 test('allows stock-transaction-undo options', () => {
   assert.doesNotThrow(() => validateOptions('stock-transaction-undo', {
     'transaction-id': 'tx-1',

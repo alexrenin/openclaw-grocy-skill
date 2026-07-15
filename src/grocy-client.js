@@ -111,6 +111,13 @@ class GrocyClient {
     return this.request('/api/stock');
   }
 
+  getStockVolatile({ dueSoonDays } = {}) {
+    const query = dueSoonDays === undefined
+      ? ''
+      : `?due_soon_days=${encodeURIComponent(dueSoonDays)}`;
+    return this.request(`/api/stock/volatile${query}`);
+  }
+
   addStockProduct(productId, payload) {
     return this.request(`/api/stock/products/${encodeURIComponent(productId)}/add`, {
       method: 'POST',

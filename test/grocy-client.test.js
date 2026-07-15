@@ -272,6 +272,49 @@ test('adds product amount through Grocy stock API', async () => {
   assert.equal(requestOptions.body, JSON.stringify(payload));
 });
 
+test('reads volatile stock through Grocy stock API', async () => {
+  let requestUrl;
+
+  const client = new GrocyClient({
+    baseUrl: 'http://grocy',
+    apiKey: 'secret-key',
+    fetchImpl: async (url) => {
+      requestUrl = url;
+
+      return {
+        ok: true,
+        text: async () => '{"missing_products":[],"due_products":[]}',
+      };
+    },
+  });
+
+  const data = await client.getStockVolatile();
+
+  assert.deepEqual(data, { missing_products: [], due_products: [] });
+  assert.equal(requestUrl, 'http://grocy/api/stock/volatile');
+});
+
+test('reads volatile stock with a due-soon window', async () => {
+  let requestUrl;
+
+  const client = new GrocyClient({
+    baseUrl: 'http://grocy',
+    apiKey: 'secret-key',
+    fetchImpl: async (url) => {
+      requestUrl = url;
+
+      return {
+        ok: true,
+        text: async () => '{"due_products":[]}',
+      };
+    },
+  });
+
+  await client.getStockVolatile({ dueSoonDays: 7 });
+
+  assert.equal(requestUrl, 'http://grocy/api/stock/volatile?due_soon_days=7');
+});
+
 test('reads stock transaction through Grocy stock API', async () => {
   let requestUrl;
 

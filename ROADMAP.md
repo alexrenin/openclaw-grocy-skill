@@ -24,6 +24,9 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
 - `[x]` Safely delete unused products with `product-delete`, with documented deactivation fallback.
 - `[x]` Read shopping list with `shopping-list`.
 - `[x]` Read stock with `stock`.
+- `[x]` Read a compact monitoring overview with `stock-summary`.
+- `[x]` Read products below minimum stock with `stock-low`.
+- `[x]` Read due-soon, overdue, and expired stock with `stock-expiring`.
 - `[x]` Read configured custom fields with `userfields`.
 - `[x]` Read custom field values with `userfields-get`.
 - `[x]` Create quantity units with `unit-create`.
@@ -44,7 +47,13 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
 
 ## Current Verification Notes
 
-- `npm.cmd test` passed locally with 199 tests.
+- `npm.cmd test` passed locally with 219 tests.
+- `stock-expiring` is implemented, documented, covered by mocked tests, and read-only live-verified against the configured Grocy 4.6.0 instance. A live check with a 60-day due-soon window returned 1 due-soon product with its amount, stock unit, and due date without changing Grocy data.
+- Grocy 4.6.0 OpenAPI was checked before implementing `stock-expiring`. The command passes `--days` as `due_soon_days` to read-only `GET /stock/volatile` and preserves Grocy's `due_products`, `overdue_products`, and `expired_products` categories.
+- `stock-low` is implemented, documented, covered by mocked tests, and read-only live-verified against the configured Grocy 4.6.0 instance. The live check returned 2 products below minimum stock with their missing amounts and stock units without changing Grocy data.
+- Grocy 4.6.0 OpenAPI was checked before implementing `stock-low`. The command uses `missing_products` from read-only `GET /stock/volatile` and enriches those rows with product minimums and stock units from read-only object lists.
+- `stock-summary` is implemented, documented, covered by mocked tests, and read-only live-verified against the configured Grocy 4.6.0 instance. The live check reported 14 tracked products, 1 product in stock, 2 products below minimum stock, and the nearest meaningful due date without changing Grocy data.
+- Grocy 4.6.0 OpenAPI was checked before implementing `stock-summary`. The command uses read-only `GET /stock` for current amounts and nearest due dates, plus read-only `GET /stock/volatile` for Grocy-native due, overdue, expired, and missing-product categories.
 - Grocy 4.6.0 OpenAPI was checked before implementing the custom field lifecycle. The commands use generic userfields object `PUT` and `DELETE`.
 - Custom field lifecycle was live-verified against the configured Grocy 4.6.0 instance after explicit confirmations for each write. The test created recipe custom field `OPENCLAW_TEST_20260714_CUSTOM_FIELD_LIFECYCLE` as id 7, updated its caption to `OPENCLAW_TEST_20260714_CUSTOM_FIELD_LIFECYCLE_UPDATED`, inspected 7 recipes and found no populated values, deleted field id 7, and verified the test marker was absent afterward.
 - `recipe-update`, `recipe-delete`, and `recipe-ingredient-delete` are implemented, documented, covered by mocked unit tests, and live-verified against the configured Grocy 4.6.0 instance after explicit user confirmation.
@@ -88,10 +97,10 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
    - `[x]` Command: `product-search --name "молоко" --format json`
    - Purpose: support receipt-derived names and natural chat queries without forcing exact product names.
 
-4. `[ ]` Add stock monitoring.
-   - Command: `stock-low`
-   - Command: `stock-expiring`
-   - Command: `stock-summary`
+4. `[x]` Add stock monitoring.
+   - `[x]` Command: `stock-low`
+   - `[x]` Command: `stock-expiring`
+   - `[x]` Command: `stock-summary`
    - Purpose: answer "what is running low?", "what expires soon?", and "what do we have at home?"
 
 5. `[ ]` Add shopping list write commands.

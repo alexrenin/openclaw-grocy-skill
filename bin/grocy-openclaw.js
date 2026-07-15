@@ -19,6 +19,9 @@ const { runRecipeIngredientUpdateCommand } = require('../src/commands/recipe-ing
 const { runRecipeUpdateCommand } = require('../src/commands/recipe-update');
 const { runShoppingListCommand } = require('../src/commands/shopping-list');
 const { runStockAddCommand } = require('../src/commands/stock-add');
+const { runStockExpiringCommand } = require('../src/commands/stock-expiring');
+const { runStockLowCommand } = require('../src/commands/stock-low');
+const { runStockSummaryCommand } = require('../src/commands/stock-summary');
 const { runStockTransactionUndoCommand } = require('../src/commands/stock-transaction-undo');
 const { runStockCommand } = require('../src/commands/stock');
 const { runSystemInfoCommand } = require('../src/commands/system-info');
@@ -69,6 +72,9 @@ Commands:
   userfields-get   Read custom field values of one object
   userfields-set   Set custom field values of one object
   stock            Read Grocy stock
+  stock-expiring   Show due-soon, overdue, and expired stock
+  stock-low        Show products below their configured minimum stock
+  stock-summary    Show a compact Grocy stock monitoring summary
   stock-add        Add a purchased product amount to Grocy stock
   stock-transaction-undo
                    Undo a Grocy stock transaction
@@ -106,6 +112,9 @@ Formats:
   userfields-get   table, json
   userfields-set   json
   stock            table, json
+  stock-expiring   text, table, json
+  stock-low        text, table, json
+  stock-summary    text, json
   stock-add        json
   stock-transaction-undo
                    json
@@ -137,6 +146,9 @@ Examples:
   node bin/grocy-openclaw.js userfields-get --entity recipes --object-id 10 --format json
   node bin/grocy-openclaw.js userfields-set --entity recipes --object-name "Pancakes" --values '{"difficulty":"easy","cook_time":"10 minutes"}' --format json
   node bin/grocy-openclaw.js stock --format json
+  node bin/grocy-openclaw.js stock-expiring --days 7 --format text
+  node bin/grocy-openclaw.js stock-low --format text
+  node bin/grocy-openclaw.js stock-summary --format text
   node bin/grocy-openclaw.js stock-add --product "Milk" --amount 1 --unit "l" --price 2.49 --format json
   node bin/grocy-openclaw.js stock-transaction-undo --transaction-id "abc123" --format json
 `;
@@ -168,6 +180,9 @@ const COMMAND_FORMATS = new Map([
   ['userfields-get', new Set(['table', 'json'])],
   ['userfields-set', new Set(['json'])],
   ['stock', new Set(['table', 'json'])],
+  ['stock-expiring', new Set(['text', 'table', 'json'])],
+  ['stock-low', new Set(['text', 'table', 'json'])],
+  ['stock-summary', new Set(['text', 'json'])],
   ['stock-add', new Set(['json'])],
   ['stock-transaction-undo', new Set(['json'])],
 ]);
@@ -352,6 +367,9 @@ const COMMAND_OPTIONS = new Map([
     'best-before-date',
     'transaction-type',
   ])],
+  ['stock-expiring', new Set([
+    'days',
+  ])],
   ['stock-transaction-undo', new Set([
     'transaction-id',
   ])],
@@ -504,6 +522,15 @@ async function main(argv, env = process.env) {
       break;
     case 'stock':
       output = await runStockCommand({ client, format });
+      break;
+    case 'stock-expiring':
+      output = await runStockExpiringCommand({ client, format, options });
+      break;
+    case 'stock-low':
+      output = await runStockLowCommand({ client, format });
+      break;
+    case 'stock-summary':
+      output = await runStockSummaryCommand({ client, format });
       break;
     case 'stock-add':
       output = await runStockAddCommand({ client, format, options });

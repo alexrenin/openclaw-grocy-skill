@@ -1,6 +1,6 @@
 ---
 name: grocy
-description: Work with Grocy home inventory, stock, products, and shopping list.
+description: Read and manage Grocy home inventory, stock monitoring, products, recipes, quantity units, custom fields, and shopping lists through the bundled safe CLI. Use for groceries, household supplies, stock summaries, low-stock or expiring-product checks, shopping lists, and Russian requests about products at home.
 ---
 
 # Grocy Home Inventory Skill
@@ -401,6 +401,37 @@ Return Grocy stock as JSON:
 ```bash
 node bin/grocy-openclaw.js stock --format json
 ```
+
+Show a compact stock monitoring summary:
+
+```bash
+node bin/grocy-openclaw.js stock-summary --format text
+node bin/grocy-openclaw.js stock-summary --format json
+```
+
+Use `stock-summary` for a read-only overview of configured products, products currently in and out of stock, products below their minimum stock amount, due-soon products, overdue products, expired products, and the nearest meaningful due date. It uses Grocy's own `stock/volatile` categories; Grocy's default due-soon window is 5 days. It ignores the never-expiring sentinel date when choosing the nearest due date.
+
+Use `stock --format table` or `stock --format json` when the user needs the exact product-by-product inventory instead of monitoring totals. Both `stock` and `stock-summary` are read-only and do not require confirmation.
+
+Show products below their configured minimum stock:
+
+```bash
+node bin/grocy-openclaw.js stock-low --format text
+node bin/grocy-openclaw.js stock-low --format table
+node bin/grocy-openclaw.js stock-low --format json
+```
+
+Use `stock-low` when the user asks what is running low, what needs restocking, or which products are below minimum stock. It uses Grocy's own `missing_products` classification and reports the missing amount in the product stock unit. It is read-only and does not require confirmation. Do not infer low stock only from a zero amount; rely on the minimum stock configured for each product in Grocy.
+
+Show stock with approaching or passed due dates:
+
+```bash
+node bin/grocy-openclaw.js stock-expiring --days 7 --format text
+node bin/grocy-openclaw.js stock-expiring --days 7 --format table
+node bin/grocy-openclaw.js stock-expiring --days 7 --format json
+```
+
+Use `stock-expiring` when the user asks what expires soon, which due dates have passed, or what should be used first. `--days` is an optional non-negative integer and defaults to 5. The command uses Grocy's own due-soon, overdue, and expired categories, preserves those distinctions in output, and is read-only. Do not reclassify products locally from the date alone.
 
 Add a purchased product amount to Grocy stock and record the latest purchase price:
 
