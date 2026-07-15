@@ -151,7 +151,19 @@ test('allows recipe read command options', () => {
   }));
 });
 
-test('allows recipe lifecycle options', () => {
+
+test('allows menu planning command options', () => {
+  assert.doesNotThrow(() => validateOptions('menu-check', {
+    recipe: 'Pancakes',
+    servings: '4',
+  }));
+  assert.doesNotThrow(() => validateOptions('menu-shopping-list', {
+    recipes: '[{"name":"Pancakes","servings":4}]',
+  }));
+  assert.doesNotThrow(() => validateOptions('menu-check', {
+    'recipe-id': '7',
+  }));
+});test('allows recipe lifecycle options', () => {
   assert.doesNotThrow(() => validateOptions('recipe-update', {
     recipe: 'Оливье',
     name: 'Оливье быстрый',

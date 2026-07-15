@@ -46,11 +46,14 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
 - `[x]` Add purchased product amounts to stock with `stock-add`, including optional latest purchase price and best-before date.
 - `[x]` Undo stock transactions with `stock-transaction-undo`.
 - `[x]` Manage shopping list rows with `shopping-list-add`, `shopping-list-update`, `shopping-list-delete`, `shopping-list-done`, and completed-row-only `shopping-list-clean`.
+- `[x]` Read-only menu planning helpers with `menu-check` and `menu-shopping-list`.
 
 ## Current Verification Notes
 
+- `menu-check` and `menu-shopping-list` are implemented, documented, covered by mocked tests, and live-verified read-only against the configured Grocy 4.6.0 instance. The live check used recipe id 2 (`Рассольник`) for 8 servings. `menu-check` correctly reported `status: missing`, `can_cook: false`, 6 ingredients, 5 missing products, 1 available product, and no unresolved conversions. `menu-shopping-list` returned only the 5 missing products and did not create Grocy shopping list rows. No Grocy data was changed.
+- Live menu helper verification exposed that tiny non-zero amounts such as `0.000001 кг` were rounded to `0 кг` in text output. The formatter now preserves tiny non-zero values and has a regression test.
 - `recipes` and `recipe-get` are implemented, documented, covered by mocked tests, and live-verified read-only against the configured Grocy 4.6.0 instance. `recipes` returned 4 normal recipes with correct ingredient counts and excluded 3 internal `mealplan-*` pseudo-recipes exposed by the objects endpoint. Its table output converted and truncated HTML descriptions for chat. `recipe-get` resolved recipe 3 by both id and name and returned 2 ingredient rows with correct position ids, product names, amounts, and quantity units. No Grocy data was changed.
-- `npm.cmd test` passed locally with 244 tests.
+- `npm.cmd test` passed locally with 253 tests.
 - Shopping list write commands are implemented, documented, covered by mocked tests, and live-verified against the configured Grocy 4.6.0 instance after explicit confirmation before each write. The lifecycle test created note-only row `OPENCLAW_TEST_20260715_SHOPPING_LIST_LIFECYCLE` as id 5, updated its amount and note, marked it done, restored it to undone, and deleted it. The cleanup test created `OPENCLAW_TEST_20260715_SHOPPING_LIST_CLEAN` as id 6, marked it done, previewed exactly that one affected row with `shopping-list-clean --dry-run true`, then removed it with `shopping-list-clean`. Final read-only verification found both markers absent, the four original pending rows unchanged, and zero completed rows.
 - Live shopping list verification exposed that note-only rows were labeled `Unknown product null`; the formatter now leaves their product name empty and has a regression test. The test also added the read-only `shopping-list-clean --dry-run true` preview so completed rows can be inspected before confirming cleanup.
 - Grocy 4.6.0 OpenAPI and frontend source were checked: item create/update/delete use generic `shopping_list` object endpoints, done toggles the `done` field with generic `PUT`, and completed-only cleanup uses `POST /stock/shoppinglist/clear` with `done_only: true`.
@@ -122,10 +125,10 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
    - `[x]` Command: `recipe-get`
    - Purpose: expose recipes and ingredients in a chat-friendly format before planning menus.
 
-7. `[ ]` Add menu planning helpers.
-   - Command: `menu-check`
-   - Command: `menu-shopping-list`
-   - Later command: `menu-plan`
+7. `[~]` Add menu planning helpers.
+   - `[x]` Command: `menu-check` implemented, documented, covered by mocked tests, and live-verified read-only.
+   - `[x]` Command: `menu-shopping-list` implemented, documented, covered by mocked tests, and live-verified read-only; it calculates missing items only and does not write Grocy shopping list rows.
+   - `[ ]` Later command: `menu-plan`
    - Purpose: check whether selected recipes can be cooked from current stock and calculate missing ingredients.
 
 ## Write Lifecycle Principle

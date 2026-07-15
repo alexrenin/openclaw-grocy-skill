@@ -1,7 +1,7 @@
 {
   "name": "openclaw-grocy-skill",
   "version": "0.1.0",
-  "description": "Reusable OpenClaw skill for Grocy shopping list, stock, products, and recipes.",
+  "description": "Reusable OpenClaw skill for Grocy shopping list, stock, products, recipes, and menu planning.",
   "main": "src/format-shopping-list.js",
   "bin": {
     "grocy-openclaw": "bin/grocy-openclaw.js"

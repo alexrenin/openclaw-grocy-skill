@@ -6,6 +6,8 @@ const { createGrocyClientFromEnv } = require('../src/grocy-client');
 const { loadEnvWithDotEnvFallback } = require('../src/env');
 const { runApiDocsCommand } = require('../src/commands/api-docs');
 const { runLocationsCommand } = require('../src/commands/locations');
+const { runMenuCheckCommand } = require('../src/commands/menu-check');
+const { runMenuShoppingListCommand } = require('../src/commands/menu-shopping-list');
 const { runProductCreateCommand } = require('../src/commands/product-create');
 const { runProductDeleteCommand } = require('../src/commands/product-delete');
 const { runProductSearchCommand } = require('../src/commands/product-search');
@@ -50,6 +52,9 @@ Commands:
   api-docs        Show Grocy OpenAPI documentation links for the installed version
   system-info      Read Grocy system info
   locations        Read Grocy locations
+  menu-check       Check selected recipes against current stock
+  menu-shopping-list
+                   Calculate missing products for selected recipes
   units            Read Grocy quantity units
   unit-create      Create a Grocy quantity unit
   unit-update      Update a Grocy quantity unit
@@ -102,6 +107,9 @@ Formats:
   api-docs        text, json
   system-info      json
   locations        table, json
+  menu-check       text, json
+  menu-shopping-list
+                   text, json
   units            table, json
   unit-create      json
   unit-update      json
@@ -154,6 +162,8 @@ Examples:
   node bin/grocy-openclaw.js api-docs --format text
   node bin/grocy-openclaw.js system-info --format json
   node bin/grocy-openclaw.js locations --format table
+  node bin/grocy-openclaw.js menu-check --recipe "Pancakes" --servings 4 --format text
+  node bin/grocy-openclaw.js menu-shopping-list --recipes '[{"name":"Pancakes","servings":4}]' --format text
   node bin/grocy-openclaw.js units --format table
   node bin/grocy-openclaw.js unit-create --name "банка" --name-plural "банки" --format json
   node bin/grocy-openclaw.js unit-update --unit-id 7 --name "jar" --name-plural "jars" --format json
@@ -195,6 +205,8 @@ const COMMAND_FORMATS = new Map([
   ['api-docs', new Set(['text', 'json'])],
   ['system-info', new Set(['json'])],
   ['locations', new Set(['table', 'json'])],
+  ['menu-check', new Set(['text', 'json'])],
+  ['menu-shopping-list', new Set(['text', 'json'])],
   ['units', new Set(['table', 'json'])],
   ['unit-create', new Set(['json'])],
   ['unit-update', new Set(['json'])],
@@ -232,7 +244,16 @@ const COMMAND_FORMATS = new Map([
   ['stock-transaction-undo', new Set(['json'])],
 ]);
 
+const MENU_PLANNING_OPTIONS = new Set([
+  'recipe',
+  'recipe-id',
+  'recipes',
+  'servings',
+]);
+
 const COMMAND_OPTIONS = new Map([
+  ['menu-check', MENU_PLANNING_OPTIONS],
+  ['menu-shopping-list', MENU_PLANNING_OPTIONS],
   ['shopping-list-add', new Set([
     'product',
     'product-id',
@@ -534,6 +555,12 @@ async function main(argv, env = process.env) {
       break;
     case 'locations':
       output = await runLocationsCommand({ client, format });
+      break;
+    case 'menu-check':
+      output = await runMenuCheckCommand({ client, format, options });
+      break;
+    case 'menu-shopping-list':
+      output = await runMenuShoppingListCommand({ client, format, options });
       break;
     case 'units':
       output = await runUnitsCommand({ client, format });
