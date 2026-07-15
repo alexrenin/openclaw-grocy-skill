@@ -688,4 +688,4 @@ Use the version-specific OpenAPI link first, because `master` can describe a dif
 
 See [ROADMAP.md](ROADMAP.md) for the current implementation status, planned commands, and verification notes.
 
-Current status: read commands, stock monitoring, product search and lifecycle, unit lifecycle, recipe reads and lifecycle, ingredient lifecycle, custom-field lifecycle, stock add/undo, shopping list add/update/delete/done/clean, and read-only menu planning helpers are implemented. Shopping list writes, recipe reads, and menu planning helpers are live-verified against Grocy 4.6.0.
+Current status: read commands, stock monitoring, product search and lifecycle, unit lifecycle, recipe reads and lifecycle, ingredient lifecycle, custom-field lifecycle, stock add/undo, shopping list add/update/delete/done/clean, read-only menu planning helpers, Grocy meal plan lifecycle commands, and the strict command policy index are implemented. Shopping list writes, recipe/product/unit/custom-field/stock/meal-plan flows, and menu planning helpers are live-verified against Grocy 4.6.0.

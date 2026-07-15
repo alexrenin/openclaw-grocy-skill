@@ -12,9 +12,9 @@ This must be developed as a reusable public skill, not as a one-off private scri
 
 The initial read commands remain read-only.
 
-The skill may read Grocy system info, products, product locations, quantity units, shopping list items, recipes, custom fields, and stock.
+The skill may read Grocy system info, products, product locations, quantity units, shopping list items, recipes, custom fields, stock, menu planning data, and meal plan rows.
 
-Write commands include `product-create`, `product-update`, `product-delete`, `unit-create`, `unit-update`, `unit-delete`, `recipe-create`, `recipe-ingredient-add`, `recipe-ingredient-update`, `userfields-create`, `userfields-update`, `userfields-delete`, `userfields-set`, `stock-add`, and `stock-transaction-undo`. Run them only after explicit user confirmation for that specific data manipulation. Keep write commands separate from read commands, clearly documented, and covered by tests.
+Write commands include product lifecycle commands, quantity unit lifecycle commands, recipe lifecycle commands, recipe ingredient lifecycle commands, custom field lifecycle and value commands, shopping list lifecycle commands, stock add/undo commands, and meal plan lifecycle commands. Run them only after explicit user confirmation for that specific data manipulation. Keep write commands separate from read commands, clearly documented, and covered by tests.
 
 ## Project tracking
 
@@ -31,6 +31,8 @@ Agent workflow:
 - Keep `AGENTS.md` focused on durable instructions; keep changing task status in `ROADMAP.md`.
 - When adding a create/add write command, also add the corresponding edit/update and delete/remove/cancel needs to `ROADMAP.md`, unless they already exist.
 - Preserve the confirmation rule in roadmap and docs: reads do not need confirmation, every data manipulation does.
+- Keep `docs/commands.json` as a strict machine-readable safety policy index, not as a complete CLI option schema. The CLI owns full argument validation.
+- Keep OpenClaw-facing runtime files free of development workflow instructions. Development guidance belongs in `AGENTS.md`, `ROADMAP.md`, and README development sections, not in `SKILL.md`, `docs/COMMANDS.md`, or `docs/commands.json`.
 
 ## Core principles
 
@@ -73,11 +75,14 @@ Rules:
 
 ## Expected repository structure
 
-Create and maintain this structure:
+Create and maintain this structure. Command and test files should grow with the CLI surface instead of being duplicated here exhaustively:
 
 ```text
 openclaw-grocy-skill/
 |-- AGENTS.md
+|-- docs/
+|   |-- COMMANDS.md
+|   `-- commands.json
 |-- README.md
 |-- ROADMAP.md
 |-- SKILL.md
@@ -91,28 +96,11 @@ openclaw-grocy-skill/
 |   |-- format-shopping-list.js
 |   `-- commands/
 |       |-- api-docs.js
-|       |-- system-info.js
-|       |-- locations.js
-|       |-- units.js
-|       |-- unit-create.js
-|       |-- unit-update.js
-|       |-- unit-delete.js
-|       |-- product-create.js
-|       |-- recipe-create.js
-|       |-- recipe-ingredient-add.js
-|       |-- recipe-ingredient-update.js
-|       |-- shopping-list.js
-|       |-- products.js
-|       |-- userfields.js
-|       |-- userfields-create.js
-|       |-- userfields-update.js
-|       |-- userfields-delete.js
-|       |-- userfields-get.js
-|       |-- userfields-set.js
-|       |-- stock-add.js
-|       `-- stock.js
+|       |-- <command>.js
+|       `-- <shared-command-helper>.js
 |-- test/
-|   `-- format-shopping-list.test.js
+|   |-- command-index.test.js
+|   `-- <feature>.test.js
 `-- scripts/
     |-- deploy-local.sh
     `-- smoke-test-openclaw.sh
@@ -120,38 +108,29 @@ openclaw-grocy-skill/
 
 ## CLI commands
 
-Implement these commands:
+Keep these command groups implemented, documented, and covered by tests:
 
-```bash
-node bin/grocy-openclaw.js api-docs --format text
-node bin/grocy-openclaw.js api-docs --format json
-node bin/grocy-openclaw.js system-info --format json
-node bin/grocy-openclaw.js locations --format table
-node bin/grocy-openclaw.js locations --format json
-node bin/grocy-openclaw.js units --format table
-node bin/grocy-openclaw.js units --format json
-node bin/grocy-openclaw.js unit-create --name "банка" --name-plural "банки" --format json
-node bin/grocy-openclaw.js unit-update --unit-id 7 --name "стеклянная банка" --name-plural "стеклянные банки" --format json
-node bin/grocy-openclaw.js unit-delete --unit-id 7 --confirm-unit-name "стеклянная банка" --format json
-node bin/grocy-openclaw.js product-create --name "Молоко" --location "Холодильник" --stock-unit "л" --format json
-node bin/grocy-openclaw.js product-create --name "Огурцы маринованные" --location "Кладовка" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --consume-unit "шт" --format json
-node bin/grocy-openclaw.js recipe-create --name "Оливье" --base-servings 4 --ingredients '[{"name":"Картофель","amount":3,"unit":"шт"}]' --format json
-node bin/grocy-openclaw.js recipe-ingredient-add --recipe "Блины" --product "Масло подсолнечное" --amount 30 --unit "мл" --note "в тесто" --format json
-node bin/grocy-openclaw.js recipe-ingredient-update --recipe "Блины" --product "Масло подсолнечное" --amount 0.03 --unit "л" --format json
-node bin/grocy-openclaw.js userfields --entity recipes --format table
-node bin/grocy-openclaw.js userfields-create --entity recipes --caption "Время готовки" --type text-single-line --format json
-node bin/grocy-openclaw.js userfields-update --entity recipes --field cook_time --caption "Время готовки, мин" --format json
-node bin/grocy-openclaw.js userfields-delete --userfield-id 14 --confirm-field-name cook_time --format json
-node bin/grocy-openclaw.js userfields-get --entity recipes --object-id 10 --format json
-node bin/grocy-openclaw.js userfields-set --entity recipes --object-name "Быстрые блины" --values '{"Уровень сложности":"легкий","Время готовки":"10 минут"}' --format json
-node bin/grocy-openclaw.js shopping-list --format text
-node bin/grocy-openclaw.js shopping-list --format json
-node bin/grocy-openclaw.js products --format table
-node bin/grocy-openclaw.js products --format json
-node bin/grocy-openclaw.js stock --format table
-node bin/grocy-openclaw.js stock --format json
-node bin/grocy-openclaw.js stock-add --product "Молоко" --amount 1 --unit "л" --price 2.49 --format json
-```
+Read commands:
+
+- `api-docs`, `system-info`, `locations`, `units`
+- `shopping-list`, `products`, `product-search`
+- `recipes`, `recipe-get`
+- `userfields`, `userfields-get`
+- `stock`, `stock-expiring`, `stock-low`, `stock-summary`
+- `menu-check`, `menu-plan`, `menu-shopping-list`, `meal-plan`
+
+Write commands:
+
+- `unit-create`, `unit-update`, `unit-delete`
+- `product-create`, `product-update`, `product-delete`
+- `recipe-create`, `recipe-update`, `recipe-delete`
+- `recipe-ingredient-add`, `recipe-ingredient-update`, `recipe-ingredient-delete`
+- `userfields-create`, `userfields-update`, `userfields-delete`, `userfields-set`
+- `shopping-list-add`, `shopping-list-update`, `shopping-list-delete`, `shopping-list-done`, `shopping-list-clean` without `--dry-run true`
+- `stock-add`, `stock-transaction-undo`
+- `meal-plan-add`, `meal-plan-update`, `meal-plan-delete`
+
+`docs/COMMANDS.md` is the human command reference. `docs/commands.json` is the strict safety policy index for command routing, read/write classification, confirmation requirements, mode-specific safety behavior, supported output formats, and correction/removal paths. Do not turn `docs/commands.json` into a full CLI argument schema; the CLI dispatcher and command modules own option validation.
 
 The CLI should:
 
@@ -389,7 +368,7 @@ OPENCLAW_COMPOSE_DIR=~/home-server/openclaw ./scripts/deploy-local.sh
 Deploy script requirements:
 
 - Create target directories if missing.
-- Copy `SKILL.md`, `bin/`, `src/`, `package.json`, and needed files.
+- Copy `SKILL.md`, `README.md`, `docs/`, `bin/`, `src/`, `scripts/`, `package.json`, and needed files.
 - Do not overwrite an existing `.env`.
 - Create `.env` from `.env.example` if missing.
 - `chmod +x` executable scripts.
@@ -449,6 +428,7 @@ Automated tests must not require or mutate the user's real Grocy instance. Use m
 - Local CLI usage
 - Deploy to OpenClaw workspace
 - How to test inside OpenClaw gateway Docker container
+- Command reference files, including `docs/COMMANDS.md` and the strict policy index `docs/commands.json`
 - Security notes
 - Roadmap
 
@@ -456,9 +436,8 @@ Roadmap should include:
 
 - a link to `ROADMAP.md`
 - current implementation status
-- planned product search
-- planned shopping list write commands
-- planned stock summaries and expiring products
+- planned or pending command groups
+- verification notes for local tests and any live Grocy checks
 
 ## Security requirements
 
@@ -515,23 +494,21 @@ For each change:
 
 Write operations must be added carefully.
 
-Implemented write operation:
+Implemented write operations:
 
-- create quantity unit object
-- update quantity unit object
-- delete unused quantity unit object
-- create product object
-- create recipe object with ingredient rows
-- add one ingredient row to an existing recipe
-- update one ingredient row in an existing recipe
-- set custom field values
-- add stock entry with optional latest purchase price
+- create, update, and delete unused quantity unit objects
+- create, update, and delete product objects, with `active=false` preferred when hard deletion is unsafe
+- create, update, and delete recipes, including ingredient-row cleanup when explicitly confirmed
+- add, update, and delete one ingredient row on an existing recipe
+- create, update, delete, get, and set custom field definitions and values
+- add stock with optional latest purchase price and undo stock transactions
+- add, update, delete, mark done, and clean completed shopping list rows
+- add, update, and delete Grocy meal plan rows
 
 Examples:
 
 - add item to shopping list
 - mark shopping item done
-- consume stock
 - add stock entry
 
 Rules for future write operations:

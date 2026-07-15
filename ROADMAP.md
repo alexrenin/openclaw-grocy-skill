@@ -195,5 +195,7 @@ Expected workflow:
 - Keep the confirmation rule explicit for every write command: reads do not need confirmation, data changes do.
 - For every new create/add command, add matching update/edit and delete/remove/cancel needs to this roadmap.
 - Do not mark live-write verification as complete unless it was intentionally confirmed by the user against real Grocy data and any temporary test records were cleaned up.
-- Keep user-facing behavior documented in `README.md` and `SKILL.md`.
+- Keep user-facing behavior documented in `README.md`, `SKILL.md`, and `docs/COMMANDS.md`.
+- Keep `docs/commands.json` aligned with CLI safety policy: command routing, read/write classification, confirmation requirements, supported formats, mode-specific safety behavior, and correction/removal paths. Do not use it as a full CLI option schema.
+- Keep OpenClaw-facing runtime files free of development workflow instructions; implementation and OpenAPI extension workflow belong in development documentation.
 - Do not store secrets, environment contents, hostnames, or personal deployment details in this file.
