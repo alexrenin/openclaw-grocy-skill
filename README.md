@@ -280,6 +280,17 @@ For `menu-plan`, `--count` defaults to `3`, `--servings` applies the same target
 
 The helpers use configured Grocy quantity-unit conversions, including product-specific conversions when present. They do not guess conversions. If a conversion, product, unit, or amount is missing, the command reports it under `unresolved` and the result is not considered cookable until the underlying product, recipe ingredient, or unit conversion is corrected.
 
+Grocy meal plan commands:
+
+```bash
+node bin/grocy-openclaw.js meal-plan --from 2026-07-15 --to 2026-07-21 --format table
+node bin/grocy-openclaw.js meal-plan-add --date 2026-07-16 --recipe "Pancakes" --section "Dinner" --note "family" --format json
+node bin/grocy-openclaw.js meal-plan-update --entry-id 12 --date 2026-07-17 --note "changed" --format json
+node bin/grocy-openclaw.js meal-plan-delete --entry-id 12 --confirm-recipe-name "Pancakes" --format json
+```
+
+`meal-plan` is read-only and lists Grocy meal plan rows with resolved recipe and section names. `meal-plan-add`, `meal-plan-update`, and `meal-plan-delete` modify Grocy and require explicit confirmation immediately before execution. Confirm the exact date, recipe, section, note, and entry id as applicable; ask again if any detail changes. Grocy 4.6.0 meal plan rows do not support per-row servings, so `--servings` is intentionally rejected for meal plan writes; adjust recipe desired servings separately if needed. Use `meal-plan-update` to correct a planned menu row and `meal-plan-delete` to remove a wrong row instead of creating duplicates. These commands only manage Grocy meal plan rows; they do not add missing ingredients to the shopping list and do not consume stock.
+
 Create a recipe with ingredients:
 
 ```bash
@@ -638,7 +649,8 @@ Automated tests must not depend on or modify the configured Grocy instance.
 - `unit-create` modifies Grocy and must only be run after existing units were considered and the user confirms that a new unit should be created.
 - `unit-update` modifies Grocy and must only be run after the user explicitly confirms the exact unit correction.
 - `unit-delete` modifies Grocy and must only be run after especially clear confirmation of the exact unit id; delete only unused units.
-- `recipes`, `recipe-get`, `menu-check`, `menu-plan`, and `menu-shopping-list` are read-only and may run without confirmation.
+- `recipes`, `recipe-get`, `menu-check`, `menu-plan`, `menu-shopping-list`, and `meal-plan` are read-only and may run without confirmation.
+- `meal-plan-add`, `meal-plan-update`, and `meal-plan-delete` modify Grocy meal plan rows; run each only after confirmation of the exact date, recipe, section, note, or entry id. Grocy meal plan rows do not support per-row servings. Use update/delete to correct or remove wrong planned rows instead of creating duplicates.
 - `recipe-create` modifies Grocy and may create missing products only when `--create-missing-products true` is used after explicit confirmation; run it only after the user confirms creating the recipe.
 - `recipe-update` modifies Grocy and must only be run after the user explicitly confirms the exact recipe correction.
 - `recipe-delete` modifies Grocy and must only be run after especially clear confirmation of the exact recipe; use `--delete-ingredients true` only when the user also confirmed deleting the recipe's ingredient rows.

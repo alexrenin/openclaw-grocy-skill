@@ -138,6 +138,30 @@ class GrocyClient {
     return this.request('/api/stock');
   }
 
+  getMealPlanEntries() {
+    return this.getObjects('meal_plan');
+  }
+
+  getMealPlanEntry(objectId) {
+    return this.getObject('meal_plan', objectId);
+  }
+
+  getMealPlanSections() {
+    return this.getObjects('meal_plan_sections');
+  }
+
+  createMealPlanEntry(payload) {
+    return this.createObject('meal_plan', payload);
+  }
+
+  updateMealPlanEntry(objectId, payload) {
+    return this.updateObject('meal_plan', objectId, payload);
+  }
+
+  deleteMealPlanEntry(objectId) {
+    return this.deleteObject('meal_plan', objectId);
+  }
+
   getStockVolatile({ dueSoonDays } = {}) {
     const query = dueSoonDays === undefined
       ? ''

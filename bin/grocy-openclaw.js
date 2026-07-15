@@ -9,6 +9,10 @@ const { runLocationsCommand } = require('../src/commands/locations');
 const { runMenuCheckCommand } = require('../src/commands/menu-check');
 const { runMenuPlanCommand } = require('../src/commands/menu-plan');
 const { runMenuShoppingListCommand } = require('../src/commands/menu-shopping-list');
+const { runMealPlanCommand } = require('../src/commands/meal-plan');
+const { runMealPlanAddCommand } = require('../src/commands/meal-plan-add');
+const { runMealPlanDeleteCommand } = require('../src/commands/meal-plan-delete');
+const { runMealPlanUpdateCommand } = require('../src/commands/meal-plan-update');
 const { runProductCreateCommand } = require('../src/commands/product-create');
 const { runProductDeleteCommand } = require('../src/commands/product-delete');
 const { runProductSearchCommand } = require('../src/commands/product-search');
@@ -57,6 +61,12 @@ Commands:
   menu-plan        Recommend recipes for a read-only menu plan
   menu-shopping-list
                    Calculate missing products for selected recipes
+  meal-plan        Read Grocy meal plan rows
+  meal-plan-add    Add a recipe to the Grocy meal plan
+  meal-plan-update
+                   Update one Grocy meal plan row
+  meal-plan-delete
+                   Delete one Grocy meal plan row
   units            Read Grocy quantity units
   unit-create      Create a Grocy quantity unit
   unit-update      Update a Grocy quantity unit
@@ -113,6 +123,12 @@ Formats:
   menu-plan        text, json
   menu-shopping-list
                    text, json
+  meal-plan        table, json
+  meal-plan-add    json
+  meal-plan-update
+                   json
+  meal-plan-delete
+                   json
   units            table, json
   unit-create      json
   unit-update      json
@@ -168,6 +184,10 @@ Examples:
   node bin/grocy-openclaw.js menu-check --recipe "Pancakes" --servings 4 --format text
   node bin/grocy-openclaw.js menu-plan --count 3 --servings 4 --format text
   node bin/grocy-openclaw.js menu-shopping-list --recipes '[{"name":"Pancakes","servings":4}]' --format text
+  node bin/grocy-openclaw.js meal-plan --from 2026-07-15 --to 2026-07-21 --format table
+  node bin/grocy-openclaw.js meal-plan-add --date 2026-07-16 --recipe "Pancakes" --format json
+  node bin/grocy-openclaw.js meal-plan-update --entry-id 12 --date 2026-07-17 --note "changed" --format json
+  node bin/grocy-openclaw.js meal-plan-delete --entry-id 12 --confirm-recipe-name "Pancakes" --format json
   node bin/grocy-openclaw.js units --format table
   node bin/grocy-openclaw.js unit-create --name "банка" --name-plural "банки" --format json
   node bin/grocy-openclaw.js unit-update --unit-id 7 --name "jar" --name-plural "jars" --format json
@@ -212,6 +232,10 @@ const COMMAND_FORMATS = new Map([
   ['menu-check', new Set(['text', 'json'])],
   ['menu-plan', new Set(['text', 'json'])],
   ['menu-shopping-list', new Set(['text', 'json'])],
+  ['meal-plan', new Set(['table', 'json'])],
+  ['meal-plan-add', new Set(['json'])],
+  ['meal-plan-update', new Set(['json'])],
+  ['meal-plan-delete', new Set(['json'])],
   ['units', new Set(['table', 'json'])],
   ['unit-create', new Set(['json'])],
   ['unit-update', new Set(['json'])],
@@ -266,6 +290,33 @@ const COMMAND_OPTIONS = new Map([
   ['menu-check', MENU_PLANNING_OPTIONS],
   ['menu-plan', MENU_PLAN_OPTIONS],
   ['menu-shopping-list', MENU_PLANNING_OPTIONS],
+  ['meal-plan', new Set([
+    'from',
+    'to',
+  ])],
+  ['meal-plan-add', new Set([
+    'date',
+    'recipe',
+    'recipe-id',
+    'servings',
+    'section',
+    'section-id',
+    'note',
+  ])],
+  ['meal-plan-update', new Set([
+    'entry-id',
+    'date',
+    'recipe',
+    'recipe-id',
+    'servings',
+    'section',
+    'section-id',
+    'note',
+  ])],
+  ['meal-plan-delete', new Set([
+    'entry-id',
+    'confirm-recipe-name',
+  ])],
   ['shopping-list-add', new Set([
     'product',
     'product-id',
@@ -576,6 +627,18 @@ async function main(argv, env = process.env) {
       break;
     case 'menu-shopping-list':
       output = await runMenuShoppingListCommand({ client, format, options });
+      break;
+    case 'meal-plan':
+      output = await runMealPlanCommand({ client, format, options });
+      break;
+    case 'meal-plan-add':
+      output = await runMealPlanAddCommand({ client, format, options });
+      break;
+    case 'meal-plan-update':
+      output = await runMealPlanUpdateCommand({ client, format, options });
+      break;
+    case 'meal-plan-delete':
+      output = await runMealPlanDeleteCommand({ client, format, options });
       break;
     case 'units':
       output = await runUnitsCommand({ client, format });

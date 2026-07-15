@@ -297,6 +297,36 @@ test('uses Grocy shopping list object and clean endpoints', async () => {
   assert.equal(requests[3].options.body, JSON.stringify({ list_id: 1, done_only: true }));
 });
 
+test('uses Grocy meal plan object endpoints', async () => {
+  const requests = [];
+  const client = new GrocyClient({
+    baseUrl: 'http://grocy',
+    apiKey: 'secret-key',
+    fetchImpl: async (url, options = {}) => {
+      requests.push({ url, options });
+      return { ok: true, text: async () => '' };
+    },
+  });
+
+  await client.getMealPlanEntries();
+  await client.getMealPlanEntry(12);
+  await client.getMealPlanSections();
+  await client.createMealPlanEntry({ day: '2026-07-16', recipe_id: 1 });
+  await client.updateMealPlanEntry(12, { day: '2026-07-17', recipe_id: 2 });
+  await client.deleteMealPlanEntry(12);
+
+  assert.deepEqual(requests.map(({ url, options }) => [url, options.method]), [
+    ['http://grocy/api/objects/meal_plan', undefined],
+    ['http://grocy/api/objects/meal_plan/12', undefined],
+    ['http://grocy/api/objects/meal_plan_sections', undefined],
+    ['http://grocy/api/objects/meal_plan', 'POST'],
+    ['http://grocy/api/objects/meal_plan/12', 'PUT'],
+    ['http://grocy/api/objects/meal_plan/12', 'DELETE'],
+  ]);
+  assert.equal(requests[3].options.body, JSON.stringify({ day: '2026-07-16', recipe_id: 1 }));
+  assert.equal(requests[4].options.body, JSON.stringify({ day: '2026-07-17', recipe_id: 2 }));
+});
+
 test('reads volatile stock through Grocy stock API', async () => {
   let requestUrl;
 

@@ -23,7 +23,9 @@ The `unit-update` command modifies Grocy by updating a quantity unit. Run it onl
 
 The `unit-delete` command modifies Grocy by deleting an unused quantity unit. Run it only after especially clear confirmation of the exact unit id. Do not delete units that are still referenced by products, recipe ingredients, shopping list rows, or conversion rows.
 
-The `recipes`, `recipe-get`, `menu-check`, `menu-plan`, and `menu-shopping-list` commands are read-only. Run them without confirmation when the user asks what recipes exist, wants recipe ingredients and amounts, asks whether selected recipes can be cooked from stock, asks for menu recommendations, or asks what to buy for selected recipes.
+The `recipes`, `recipe-get`, `menu-check`, `menu-plan`, `menu-shopping-list`, and `meal-plan` commands are read-only. Run them without confirmation when the user asks what recipes exist, wants recipe ingredients and amounts, asks whether selected recipes can be cooked from stock, asks for menu recommendations, asks what to buy for selected recipes, or asks what is currently planned in Grocy.
+
+The `meal-plan-add`, `meal-plan-update`, and `meal-plan-delete` commands modify Grocy meal plan rows. Run each only after the user confirms the exact date, recipe, section, note, or entry id as applicable. Grocy 4.6.0 meal plan rows do not support per-row servings, so do not pass `--servings` to meal plan write commands. Ask again if any detail changes. Use update/delete to correct or remove a wrong planned row instead of creating duplicates.
 
 The `recipe-create` command modifies Grocy by creating a recipe and recipe ingredient rows. It may create missing ingredient products only when `--create-missing-products true` is used after explicit user confirmation. Run it only after the user confirms creating that recipe.
 
@@ -297,6 +299,25 @@ For one recipe, use `--recipe` or `--recipe-id`; for multiple recipes, use `--re
 For `menu-plan`, use `--count` to choose how many recipes to recommend, `--servings` to apply the same target servings to every candidate, and `--only-ready true` when the user wants only recipes cookable from current stock. The command ranks ready recipes first, then recipes with fewer missing products and fewer unresolved ingredients. It does not create Grocy meal plan rows.
 
 If output contains `unresolved`, do not guess the missing conversion or silently add products. Inspect `units`, `products`, or `recipe-get` as needed, then ask the user how to correct the product, ingredient, or unit conversion through the supported commands. `menu-plan` and `menu-shopping-list` only calculate missing items; before adding those items to Grocy, show the exact proposed `shopping-list-add` writes and ask for explicit confirmation.
+
+Read the current Grocy meal plan:
+
+```bash
+node bin/grocy-openclaw.js meal-plan --from 2026-07-15 --to 2026-07-21 --format table
+node bin/grocy-openclaw.js meal-plan --format json
+```
+
+Set or correct the Grocy meal plan only after explicit confirmation:
+
+```bash
+node bin/grocy-openclaw.js meal-plan-add --date 2026-07-16 --recipe "Pancakes" --section "Dinner" --note "family" --format json
+node bin/grocy-openclaw.js meal-plan-update --entry-id 12 --date 2026-07-17 --note "changed" --format json
+node bin/grocy-openclaw.js meal-plan-delete --entry-id 12 --confirm-recipe-name "Pancakes" --format json
+```
+
+Use `meal-plan-add` when the user has chosen recipes and explicitly asks to put them into the Grocy meal plan. Prefer recipe and section names in chat workflows; use ids returned by `recipes` or `meal-plan` when correcting an exact row. `meal-plan-update` can change date, recipe, section, or note for one row. `meal-plan-delete` removes one row and should use `--confirm-recipe-name` when the row represents a recipe.
+
+Workflow for “запланируй меню”: first use `menu-plan` or `menu-check` to propose recipes and missing products. Then show the exact planned `meal-plan-add` commands with dates, recipes, section, and note. Run the write commands only after the user confirms those exact rows. If the user changes a date, recipe, or section, ask for confirmation again. These commands do not add missing ingredients to the shopping list and do not consume stock.
 
 Create a recipe with ingredients:
 

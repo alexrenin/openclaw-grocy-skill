@@ -168,7 +168,40 @@ test('allows menu planning command options', () => {
   assert.doesNotThrow(() => validateOptions('menu-check', {
     'recipe-id': '7',
   }));
-});test('allows recipe lifecycle options', () => {
+});
+
+test('allows Grocy meal plan lifecycle options', () => {
+  assert.doesNotThrow(() => validateOptions('meal-plan', {
+    from: '2026-07-15',
+    to: '2026-07-21',
+  }));
+  assert.doesNotThrow(() => validateOptions('meal-plan-add', {
+    date: '2026-07-16',
+    recipe: 'Pancakes',
+    servings: '4',
+    section: 'Dinner',
+    note: 'family',
+  }));
+  assert.doesNotThrow(() => validateOptions('meal-plan-add', {
+    date: '2026-07-16',
+    'recipe-id': '7',
+    'section-id': '2',
+  }));
+  assert.doesNotThrow(() => validateOptions('meal-plan-update', {
+    'entry-id': '12',
+    date: '2026-07-17',
+    recipe: 'Soup',
+    servings: '2',
+    'section-id': '1',
+    note: '',
+  }));
+  assert.doesNotThrow(() => validateOptions('meal-plan-delete', {
+    'entry-id': '12',
+    'confirm-recipe-name': 'Pancakes',
+  }));
+});
+
+test('allows recipe lifecycle options', () => {
   assert.doesNotThrow(() => validateOptions('recipe-update', {
     recipe: 'Оливье',
     name: 'Оливье быстрый',

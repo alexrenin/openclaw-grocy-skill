@@ -48,14 +48,16 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
 - `[x]` Manage shopping list rows with `shopping-list-add`, `shopping-list-update`, `shopping-list-delete`, `shopping-list-done`, and completed-row-only `shopping-list-clean`.
 - `[x]` Read-only menu planning helpers with `menu-check` and `menu-shopping-list`.
 - `[x]` Read-only menu recommendations with `menu-plan`.
+- `[x]` Grocy meal plan lifecycle with `meal-plan`, `meal-plan-add`, `meal-plan-update`, and `meal-plan-delete`.
 
 ## Current Verification Notes
 
+- `meal-plan`, `meal-plan-add`, `meal-plan-update`, and `meal-plan-delete` are implemented, documented, covered by mocked tests, and live-verified against the configured Grocy 4.6.0 instance. Read-only `meal-plan --format json` returned 1 existing recipe row (`Борщ`) from Grocy's `meal_plan` object rows. The first confirmed live write attempt with `--servings` failed before creating data because Grocy 4.6.0 `meal_plan` rows have no `servings` column; the CLI now rejects per-row meal plan servings before writing and documents that recipe desired servings must be handled separately. The corrected live lifecycle test created test row `OPENCLAW_TEST_20260715_MEAL_PLAN_LIFECYCLE` as meal plan id 2 for recipe `Быстрые блины`, updated it to date `2026-07-16` with marker `OPENCLAW_TEST_20260715_MEAL_PLAN_LIFECYCLE_UPDATED`, verified the updated row by read-only `meal-plan`, deleted id 2 with `meal-plan-delete`, and final read-only verification found the test marker absent while the original `Борщ` row remained. The matching update and delete paths are included in the same scope so OpenClaw can correct or remove a wrong planned menu row instead of creating duplicates.
 - `menu-check` and `menu-shopping-list` are implemented, documented, covered by mocked tests, and live-verified read-only against the configured Grocy 4.6.0 instance. The live check used recipe id 2 (`Рассольник`) for 8 servings. `menu-check` correctly reported `status: missing`, `can_cook: false`, 6 ingredients, 5 missing products, 1 available product, and no unresolved conversions. `menu-shopping-list` returned only the 5 missing products and did not create Grocy shopping list rows. No Grocy data was changed.
 - `menu-plan` is implemented, documented, covered by mocked tests, and live-verified read-only against the configured Grocy 4.6.0 instance. The live check evaluated 4 normal recipes, selected 3 recipes with the fewest missing products, returned a combined missing-product list, and did not create Grocy meal plan or shopping list rows. `menu-plan --only-ready true` correctly returned an empty plan because no recipe was fully cookable from current stock. No Grocy data was changed.
 - Live menu helper verification exposed that tiny non-zero amounts such as `0.000001 кг` were rounded to `0 кг` in text output. The formatter now preserves tiny non-zero values and has a regression test.
 - `recipes` and `recipe-get` are implemented, documented, covered by mocked tests, and live-verified read-only against the configured Grocy 4.6.0 instance. `recipes` returned 4 normal recipes with correct ingredient counts and excluded 3 internal `mealplan-*` pseudo-recipes exposed by the objects endpoint. Its table output converted and truncated HTML descriptions for chat. `recipe-get` resolved recipe 3 by both id and name and returned 2 ingredient rows with correct position ids, product names, amounts, and quantity units. No Grocy data was changed.
-- `npm.cmd test` passed locally with 258 tests.
+- `npm.cmd test` passed locally with 272 tests.
 - Shopping list write commands are implemented, documented, covered by mocked tests, and live-verified against the configured Grocy 4.6.0 instance after explicit confirmation before each write. The lifecycle test created note-only row `OPENCLAW_TEST_20260715_SHOPPING_LIST_LIFECYCLE` as id 5, updated its amount and note, marked it done, restored it to undone, and deleted it. The cleanup test created `OPENCLAW_TEST_20260715_SHOPPING_LIST_CLEAN` as id 6, marked it done, previewed exactly that one affected row with `shopping-list-clean --dry-run true`, then removed it with `shopping-list-clean`. Final read-only verification found both markers absent, the four original pending rows unchanged, and zero completed rows.
 - Live shopping list verification exposed that note-only rows were labeled `Unknown product null`; the formatter now leaves their product name empty and has a regression test. The test also added the read-only `shopping-list-clean --dry-run true` preview so completed rows can be inspected before confirming cleanup.
 - Grocy 4.6.0 OpenAPI and frontend source were checked: item create/update/delete use generic `shopping_list` object endpoints, done toggles the `done` field with generic `PUT`, and completed-only cleanup uses `POST /stock/shoppinglist/clear` with `done_only: true`.
@@ -132,6 +134,14 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
    - `[x]` Command: `menu-shopping-list` implemented, documented, covered by mocked tests, and live-verified read-only; it calculates missing items only and does not write Grocy shopping list rows.
    - `[x]` Command: `menu-plan` implemented, documented, covered by mocked tests, and live-verified read-only.
    - Purpose: check whether selected recipes can be cooked from current stock and calculate missing ingredients.
+
+8. `[x]` Add Grocy meal plan write lifecycle.
+   - `[x]` Command: `meal-plan` to read planned menu rows without confirmation; implemented, tested, documented, and live-verified read-only.
+   - `[x]` Command: `meal-plan-add` to add a recipe to the Grocy meal plan after explicit confirmation; implemented, tested, documented, and live-verified.
+   - `[x]` Command: `meal-plan-update` to correct date, recipe, section, or note for one planned menu row after explicit confirmation; implemented, tested, documented, and live-verified.
+   - `[x]` Command: `meal-plan-delete` to remove one planned menu row after explicit confirmation; implemented, tested, documented, and live-verified.
+   - Purpose: let OpenClaw actually set the user's Grocy menu after `menu-plan` suggests recipes, while preserving the ability to correct or remove mistakes through the skill.
+   - Verification status: mocked tests, documentation, read-only live check, and explicit confirmed live write/cleanup verification are complete.
 
 ## Write Lifecycle Principle
 
