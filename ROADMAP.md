@@ -44,10 +44,14 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
 - `[x]` Update custom field definitions with `userfields-update` and safely delete them with `userfields-delete`.
 - `[x]` Add purchased product amounts to stock with `stock-add`, including optional latest purchase price and best-before date.
 - `[x]` Undo stock transactions with `stock-transaction-undo`.
+- `[x]` Manage shopping list rows with `shopping-list-add`, `shopping-list-update`, `shopping-list-delete`, `shopping-list-done`, and completed-row-only `shopping-list-clean`.
 
 ## Current Verification Notes
 
-- `npm.cmd test` passed locally with 219 tests.
+- `npm.cmd test` passed locally with 236 tests.
+- Shopping list write commands are implemented, documented, covered by mocked tests, and live-verified against the configured Grocy 4.6.0 instance after explicit confirmation before each write. The lifecycle test created note-only row `OPENCLAW_TEST_20260715_SHOPPING_LIST_LIFECYCLE` as id 5, updated its amount and note, marked it done, restored it to undone, and deleted it. The cleanup test created `OPENCLAW_TEST_20260715_SHOPPING_LIST_CLEAN` as id 6, marked it done, previewed exactly that one affected row with `shopping-list-clean --dry-run true`, then removed it with `shopping-list-clean`. Final read-only verification found both markers absent, the four original pending rows unchanged, and zero completed rows.
+- Live shopping list verification exposed that note-only rows were labeled `Unknown product null`; the formatter now leaves their product name empty and has a regression test. The test also added the read-only `shopping-list-clean --dry-run true` preview so completed rows can be inspected before confirming cleanup.
+- Grocy 4.6.0 OpenAPI and frontend source were checked: item create/update/delete use generic `shopping_list` object endpoints, done toggles the `done` field with generic `PUT`, and completed-only cleanup uses `POST /stock/shoppinglist/clear` with `done_only: true`.
 - `stock-expiring` is implemented, documented, covered by mocked tests, and read-only live-verified against the configured Grocy 4.6.0 instance. A live check with a 60-day due-soon window returned 1 due-soon product with its amount, stock unit, and due date without changing Grocy data.
 - Grocy 4.6.0 OpenAPI was checked before implementing `stock-expiring`. The command passes `--days` as `due_soon_days` to read-only `GET /stock/volatile` and preserves Grocy's `due_products`, `overdue_products`, and `expired_products` categories.
 - `stock-low` is implemented, documented, covered by mocked tests, and read-only live-verified against the configured Grocy 4.6.0 instance. The live check returned 2 products below minimum stock with their missing amounts and stock units without changing Grocy data.
@@ -103,12 +107,12 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
    - `[x]` Command: `stock-summary`
    - Purpose: answer "what is running low?", "what expires soon?", and "what do we have at home?"
 
-5. `[ ]` Add shopping list write commands.
-   - Command: `shopping-list-add`
-   - Command: `shopping-list-update`
-   - Command: `shopping-list-done`
-   - Command: `shopping-list-delete`
-   - Optional command: `shopping-list-clean`
+5. `[x]` Add shopping list write commands.
+   - `[x]` Command: `shopping-list-add`
+   - `[x]` Command: `shopping-list-update`
+   - `[x]` Command: `shopping-list-done`
+   - `[x]` Command: `shopping-list-delete`
+   - `[x]` Command: `shopping-list-clean` (completed rows only)
    - Purpose: let OpenClaw manage the buying workflow after menu planning or stock checks.
 
 6. `[ ]` Add recipe read commands.

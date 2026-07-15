@@ -272,6 +272,31 @@ test('adds product amount through Grocy stock API', async () => {
   assert.equal(requestOptions.body, JSON.stringify(payload));
 });
 
+test('uses Grocy shopping list object and clean endpoints', async () => {
+  const requests = [];
+  const client = new GrocyClient({
+    baseUrl: 'http://grocy',
+    apiKey: 'secret-key',
+    fetchImpl: async (url, options) => {
+      requests.push({ url, options });
+      return { ok: true, text: async () => '' };
+    },
+  });
+
+  await client.createShoppingListItem({ product_id: 42, amount: 1 });
+  await client.updateShoppingListItem(12, { done: 1 });
+  await client.deleteShoppingListItem(12);
+  await client.clearShoppingList({ list_id: 1, done_only: true });
+
+  assert.deepEqual(requests.map(({ url, options }) => [url, options.method]), [
+    ['http://grocy/api/objects/shopping_list', 'POST'],
+    ['http://grocy/api/objects/shopping_list/12', 'PUT'],
+    ['http://grocy/api/objects/shopping_list/12', 'DELETE'],
+    ['http://grocy/api/stock/shoppinglist/clear', 'POST'],
+  ]);
+  assert.equal(requests[3].options.body, JSON.stringify({ list_id: 1, done_only: true }));
+});
+
 test('reads volatile stock through Grocy stock API', async () => {
   let requestUrl;
 

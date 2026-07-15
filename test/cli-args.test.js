@@ -53,6 +53,18 @@ test('allows product-search options', () => {
   }));
 });
 
+test('allows shopping list write command options', () => {
+  assert.doesNotThrow(() => validateOptions('shopping-list-add', {
+    product: 'Milk', amount: '2', unit: 'bottle', note: 'sale', 'list-id': '1',
+  }));
+  assert.doesNotThrow(() => validateOptions('shopping-list-update', {
+    'item-id': '12', 'product-id': '2', amount: '1', 'unit-id': '3', note: '',
+  }));
+  assert.doesNotThrow(() => validateOptions('shopping-list-delete', { 'item-id': '12' }));
+  assert.doesNotThrow(() => validateOptions('shopping-list-done', { 'item-id': '12', done: 'false' }));
+  assert.doesNotThrow(() => validateOptions('shopping-list-clean', { 'list-id': '1', 'dry-run': 'true' }));
+});
+
 test('allows unit-create options', () => {
   assert.doesNotThrow(() => validateOptions('unit-create', {
     name: 'банка',

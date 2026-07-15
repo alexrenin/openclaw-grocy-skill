@@ -18,6 +18,11 @@ const { runRecipeIngredientDeleteCommand } = require('../src/commands/recipe-ing
 const { runRecipeIngredientUpdateCommand } = require('../src/commands/recipe-ingredient-update');
 const { runRecipeUpdateCommand } = require('../src/commands/recipe-update');
 const { runShoppingListCommand } = require('../src/commands/shopping-list');
+const { runShoppingListAddCommand } = require('../src/commands/shopping-list-add');
+const { runShoppingListCleanCommand } = require('../src/commands/shopping-list-clean');
+const { runShoppingListDeleteCommand } = require('../src/commands/shopping-list-delete');
+const { runShoppingListDoneCommand } = require('../src/commands/shopping-list-done');
+const { runShoppingListUpdateCommand } = require('../src/commands/shopping-list-update');
 const { runStockAddCommand } = require('../src/commands/stock-add');
 const { runStockExpiringCommand } = require('../src/commands/stock-expiring');
 const { runStockLowCommand } = require('../src/commands/stock-low');
@@ -48,6 +53,16 @@ Commands:
   unit-update      Update a Grocy quantity unit
   unit-delete      Safely delete an unused Grocy quantity unit
   shopping-list    Read Grocy shopping list
+  shopping-list-add
+                   Add an item to a Grocy shopping list
+  shopping-list-update
+                   Update one Grocy shopping list item
+  shopping-list-delete
+                   Delete one Grocy shopping list item
+  shopping-list-done
+                   Mark one Grocy shopping list item done or undone
+  shopping-list-clean
+                   Delete completed items from one Grocy shopping list
   products         Read Grocy products
   product-search   Search Grocy products by name
   product-create   Create a Grocy product
@@ -88,6 +103,16 @@ Formats:
   unit-update      json
   unit-delete      json
   shopping-list    text, json
+  shopping-list-add
+                   json
+  shopping-list-update
+                   json
+  shopping-list-delete
+                   json
+  shopping-list-done
+                   json
+  shopping-list-clean
+                   json
   products         table, json
   product-search   table, json
   product-create   json
@@ -128,6 +153,11 @@ Examples:
   node bin/grocy-openclaw.js unit-update --unit-id 7 --name "jar" --name-plural "jars" --format json
   node bin/grocy-openclaw.js unit-delete --unit-id 7 --confirm-unit-name "jar" --format json
   node bin/grocy-openclaw.js shopping-list --format text
+  node bin/grocy-openclaw.js shopping-list-add --product "Milk" --amount 2 --unit "bottle" --format json
+  node bin/grocy-openclaw.js shopping-list-update --item-id 12 --amount 3 --unit "bottle" --note "sale" --format json
+  node bin/grocy-openclaw.js shopping-list-delete --item-id 12 --format json
+  node bin/grocy-openclaw.js shopping-list-done --item-id 12 --format json
+  node bin/grocy-openclaw.js shopping-list-clean --list-id 1 --format json
   node bin/grocy-openclaw.js products --format table
   node bin/grocy-openclaw.js product-search --name "Milk" --format table
   node bin/grocy-openclaw.js product-create --name "Pickles" --location "Pantry" --stock-unit "шт" --purchase-unit "банка" --purchase-to-stock-factor 10 --format json
@@ -162,6 +192,11 @@ const COMMAND_FORMATS = new Map([
   ['unit-update', new Set(['json'])],
   ['unit-delete', new Set(['json'])],
   ['shopping-list', new Set(['text', 'json'])],
+  ['shopping-list-add', new Set(['json'])],
+  ['shopping-list-update', new Set(['json'])],
+  ['shopping-list-delete', new Set(['json'])],
+  ['shopping-list-done', new Set(['json'])],
+  ['shopping-list-clean', new Set(['json'])],
   ['products', new Set(['table', 'json'])],
   ['product-search', new Set(['table', 'json'])],
   ['product-create', new Set(['json'])],
@@ -188,6 +223,38 @@ const COMMAND_FORMATS = new Map([
 ]);
 
 const COMMAND_OPTIONS = new Map([
+  ['shopping-list-add', new Set([
+    'product',
+    'product-id',
+    'name',
+    'amount',
+    'unit',
+    'unit-id',
+    'note',
+    'list-id',
+  ])],
+  ['shopping-list-update', new Set([
+    'item-id',
+    'product',
+    'product-id',
+    'name',
+    'amount',
+    'unit',
+    'unit-id',
+    'note',
+    'list-id',
+  ])],
+  ['shopping-list-delete', new Set([
+    'item-id',
+  ])],
+  ['shopping-list-done', new Set([
+    'item-id',
+    'done',
+  ])],
+  ['shopping-list-clean', new Set([
+    'list-id',
+    'dry-run',
+  ])],
   ['product-search', new Set([
     'name',
   ])],
@@ -468,6 +535,21 @@ async function main(argv, env = process.env) {
       break;
     case 'shopping-list':
       output = await runShoppingListCommand({ client, format });
+      break;
+    case 'shopping-list-add':
+      output = await runShoppingListAddCommand({ client, format, options });
+      break;
+    case 'shopping-list-update':
+      output = await runShoppingListUpdateCommand({ client, format, options });
+      break;
+    case 'shopping-list-delete':
+      output = await runShoppingListDeleteCommand({ client, format, options });
+      break;
+    case 'shopping-list-done':
+      output = await runShoppingListDoneCommand({ client, format, options });
+      break;
+    case 'shopping-list-clean':
+      output = await runShoppingListCleanCommand({ client, format, options });
       break;
     case 'products':
       output = await runProductsCommand({ client, format });

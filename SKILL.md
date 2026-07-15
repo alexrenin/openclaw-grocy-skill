@@ -5,23 +5,6 @@ description: Read and manage Grocy home inventory, stock monitoring, products, r
 
 # Grocy Home Inventory Skill
 
-Use this skill when the user asks about:
-
-- Grocy
-- groceries
-- home inventory
-- household supplies
-- shopping list
-- stock
-- products in stock
-- список покупок
-- покупки
-- что купить
-- что есть дома
-- остатки
-- продукты дома
-- бытовые расходники
-
 ## Scope
 
 Read commands are read-only.
@@ -55,6 +38,8 @@ The `recipe-ingredient-delete` command modifies Grocy by deleting one existing r
 The `stock-add` command modifies Grocy by adding a purchased product amount to stock and may record the latest purchase price. Run it only after the user confirms adding those purchases or stock entries.
 
 The `stock-transaction-undo` command modifies Grocy by undoing one stock transaction. Run it only after the user confirms the exact transaction id to undo.
+
+The `shopping-list-add`, `shopping-list-update`, `shopping-list-delete`, `shopping-list-done`, and `shopping-list-clean` commands modify Grocy. Run each only after the user confirms the exact item, amount, unit, note, list, or cleanup. Ask again if any detail changes. `shopping-list-clean` deletes completed rows only.
 
 ## Safety
 
@@ -480,5 +465,19 @@ For Russian shopping list requests, prefer:
 ```bash
 node bin/grocy-openclaw.js shopping-list --format text
 ```
+
+Manage shopping list rows only after explicit confirmation:
+
+```bash
+node bin/grocy-openclaw.js shopping-list-add --product "Milk" --amount 2 --unit "bottle" --format json
+node bin/grocy-openclaw.js shopping-list-update --item-id 12 --amount 3 --unit "bottle" --note "sale" --format json
+node bin/grocy-openclaw.js shopping-list-delete --item-id 12 --format json
+node bin/grocy-openclaw.js shopping-list-done --item-id 12 --format json
+node bin/grocy-openclaw.js shopping-list-done --item-id 12 --done false --format json
+node bin/grocy-openclaw.js shopping-list-clean --list-id 1 --dry-run true --format json
+node bin/grocy-openclaw.js shopping-list-clean --list-id 1 --format json
+```
+
+Use `shopping-list --format json` to get item ids before update, delete, or done. Prefer product and unit names in chat. Use `product-search` or `units` before writing when matching is unclear. `shopping-list-add` defaults to amount `1`, purchase unit, and list id `1`; it increments an existing product row instead of creating a duplicate. `shopping-list-update` requires `--amount` when changing the product. Use an empty `--note ""` to clear a note. Run `shopping-list-clean --dry-run true` before confirmation; without dry-run it removes all completed rows from the selected list, never pending rows.
 
 If a command fails, summarize the readable error without exposing `.env` or `GROCY_API_KEY`.

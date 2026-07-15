@@ -119,6 +119,30 @@ Show the active shopping list as JSON:
 node bin/grocy-openclaw.js shopping-list --format json
 ```
 
+Add a product or a note-only item to a shopping list:
+
+```bash
+node bin/grocy-openclaw.js shopping-list-add --product "Milk" --amount 2 --unit "bottle" --note "sale" --format json
+node bin/grocy-openclaw.js shopping-list-add --note "Buy birthday candles" --amount 2 --format json
+```
+
+`shopping-list-add` defaults to shopping list id `1`, amount `1`, and the product purchase unit. Use `--list-id`, `--amount`, `--unit`, or `--unit-id` when needed. Amounts are converted to the product stock unit through configured Grocy quantity-unit conversions. If the same product is already on the selected list, the command increases that row instead of creating a duplicate and marks it undone. Use `product-search` first when the product match is unclear.
+
+Update, delete, mark, or clean shopping list items:
+
+```bash
+node bin/grocy-openclaw.js shopping-list-update --item-id 12 --amount 3 --unit "bottle" --note "sale" --format json
+node bin/grocy-openclaw.js shopping-list-delete --item-id 12 --format json
+node bin/grocy-openclaw.js shopping-list-done --item-id 12 --format json
+node bin/grocy-openclaw.js shopping-list-done --item-id 12 --done false --format json
+node bin/grocy-openclaw.js shopping-list-clean --list-id 1 --dry-run true --format json
+node bin/grocy-openclaw.js shopping-list-clean --list-id 1 --format json
+```
+
+Use the item ids returned by `shopping-list --format json` or `shopping-list-add`. `shopping-list-update` can change amount, display unit, note, list id, or product; changing the product also requires `--amount`. An empty `--note ""` clears the note. `shopping-list-delete` removes one exact row. `shopping-list-done` marks it done by default and `--done false` restores it. Preview `shopping-list-clean` with `--dry-run true`; without dry-run it deletes all completed rows on the selected list, never pending rows.
+
+All five shopping list write commands modify Grocy. Ask for explicit confirmation of the exact item, amount, unit, note, list, or cleanup immediately before running them. If any of those details change, ask again.
+
 Show products as a table:
 
 ```bash
@@ -591,6 +615,7 @@ Automated tests must not depend on or modify the configured Grocy instance.
 - `userfields-set` modifies Grocy and must only be run after the user confirms setting or updating custom field values.
 - `stock-add` modifies Grocy by adding a purchased product amount to stock and may record `price`; run it only after the user confirms adding those purchases or stock entries.
 - `stock-transaction-undo` modifies Grocy by undoing a stock transaction; run it only after the user confirms the exact transaction id to undo.
+- `shopping-list-add`, `shopping-list-update`, `shopping-list-delete`, `shopping-list-done`, and `shopping-list-clean` modify Grocy; run each only after confirmation of the exact row or list change. `shopping-list-clean` deletes completed rows only.
 - Future write commands must be separate from read commands and require explicit user confirmation.
 - Future write commands must document their confirmation requirement.
 - Write command design must cover the full lifecycle where possible: create/add, update/edit, and delete/remove/cancel. This lets OpenClaw correct or undo records it just created instead of creating duplicates or requiring direct API calls.
@@ -609,4 +634,4 @@ Use the version-specific OpenAPI link first, because `master` can describe a dif
 
 See [ROADMAP.md](ROADMAP.md) for the current implementation status, planned commands, and verification notes.
 
-Current status: read commands, stock summary, low-stock, and expiring-stock monitoring, product search, product create/update/delete, unit create/update/delete, recipe create/update/delete, recipe ingredient add/update/delete, custom-field create/update/delete and value setting, stock add, and stock transaction undo are implemented. Planned work includes shopping list write commands, recipe read commands, and menu planning helpers.
+Current status: read commands, stock monitoring, product search and lifecycle, unit lifecycle, recipe and ingredient lifecycle, custom-field lifecycle, stock add/undo, and shopping list add/update/delete/done/clean are implemented. Shopping list writes are live-verified against Grocy 4.6.0. Planned work includes recipe read commands and menu planning helpers.

@@ -103,8 +103,35 @@ class GrocyClient {
     return this.request('/api/objects/quantity_units');
   }
 
+  getQuantityUnitConversions() {
+    return this.request('/api/objects/quantity_unit_conversions');
+  }
+
   getShoppingList() {
     return this.request('/api/objects/shopping_list');
+  }
+
+  getShoppingListItem(objectId) {
+    return this.getObject('shopping_list', objectId);
+  }
+
+  createShoppingListItem(payload) {
+    return this.createObject('shopping_list', payload);
+  }
+
+  updateShoppingListItem(objectId, payload) {
+    return this.updateObject('shopping_list', objectId, payload);
+  }
+
+  deleteShoppingListItem(objectId) {
+    return this.deleteObject('shopping_list', objectId);
+  }
+
+  clearShoppingList(payload) {
+    return this.request('/api/stock/shoppinglist/clear', {
+      method: 'POST',
+      body: payload,
+    });
   }
 
   getStock() {
