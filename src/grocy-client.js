@@ -176,6 +176,27 @@ class GrocyClient {
     });
   }
 
+  consumeStockProduct(productId, payload) {
+    return this.request(`/api/stock/products/${encodeURIComponent(productId)}/consume`, {
+      method: 'POST',
+      body: payload,
+    });
+  }
+
+  transferStockProduct(productId, payload) {
+    return this.request(`/api/stock/products/${encodeURIComponent(productId)}/transfer`, {
+      method: 'POST',
+      body: payload,
+    });
+  }
+
+  inventoryStockProduct(productId, payload) {
+    return this.request(`/api/stock/products/${encodeURIComponent(productId)}/inventory`, {
+      method: 'POST',
+      body: payload,
+    });
+  }
+
   getStockTransaction(transactionId) {
     return this.request(`/api/stock/transactions/${encodeURIComponent(transactionId)}`);
   }

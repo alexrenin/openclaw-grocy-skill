@@ -33,10 +33,14 @@ const { runShoppingListDeleteCommand } = require('../src/commands/shopping-list-
 const { runShoppingListDoneCommand } = require('../src/commands/shopping-list-done');
 const { runShoppingListUpdateCommand } = require('../src/commands/shopping-list-update');
 const { runStockAddCommand } = require('../src/commands/stock-add');
+const { runStockConsumeCommand } = require('../src/commands/stock-consume');
 const { runStockExpiringCommand } = require('../src/commands/stock-expiring');
+const { runStockInventoryCommand } = require('../src/commands/stock-inventory');
 const { runStockLowCommand } = require('../src/commands/stock-low');
 const { runStockSummaryCommand } = require('../src/commands/stock-summary');
+const { runStockTransactionCommand } = require('../src/commands/stock-transaction');
 const { runStockTransactionUndoCommand } = require('../src/commands/stock-transaction-undo');
+const { runStockTransferCommand } = require('../src/commands/stock-transfer');
 const { runStockCommand } = require('../src/commands/stock');
 const { runSystemInfoCommand } = require('../src/commands/system-info');
 const { runUnitCreateCommand } = require('../src/commands/unit-create');
@@ -112,6 +116,11 @@ Commands:
   stock-low        Show products below their configured minimum stock
   stock-summary    Show a compact Grocy stock monitoring summary
   stock-add        Add a purchased product amount to Grocy stock
+  stock-inventory  Set a product to a counted actual stock amount
+  stock-consume    Remove a confirmed amount from Grocy stock
+  stock-transfer   Move stock between Grocy locations
+  stock-transaction
+                   Read stock bookings for one transaction id
   stock-transaction-undo
                    Undo a Grocy stock transaction
 
@@ -174,6 +183,11 @@ Formats:
   stock-low        text, table, json
   stock-summary    text, json
   stock-add        json
+  stock-inventory  json
+  stock-consume    json
+  stock-transfer   json
+  stock-transaction
+                   json
   stock-transaction-undo
                    json
 
@@ -222,6 +236,10 @@ Examples:
   node bin/grocy-openclaw.js stock-low --format text
   node bin/grocy-openclaw.js stock-summary --format text
   node bin/grocy-openclaw.js stock-add --product "Milk" --amount 1 --unit "l" --price 2.49 --format json
+  node bin/grocy-openclaw.js stock-inventory --product "Milk" --new-amount 3 --unit "l" --format json
+  node bin/grocy-openclaw.js stock-consume --product "Milk" --amount 0.5 --unit "l" --format json
+  node bin/grocy-openclaw.js stock-transfer --product "Milk" --amount 1 --from-location "Pantry" --to-location "Fridge" --format json
+  node bin/grocy-openclaw.js stock-transaction --transaction-id "abc123" --format json
   node bin/grocy-openclaw.js stock-transaction-undo --transaction-id "abc123" --format json
 `;
 
@@ -270,6 +288,10 @@ const COMMAND_FORMATS = new Map([
   ['stock-low', new Set(['text', 'table', 'json'])],
   ['stock-summary', new Set(['text', 'json'])],
   ['stock-add', new Set(['json'])],
+  ['stock-inventory', new Set(['json'])],
+  ['stock-consume', new Set(['json'])],
+  ['stock-transfer', new Set(['json'])],
+  ['stock-transaction', new Set(['json'])],
   ['stock-transaction-undo', new Set(['json'])],
 ]);
 
@@ -532,6 +554,51 @@ const COMMAND_OPTIONS = new Map([
     'best-before-date',
     'transaction-type',
   ])],
+  ['stock-inventory', new Set([
+    'product',
+    'product-id',
+    'name',
+    'new-amount',
+    'unit',
+    'unit-id',
+    'price',
+    'best-before-date',
+    'location',
+    'location-id',
+    'note',
+  ])],
+  ['stock-consume', new Set([
+    'product',
+    'product-id',
+    'name',
+    'amount',
+    'unit',
+    'unit-id',
+    'transaction-type',
+    'spoiled',
+    'stock-entry-id',
+    'recipe-id',
+    'location',
+    'location-id',
+    'exact-amount',
+    'allow-subproduct-substitution',
+  ])],
+  ['stock-transfer', new Set([
+    'product',
+    'product-id',
+    'name',
+    'amount',
+    'unit',
+    'unit-id',
+    'from-location',
+    'from-location-id',
+    'to-location',
+    'to-location-id',
+    'stock-entry-id',
+  ])],
+  ['stock-transaction', new Set([
+    'transaction-id',
+  ])],
   ['stock-expiring', new Set([
     'days',
   ])],
@@ -741,6 +808,18 @@ async function main(argv, env = process.env) {
       break;
     case 'stock-add':
       output = await runStockAddCommand({ client, format, options });
+      break;
+    case 'stock-inventory':
+      output = await runStockInventoryCommand({ client, format, options });
+      break;
+    case 'stock-consume':
+      output = await runStockConsumeCommand({ client, format, options });
+      break;
+    case 'stock-transfer':
+      output = await runStockTransferCommand({ client, format, options });
+      break;
+    case 'stock-transaction':
+      output = await runStockTransactionCommand({ client, format, options });
       break;
     case 'stock-transaction-undo':
       output = await runStockTransactionUndoCommand({ client, format, options });

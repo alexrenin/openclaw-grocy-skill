@@ -272,6 +272,35 @@ test('adds product amount through Grocy stock API', async () => {
   assert.equal(requestOptions.body, JSON.stringify(payload));
 });
 
+test('uses Grocy stock inventory, consume, and transfer endpoints', async () => {
+  const requests = [];
+  const client = new GrocyClient({
+    baseUrl: 'http://grocy',
+    apiKey: 'secret-key',
+    fetchImpl: async (url, options) => {
+      requests.push({ url, options });
+
+      return {
+        ok: true,
+        text: async () => '[{"transaction_id":"tx-1"}]',
+      };
+    },
+  });
+
+  await client.inventoryStockProduct(42, { new_amount: 3 });
+  await client.consumeStockProduct(42, { amount: 1, transaction_type: 'consume' });
+  await client.transferStockProduct(42, { amount: 1, location_id_from: 1, location_id_to: 2 });
+
+  assert.deepEqual(requests.map(({ url, options }) => [url, options.method]), [
+    ['http://grocy/api/stock/products/42/inventory', 'POST'],
+    ['http://grocy/api/stock/products/42/consume', 'POST'],
+    ['http://grocy/api/stock/products/42/transfer', 'POST'],
+  ]);
+  assert.equal(requests[0].options.body, JSON.stringify({ new_amount: 3 }));
+  assert.equal(requests[1].options.body, JSON.stringify({ amount: 1, transaction_type: 'consume' }));
+  assert.equal(requests[2].options.body, JSON.stringify({ amount: 1, location_id_from: 1, location_id_to: 2 }));
+});
+
 test('uses Grocy shopping list object and clean endpoints', async () => {
   const requests = [];
   const client = new GrocyClient({

@@ -14,7 +14,7 @@
     "request payload validation",
     "replacement for CLI argument validation"
   ],
-  "commandCount": 45,
+  "commandCount": 49,
   "commands": [
     {
       "name": "api-docs",
@@ -569,6 +569,46 @@
       "selectors": ["product|product-id", "amount"],
       "confirmationDetails": ["product", "amount", "unit", "price", "best-before date", "transaction type"],
       "correctionCommand": "stock-transaction-undo"
+    },
+    {
+      "name": "stock-inventory",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Set a product to a counted actual stock amount.",
+      "selectors": ["product|product-id", "new-amount"],
+      "confirmationDetails": ["product", "current amount when available", "new actual amount", "unit", "delta", "location", "price", "best-before date", "note"],
+      "correctionCommand": "stock-transaction-undo"
+    },
+    {
+      "name": "stock-consume",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Remove a confirmed amount from Grocy stock.",
+      "selectors": ["product|product-id", "amount"],
+      "confirmationDetails": ["product", "amount", "unit", "location", "spoiled flag", "recipe id", "stock entry id", "expected stock decrease"],
+      "correctionCommand": "stock-transaction-undo"
+    },
+    {
+      "name": "stock-transfer",
+      "type": "write",
+      "formats": ["json"],
+      "requiresConfirmation": true,
+      "purpose": "Transfer stock between two Grocy locations.",
+      "selectors": ["product|product-id", "amount", "from-location|from-location-id", "to-location|to-location-id"],
+      "confirmationDetails": ["product", "amount", "unit", "source location", "target location", "stock entry id"],
+      "correctionCommand": "stock-transaction-undo"
+    },
+    {
+      "name": "stock-transaction",
+      "type": "read",
+      "formats": ["json"],
+      "requiresConfirmation": false,
+      "purpose": "Read stock bookings for one Grocy stock transaction id.",
+      "selectors": ["transaction-id"],
+      "confirmationDetails": [],
+      "correctionCommand": null
     },
     {
       "name": "stock-transaction-undo",

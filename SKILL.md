@@ -85,7 +85,7 @@ Every command below modifies Grocy and requires explicit confirmation immediatel
 | Create, correct, or remove recipes | `recipe-create`, `recipe-update`, `recipe-delete` | `recipe-update`, `recipe-delete` |
 | Add, correct, or remove one recipe ingredient | `recipe-ingredient-add`, `recipe-ingredient-update`, `recipe-ingredient-delete` | `recipe-ingredient-update`, `recipe-ingredient-delete` |
 | Create, correct, remove, or set custom fields | `userfields-create`, `userfields-update`, `userfields-delete`, `userfields-set` | `userfields-update`, `userfields-delete`, `userfields-set` |
-| Add purchased stock or undo a stock write | `stock-add`, `stock-transaction-undo` | `stock-transaction-undo` |
+| Add, inventory, consume, transfer, inspect, or undo stock | `stock-add`, `stock-inventory`, `stock-consume`, `stock-transfer`, `stock-transaction`, `stock-transaction-undo` | `stock-transaction`, `stock-transaction-undo` |
 | Add, correct, complete, delete, or clean shopping list rows | `shopping-list-add`, `shopping-list-update`, `shopping-list-done`, `shopping-list-delete`, `shopping-list-clean` | `shopping-list-update`, `shopping-list-done`, `shopping-list-delete` |
 | Add, correct, or remove meal plan rows | `meal-plan-add`, `meal-plan-update`, `meal-plan-delete` | `meal-plan-update`, `meal-plan-delete` |
 
@@ -111,7 +111,11 @@ Before running any write command, show or summarize the exact command target and
 - Use `userfields-update` to fix a custom field definition instead of creating a duplicate.
 - Use `userfields-delete --delete-values true` only after a separate confirmation that populated values may be lost.
 - Use `stock-add` only after product, amount, unit, price, best-before date, and transaction type are clear.
-- Keep `stock-add` transaction ids so mistakes can be reversed with `stock-transaction-undo`.
+- Use `stock-inventory` for counted actual stock amounts; read current stock first when possible and confirm the delta.
+- Use `stock-consume` only after confirming the product, amount, unit, location when relevant, and whether the item was spoiled or tied to a recipe.
+- Use `stock-transfer` only after confirming product, amount, unit, source location, and target location.
+- Use `stock-transaction` to inspect a stock transaction id before undoing when useful.
+- Keep stock transaction ids so mistakes can be reversed with `stock-transaction-undo`.
 - Receipt parsing is outside this skill; parse receipts separately, then use confirmed `stock-add` commands for writes.
 - Use `shopping-list --format json` to get item ids before update, delete, or done.
 - `shopping-list-clean --dry-run true` is read-only and may run without confirmation.

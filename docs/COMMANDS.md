@@ -69,6 +69,9 @@ Every command in this table modifies Grocy and requires confirmation of the exac
 | `userfields-delete` | Deletes a custom field definition | none |
 | `userfields-set` | Sets custom field values on one object | `userfields-set` |
 | `stock-add` | Adds stock and may record purchase price | `stock-transaction-undo` |
+| `stock-inventory` | Sets stock to a counted actual amount | `stock-transaction-undo` |
+| `stock-consume` | Removes a confirmed amount from stock | `stock-transaction-undo` |
+| `stock-transfer` | Moves stock between two locations | `stock-transaction-undo` |
 | `stock-transaction-undo` | Undoes one stock transaction | none |
 | `shopping-list-add` | Adds or increments a shopping list row | `shopping-list-update`, `shopping-list-delete` |
 | `shopping-list-update` | Updates a shopping list row | `shopping-list-update`, `shopping-list-delete` |
@@ -169,10 +172,14 @@ Ask for the custom field type before `userfields-create` when it is missing. Use
 
 ```bash
 node bin/grocy-openclaw.js stock-add --product "Milk" --amount 1 --unit "l" --price 2.49 --best-before-date 2026-12-31 --format json
+node bin/grocy-openclaw.js stock-inventory --product "Milk" --new-amount 3 --unit "l" --format json
+node bin/grocy-openclaw.js stock-consume --product "Milk" --amount 0.5 --unit "l" --format json
+node bin/grocy-openclaw.js stock-transfer --product "Milk" --amount 1 --from-location "Pantry" --to-location "Fridge" --format json
+node bin/grocy-openclaw.js stock-transaction --transaction-id "abc123" --format json
 node bin/grocy-openclaw.js stock-transaction-undo --transaction-id "abc123" --format json
 ```
 
-Use `stock-add` only after the product, amount, unit, price, best-before date, and transaction type are clear. The amount must be in the product stock unit. If the product is unclear, run `product-search` first. Keep returned `transaction_ids` so a mistaken stock addition can be reversed with `stock-transaction-undo`.
+Use `stock-add`, `stock-inventory`, `stock-consume`, and `stock-transfer` only after the product, amount, unit, relevant locations, price, best-before date, note, and expected effect are clear. Amounts and `--new-amount` must be in the product stock unit. If the product is unclear, run `product-search` first. For inventory, read current stock first when possible and confirm the visible delta. Use `stock-transaction` to inspect returned `transaction_ids`; use `stock-transaction-undo` to reverse mistaken add, inventory, consume, or transfer writes when Grocy returns a transaction id.
 
 ## Menu And Meal Plan Workflows
 

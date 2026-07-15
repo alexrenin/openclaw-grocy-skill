@@ -539,13 +539,24 @@ Supported `stock-add` options:
 
 For chat agents: if the user asks to add purchases to stock and the product is not found, search existing products first with `product-search --name "<name>" --format table`; if the result is still ambiguous, ask which existing product to use. Do not create a missing product unless the user explicitly asks for product creation. If the supplied unit differs from the product stock unit, ask the user to convert the amount to the stock unit before running `stock-add`.
 
-Undo a stock transaction created by `stock-add`:
+Set counted inventory, consume stock, transfer stock between locations, and inspect a transaction:
+
+```bash
+node bin/grocy-openclaw.js stock-inventory --product "Молоко" --new-amount 3 --unit "л" --format json
+node bin/grocy-openclaw.js stock-consume --product "Молоко" --amount 0.5 --unit "л" --format json
+node bin/grocy-openclaw.js stock-transfer --product "Молоко" --amount 1 --from-location "Кладовка" --to-location "Холодильник" --format json
+node bin/grocy-openclaw.js stock-transaction --transaction-id "abc123" --format json
+```
+
+`stock-inventory`, `stock-consume`, and `stock-transfer` modify Grocy and require explicit confirmation immediately before execution. Confirm the exact product, amount or new actual amount, unit, source and target locations when relevant, optional date/price/note, and expected effect. `stock-inventory` reads current stock first and returns `current_amount`, `new_amount`, and `delta` so the user can see the correction. `stock-transaction` is read-only and can inspect bookings before undo.
+
+Undo a stock transaction created by `stock-add`, `stock-inventory`, `stock-consume`, or `stock-transfer`:
 
 ```bash
 node bin/grocy-openclaw.js stock-transaction-undo --transaction-id "abc123" --format json
 ```
 
-`stock-transaction-undo` modifies Grocy. Use it only after the user confirms undoing that exact stock transaction id. Prefer this command over consuming an equivalent amount when correcting a mistaken `stock-add`, because it targets the original Grocy transaction.
+`stock-transaction-undo` modifies Grocy. Use it only after the user confirms undoing that exact stock transaction id. Prefer this command over adding or consuming an equivalent amount when correcting a mistaken stock write, because it targets the original Grocy transaction.
 
 Supported `stock-transaction-undo` options:
 
@@ -667,6 +678,10 @@ Automated tests must not depend on or modify the configured Grocy instance.
 - `userfields-delete` modifies Grocy and must only be run after the user confirms the exact field deletion; populated values require separate confirmation with `--delete-values true`.
 - `userfields-set` modifies Grocy and must only be run after the user confirms setting or updating custom field values.
 - `stock-add` modifies Grocy by adding a purchased product amount to stock and may record `price`; run it only after the user confirms adding those purchases or stock entries.
+- `stock-inventory` modifies Grocy by setting a product to a counted actual amount; run it only after the user confirms the product, new amount, unit, and expected delta.
+- `stock-consume` modifies Grocy by removing stock; run it only after the user confirms the product, amount, unit, and reason or context.
+- `stock-transfer` modifies Grocy by moving stock between locations; run it only after the user confirms the product, amount, unit, source location, and target location.
+- `stock-transaction` is read-only and may be used to inspect a transaction id before undoing it.
 - `stock-transaction-undo` modifies Grocy by undoing a stock transaction; run it only after the user confirms the exact transaction id to undo.
 - `shopping-list-add`, `shopping-list-update`, `shopping-list-delete`, and `shopping-list-done` modify Grocy; run each only after confirmation of the exact row or list change. `shopping-list-clean --dry-run true` is read-only and may run without confirmation; `shopping-list-clean` without dry-run deletes completed rows only and requires confirmation.
 - Future write commands must be separate from read commands and require explicit user confirmation.
@@ -688,4 +703,4 @@ Use the version-specific OpenAPI link first, because `master` can describe a dif
 
 See [ROADMAP.md](ROADMAP.md) for the current implementation status, planned commands, and verification notes.
 
-Current status: read commands, stock monitoring, product search and lifecycle, unit lifecycle, recipe reads and lifecycle, ingredient lifecycle, custom-field lifecycle, stock add/undo, shopping list add/update/delete/done/clean, read-only menu planning helpers, Grocy meal plan lifecycle commands, and the strict command policy index are implemented. Shopping list writes, recipe/product/unit/custom-field/stock/meal-plan flows, and menu planning helpers are live-verified against Grocy 4.6.0.
+Current status: read commands, stock monitoring, stock inventory/consume/transfer transaction commands, product search and lifecycle, unit lifecycle, recipe reads and lifecycle, ingredient lifecycle, custom-field lifecycle, stock add/undo, shopping list add/update/delete/done/clean, read-only menu planning helpers, Grocy meal plan lifecycle commands, and the strict command policy index are implemented. Shopping list writes, recipe/product/unit/custom-field/stock-add/meal-plan flows, and menu planning helpers are live-verified against Grocy 4.6.0; new stock inventory/consume/transfer commands are covered by mocked tests and still need controlled live verification before marking fully verified.

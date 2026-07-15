@@ -44,6 +44,7 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
 - `[x]` Set custom field values with `userfields-set`.
 - `[x]` Update custom field definitions with `userfields-update` and safely delete them with `userfields-delete`.
 - `[x]` Add purchased product amounts to stock with `stock-add`, including optional latest purchase price and best-before date.
+- `[x]` Set counted stock amounts with `stock-inventory`, consume stock with `stock-consume`, transfer stock with `stock-transfer`, and inspect transaction bookings with `stock-transaction`.
 - `[x]` Undo stock transactions with `stock-transaction-undo`.
 - `[x]` Manage shopping list rows with `shopping-list-add`, `shopping-list-update`, `shopping-list-delete`, `shopping-list-done`, and completed-row-only `shopping-list-clean`.
 - `[x]` Read-only menu planning helpers with `menu-check` and `menu-shopping-list`.
@@ -91,6 +92,7 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
 - The user has added a local `.env` for the real Grocy instance they plan to use after setup.
 - Treat that Grocy instance as real data, not a disposable test system.
 - `stock-add` was live-tested against the configured Grocy instance after explicit user confirmation. The controlled test added 1 package of an existing product with `price: 0.01` and `best_before_date: 2026-12-31`, received a stock transaction id, immediately undid that transaction with `stock-transaction-undo`, and verified that final stock returned to the original amount.
+- `stock-inventory`, `stock-transaction`, `stock-transfer`, and `stock-consume` were live-tested against the configured Grocy 4.6.0 instance after explicit user confirmation. The controlled test used existing product `17` (`Молоко`) in stock unit `л`, location `2` (`Холодильник`), and location `3` (`Шкаф кухня еда`). `stock-inventory` set the product to `0.001 л` with marker note `OPENCLAW_TEST_20260715_STOCK_INVENTORY` and returned transaction id `6a57ac9b033f1`; `stock-transaction` read that booking successfully. `stock-transfer` moved `0.001 л` from location 2 to 3 and returned transaction id `6a57aca94d9b2`, which was immediately undone. `stock-consume` consumed `0.001 л` from location 2 and returned transaction id `6a57acb4c9416`, which was immediately undone. The original inventory transaction `6a57ac9b033f1` was then undone. Final read-only `stock --format json` returned only the pre-existing `Заправка для рассольника MAGGI` row, confirming the temporary milk stock was cleaned up.
 
 ## Priority Roadmap
 
@@ -168,18 +170,18 @@ Keep `AGENTS.md` focused on agent instructions; update this file when scope chan
    - `[ ]` Update tests, `README.md`, `SKILL.md`, `docs/COMMANDS.md`, and `docs/commands.json` when implemented.
    - Purpose: let OpenClaw correctly create and edit Grocy product variants or child products without direct API calls, while preserving the existing confirmation and correction model.
 
-11. `[ ]` Add stock inventory and adjacent stock transaction commands, excluding barcode workflows.
-   - `[ ]` Verify Grocy 4.x stock endpoints and payloads against the installed OpenAPI before implementation.
-   - `[ ]` Add an inventory command for `POST /stock/products/{productId}/inventory` that sets a product to a confirmed actual `new_amount`; do not implement `/stock/products/by-barcode/{barcode}/inventory`.
-   - `[ ]` Add a consume command for `POST /stock/products/{productId}/consume` so OpenClaw can remove stock explicitly after confirmation; do not implement barcode consume.
-   - `[ ]` Extend or add transfer support for `POST /stock/products/{productId}/transfer` after confirming source product, amount, unit, source/target locations when applicable, and whether Grocy supports the needed payload fields for the installed version; do not implement barcode transfer.
-   - `[ ]` Support reading stock transaction details with `GET /stock/transactions/{transactionId}` so write results can be inspected before undoing them.
-   - `[ ]` Keep `stock-transaction-undo` as the correction path for inventory, consume, add, and transfer writes when Grocy returns transaction ids.
-   - `[ ]` Require explicit confirmation immediately before every inventory, consume, transfer, or undo write; confirmation must include product, amount or new actual amount, unit, locations when applicable, note/date/price when applicable, and expected effect.
-   - `[ ]` For inventory, calculate and show the delta from current read-only stock before asking for confirmation when current stock can be read safely.
+11. `[x]` Add stock inventory and adjacent stock transaction commands, excluding barcode workflows.
+   - `[x]` Verify Grocy 4.x stock endpoints and payloads against the installed OpenAPI before implementation.
+   - `[x]` Add an inventory command for `POST /stock/products/{productId}/inventory` that sets a product to a confirmed actual `new_amount`; do not implement `/stock/products/by-barcode/{barcode}/inventory`.
+   - `[x]` Add a consume command for `POST /stock/products/{productId}/consume` so OpenClaw can remove stock explicitly after confirmation; do not implement barcode consume.
+   - `[x]` Extend or add transfer support for `POST /stock/products/{productId}/transfer` after confirming source product, amount, unit, source/target locations when applicable, and whether Grocy supports the needed payload fields for the installed version; do not implement barcode transfer.
+   - `[x]` Support reading stock transaction details with `GET /stock/transactions/{transactionId}` so write results can be inspected before undoing them.
+   - `[x]` Keep `stock-transaction-undo` as the correction path for inventory, consume, add, and transfer writes when Grocy returns transaction ids.
+   - `[x]` Require explicit confirmation immediately before every inventory, consume, transfer, or undo write; confirmation must include product, amount or new actual amount, unit, locations when applicable, note/date/price when applicable, and expected effect.
+   - `[x]` For inventory, calculate and show the delta from current read-only stock before asking for confirmation when current stock can be read safely.
    - `[ ]` Prefer product names or prior command ids in chat workflows; do not require raw product ids unless they are already known.
-   - `[ ]` Add mocked tests for add/remove/no-op inventory deltas, consume validation, transaction detail reads, undo routing, and CLI option validation.
-   - `[ ]` Update `README.md`, `SKILL.md`, `docs/COMMANDS.md`, and `docs/commands.json` with the new stock write commands, confirmation details, supported formats, safety modes, and correction paths.
+   - `[x]` Add mocked tests for add/remove/no-op inventory deltas, consume validation, transaction detail reads, undo routing, and CLI option validation.
+   - `[x]` Update `README.md`, `SKILL.md`, `docs/COMMANDS.md`, and `docs/commands.json` with the new stock write commands, confirmation details, supported formats, safety modes, and correction paths.
    - Purpose: support real Grocy stocktaking/revision workflows and adjacent stock transactions through the safe CLI without direct API calls or barcode-specific behavior.
 
 ## Write Lifecycle Principle

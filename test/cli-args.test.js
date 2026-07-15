@@ -310,6 +310,39 @@ test('allows stock-add options', () => {
   }));
 });
 
+test('allows stock inventory and transaction command options', () => {
+  assert.doesNotThrow(() => validateOptions('stock-inventory', {
+    product: 'Молоко',
+    'new-amount': '3',
+    unit: 'л',
+    price: '2.49',
+    'best-before-date': '2026-07-20',
+    location: 'Холодильник',
+    note: 'counted',
+  }));
+  assert.doesNotThrow(() => validateOptions('stock-consume', {
+    'product-id': '42',
+    amount: '0.5',
+    'unit-id': '2',
+    spoiled: 'false',
+    'recipe-id': '7',
+    'location-id': '1',
+    'exact-amount': 'true',
+    'allow-subproduct-substitution': 'false',
+  }));
+  assert.doesNotThrow(() => validateOptions('stock-transfer', {
+    product: 'Молоко',
+    amount: '1',
+    unit: 'л',
+    'from-location': 'Кладовка',
+    'to-location-id': '2',
+    'stock-entry-id': '11',
+  }));
+  assert.doesNotThrow(() => validateOptions('stock-transaction', {
+    'transaction-id': 'tx-1',
+  }));
+});
+
 test('allows stock-expiring options', () => {
   assert.doesNotThrow(() => validateOptions('stock-expiring', {
     days: '7',

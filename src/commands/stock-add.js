@@ -228,7 +228,12 @@ module.exports = {
   buildStockAddPlan,
   extractTransactionIds,
   formatProductChoices,
+  parseNonNegativeNumber,
   parseDate,
+  parsePositiveInteger,
+  parsePositiveNumber,
   parseStockTransactionType,
+  resolveProductOption,
+  resolveQuantityUnitId,
   runStockAddCommand,
 };
